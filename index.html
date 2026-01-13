@@ -2392,8 +2392,10 @@ Border: #c4b5a8, #d4c4b0
             const normalized = normalizeText(word);
             
             // Check for exception words with complete IPA override
+            // BUT only use exception IPA if stress is NOT being overridden by user
             const exception = checkExceptionWord(normalized);
-            if (exception) {
+            if (exception && (stressIndex === -1 || stressIndex === exception.stressIndex)) {
+                // Use exception's pre-computed IPA (stress matches dictionary or not specified)
                 const syllableIPAs = exception.ipa.split('.');
                 const syllables = syllabify(normalized);
                 
@@ -2416,6 +2418,8 @@ Border: #c4b5a8, #d4c4b0
                     exceptionRule: exception.rule || null
                 };
             }
+            // If user overrides stress on exception word, fall through to normal processing
+            // so vowel reduction recalculates based on new stress position
             
             const syllables = syllabify(normalized);
             const vowelCount = countVowels(normalized);
@@ -3707,15 +3711,18 @@ Border: #c4b5a8, #d4c4b0
                                         ${stressIndicator}${exceptionInfo}
                                         <div class="cyrillic">
                                             ${processed.syllables.map((syl, sylIdx) => {
-                                                const stressClass = syl.isStressed ? 'stressed' : '';
+                                                const isUserStress = wordData.stressSource === 'user';
+                                                const stressClass = syl.isStressed ? (isUserStress ? 'stressed user-stress' : 'stressed') : '';
                                                 const clickableClass = 'clickable';
                                                 // Add stress mark to stressed syllable
                                                 const displayText = syl.isStressed ? addStressToSyllable(syl.cyrillic) : syl.cyrillic;
-                                                // Dynamic tooltip based on syllable content
+                                                // Dynamic tooltip based on syllable content and stress source
                                                 const hasЁ = /ё/i.test(syl.cyrillic);
                                                 const hasЕ = /е/i.test(syl.cyrillic);
                                                 let tooltip = 'Click to stress';
-                                                if (syl.isStressed && hasЁ) {
+                                                if (syl.isStressed && isUserStress) {
+                                                    tooltip = 'User-assigned stress • Click dictionary syllable to reset';
+                                                } else if (syl.isStressed && hasЁ) {
                                                     tooltip = 'Double-click to restore ⟨е⟩';
                                                 } else if (syl.isStressed && hasЕ) {
                                                     tooltip = 'Double-click to restore ⟨ё⟩';

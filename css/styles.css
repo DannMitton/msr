@@ -1030,6 +1030,12 @@
             padding: 4px 8px;
             font-weight: 700;
         }
+        
+        /* User-assigned stress (differs from dictionary) - terracotta/warm amber */
+        .syllable.stressed.user-stress {
+            border: 2px solid #B88856;
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.3) 0%, rgba(193, 150, 96, 0.3) 100%);
+        }
 
         .syllable.clickable {
             cursor: pointer;
