@@ -2396,15 +2396,19 @@ Border: #c4b5a8, #d4c4b0
             if (exception) {
                 const syllableIPAs = exception.ipa.split('.');
                 const syllables = syllabify(normalized);
+                
+                // Use passed stressIndex if provided, otherwise use exception's default
+                const effectiveStress = (stressIndex !== -1) ? stressIndex : exception.stressIndex;
+                
                 return {
                     word: normalized,
                     syllables: syllableIPAs.map((ipa, idx) => ({
                         cyrillic: syllables[idx] || '',
                         ipa: ipa,
-                        isStressed: idx === exception.stressIndex,
-                        showStressMarker: idx === exception.stressIndex && syllableIPAs.length > 1
+                        isStressed: idx === effectiveStress,
+                        showStressMarker: idx === effectiveStress && syllableIPAs.length > 1
                     })),
-                    stressIndex: exception.stressIndex,
+                    stressIndex: effectiveStress,
                     originalStressIndex: stressIndex,
                     isMonosyllable: syllableIPAs.length === 1,
                     showStressMarker: syllableIPAs.length > 1,
