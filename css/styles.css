@@ -277,8 +277,10 @@
         }
 
         .word-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, max-content));
+            grid-auto-rows: 1fr;
+            align-items: stretch;
             gap: 10px;
             margin-top: 20px;
         }
@@ -295,14 +297,21 @@
             padding-bottom: 32px;
             cursor: pointer;
             min-width: var(--card-min-width);
-            width: fit-content;
-            height: var(--card-height);
+            max-width: 320px;
+            width: max-content;
+            min-height: var(--card-height);
+            height: 100%; /* stretch to row height in grid */
             box-shadow: 0 2px 6px rgba(163, 61, 61, 0.1);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             box-sizing: border-box;
+        }
+        
+        /* Ensure IPA line doesn't overflow */
+        .word-card .ipa {
+            white-space: nowrap;
         }
         
         /* Stress source indicator - top-left corner */
@@ -572,13 +581,20 @@
             font-family: 'Georgia', 'Times New Roman', serif;
             font-style: normal;
             color: #999;
-            background: transparent;
-            border: none;
+            background: none !important;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
             cursor: pointer;
             opacity: 0;
             transition: opacity 0.4s ease-out;
             padding: 0;
+            margin: 0;
             line-height: 1;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
         
         .word-card:hover .why-icon {
@@ -589,6 +605,13 @@
         .why-icon:hover {
             opacity: 1;
             transition: opacity 0.2s ease-in;
+            background: none !important;
+        }
+        
+        .why-icon:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            background: none !important;
         }
         
         /* When mouse leaves, always fade out smoothly */
