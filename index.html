@@ -504,6 +504,30 @@ Border: #c4b5a8, #d4c4b0
         </div>
     </div>
 
+    <!-- Stress Source Modal - asks user vs composer -->
+    <div class="modal-overlay" id="stressSourceModal">
+        <div class="modal-content" style="max-width: 380px;">
+            <div class="modal-header">
+                <h2>Who assigned this stress?</h2>
+                <button class="modal-close" onclick="closeStressSourceModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 20px;">
+                <p style="margin-bottom: 20px; color: #4a5568;">
+                    Moving stress from the dictionary position on <strong id="stressSourceWord"></strong>
+                </p>
+                <button class="modal-btn" onclick="confirmStressSource('user')" style="width: 100%; margin-bottom: 12px; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+                    🎤 My choice (for learning/practice)
+                </button>
+                <button class="modal-btn" onclick="confirmStressSource('composer')" style="width: 100%; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+                    🎼 Composer's score (published this way)
+                </button>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="modal-btn modal-btn-secondary" onclick="closeStressSourceModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================================
         // MSR JAVASCRIPT - STRUCTURE OVERVIEW
@@ -2741,6 +2765,33 @@ Border: #c4b5a8, #d4c4b0
         }
 
         // ============================================================================
+        // STRESS SOURCE MODAL - User vs Composer attribution
+        // ============================================================================
+        
+        let pendingStressChange = null;  // Stores {wordIndex, syllableIndex} while modal is open
+        
+        function showStressSourceModal(wordIndex, syllableIndex, wordText) {
+            pendingStressChange = { wordIndex, syllableIndex };
+            document.getElementById('stressSourceWord').textContent = wordText;
+            document.getElementById('stressSourceModal').classList.add('show');
+        }
+        
+        function closeStressSourceModal() {
+            document.getElementById('stressSourceModal').classList.remove('show');
+            pendingStressChange = null;
+        }
+        
+        function confirmStressSource(source) {
+            if (!pendingStressChange) return;
+            
+            const { wordIndex, syllableIndex } = pendingStressChange;
+            closeStressSourceModal();
+            
+            // Now apply the stress change with the chosen source
+            applyStressChange(wordIndex, syllableIndex, source);
+        }
+
+        // ============================================================================
         // CLICK HANDLING: Single-click for stress, Double-click for е↔ё
         // ============================================================================
         
@@ -2791,50 +2842,80 @@ Border: #c4b5a8, #d4c4b0
             // RULE: If word contains ё, stress CANNOT be moved away from ё syllable
             // ё is always stressed in Russian; allowing unstressed ё violates Grayson's schema
             if (wordData.stressSource === 'ё-rule') {
-                // Show explanatory tooltip
                 showTooltip('The letter ⟨ё⟩ is always stressed in Russian.', wordIndex);
                 return;
             }
 
-            // Toggle: if clicking same syllable, remove stress; otherwise set new stress
-            const newStress = currentStress === syllableIndex ? -1 : syllableIndex;
-            console.log('[toggleStress] newStress:', newStress);
+            // Clicking same syllable does nothing (no toggle off)
+            if (currentStress === syllableIndex) {
+                // Exception: clicking placeholder confirms it
+                if (wordData.stressSource === 'placeholder') {
+                    showStressSourceModal(wordIndex, syllableIndex, wordData.originalWord);
+                }
+                return;
+            }
+            
+            // Clicking a different syllable...
+            const isOverridingDictionary = ['dictionary', 'wiktionary', 'ё-exception'].includes(wordData.stressSource);
+            const isOverridingVerified = isOverridingDictionary || 
+                (wordData.originalDictionaryStress !== undefined && syllableIndex !== wordData.originalDictionaryStress);
+            
+            if (isOverridingVerified) {
+                // Show modal to ask: user choice or composer's score?
+                // Save original dictionary stress before showing modal
+                if (wordData.originalDictionaryStress === undefined) {
+                    wordData.originalDictionaryStress = currentStress;
+                }
+                showStressSourceModal(wordIndex, syllableIndex, wordData.originalWord);
+                return;
+            }
+            
+            // For placeholder words or returning to dictionary stress, apply directly
+            if (wordData.stressSource === 'placeholder') {
+                showStressSourceModal(wordIndex, syllableIndex, wordData.originalWord);
+                return;
+            }
+            
+            // User/composer clicking different syllable — show modal
+            if (wordData.stressSource === 'user' || wordData.stressSource === 'composer') {
+                showStressSourceModal(wordIndex, syllableIndex, wordData.originalWord);
+                return;
+            }
+            
+            // Default: apply change as user
+            applyStressChange(wordIndex, syllableIndex, 'user');
+        }
+        
+        // Apply the stress change after source is determined
+        function applyStressChange(wordIndex, syllableIndex, source) {
+            const wordData = processedWords[wordIndex];
+            const currentStress = wordData.processed.stressIndex;
+            
+            console.log('[applyStressChange]', { wordIndex, syllableIndex, source });
 
             // Reprocess word with new stress (use correctedWord to preserve ё)
             const wordToUse = wordData.correctedWord || wordData.originalWord;
             const oldIPA = wordData.processed.syllables.map(s => s.ipa).join('.');
-            wordData.processed = processWord(wordToUse, newStress);
+            wordData.processed = processWord(wordToUse, syllableIndex);
             const newIPA = wordData.processed.syllables.map(s => s.ipa).join('.');
-            console.log('[toggleStress] IPA changed:', oldIPA, '->', newIPA);
+            console.log('[applyStressChange] IPA changed:', oldIPA, '->', newIPA);
             
             // Track original dictionary stress for comparison
-            if (wordData.stressSource === 'dictionary' && wordData.originalDictionaryStress === undefined) {
+            if (wordData.originalDictionaryStress === undefined && 
+                ['dictionary', 'wiktionary', 'ё-exception'].includes(wordData.stressSource)) {
                 wordData.originalDictionaryStress = currentStress;
-                console.log('[toggleStress] Saved originalDictionaryStress:', currentStress);
             }
             
-            // Update stressSource based on whether user is changing from dictionary stress
+            // Update stressSource
             const oldSource = wordData.stressSource;
-            if (newStress === -1) {
-                // User removed stress — back to placeholder (auto syllable 1)
-                wordData.stressSource = 'placeholder';
-            } else if (wordData.originalDictionaryStress !== undefined) {
-                // Word was originally from dictionary
-                if (newStress === wordData.originalDictionaryStress) {
-                    // User returned to dictionary stress
-                    wordData.stressSource = 'dictionary';
-                } else {
-                    // User overrode dictionary stress — mark as user
-                    wordData.stressSource = 'user';
-                }
-            } else if (oldSource === 'placeholder') {
-                // User clicked on a placeholder word — now it's user-assigned
-                wordData.stressSource = 'user';
-            } else if (wordData.stressSource !== 'ё-exception') {
-                // Word was never in dictionary — mark as user
-                wordData.stressSource = 'user';
+            if (wordData.originalDictionaryStress !== undefined && syllableIndex === wordData.originalDictionaryStress) {
+                // User returned to dictionary stress
+                wordData.stressSource = 'dictionary';
+            } else {
+                // Apply the chosen source (user or composer)
+                wordData.stressSource = source;
             }
-            console.log('[toggleStress] stressSource:', oldSource, '->', wordData.stressSource);
+            console.log('[applyStressChange] stressSource:', oldSource, '->', wordData.stressSource);
             
             // Clear cached IPA editor state so it regenerates with new stress
             delete wordData.ipaEditorState;
@@ -3640,17 +3721,27 @@ Border: #c4b5a8, #d4c4b0
             
             // Count statistics
             const dictCount = processedWords.filter(w => ['dictionary', 'wiktionary', 'ё-rule', 'ё-exception'].includes(w.stressSource)).length;
-            const userCount = processedWords.filter(w => w.stressSource === 'user' || w.stressSource === 'mismatch').length;
+            const userCount = processedWords.filter(w => w.stressSource === 'user').length;
+            const composerCount = processedWords.filter(w => w.stressSource === 'composer').length;
+            const overrideCount = userCount + composerCount + processedWords.filter(w => w.stressSource === 'mismatch').length;
             const placeholderCount = processedWords.filter(w => w.stressSource === 'placeholder').length;
             const totalCount = processedWords.length;
+            
+            // Build override label
+            let overrideLabel = 'your choice';
+            if (userCount > 0 && composerCount > 0) {
+                overrideLabel = `your choice (${userCount}) + composer (${composerCount})`;
+            } else if (composerCount > 0) {
+                overrideLabel = `composer's score`;
+            }
 
             const html = `
                 <div class="info-box" style="margin-top: 30px;">
                     <h3>Transcription Results</h3>
                     <p style="line-height: 1.8;">
                         <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #48bb78; border-radius: 50%; vertical-align: middle; margin-right: 4px;"></span>verified (${dictCount})
-                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #3B82F6; border-radius: 50%; vertical-align: middle; margin-left: 12px; margin-right: 4px;"></span>your choice (${userCount})
-                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px dotted rgba(100,100,100,0.5); border-radius: 50%; vertical-align: middle; margin-left: 12px; margin-right: 4px;"></span>needs attention (${placeholderCount})
+                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #3B82F6; border-radius: 50%; vertical-align: middle; margin-left: 12px; margin-right: 4px;"></span>${overrideLabel} (${overrideCount})
+                        <span style="display: inline-block; width: 12px; height: 12px; border: 2px dashed rgba(100,100,100,0.5); border-radius: 50%; vertical-align: middle; margin-left: 12px; margin-right: 4px;"></span>needs attention (${placeholderCount})
                     </p>
                 </div>
                 <div class="word-grid">
@@ -3701,29 +3792,17 @@ Border: #c4b5a8, #d4c4b0
                         // - Blue = user-assigned
                         // - Grey dotted = placeholder (needs attention)
                         // Tooltip on stressed syllable carries the full provenance sentence
-                        
-                        // Show exception info icon if word has pronunciation exception
-                        let exceptionInfo = (processed.exceptionRule && processed.exceptionRule.length > 1)
-                            ? `<span class="exception-info" title="${processed.exceptionRule}">ⓘ</span>` 
-                            : '';
-                        
-                        // Add pure exception indicator (Chapter 8, Section 5)
-                        const pureEx = wordData.pureException;
-                        if (pureEx) {
-                            const tooltip = pureEx.note + (pureEx.ipa_note ? ` ${pureEx.ipa_note}` : '');
-                            exceptionInfo = `<span class="exception-info pure-exception" title="${tooltip} (Ch. 8)">⚠️</span>`;
-                        }
+                        // Exception info (pronunciation irregularities) shown in Why section, not on card
 
                         return `
                             <div class="word-card-container" id="card-${wordIdx}">
                                 <div class="word-card-inner">
                                     <div class="word-card-front word-card">
-                                                                                <span class="why-icon" onclick="showExplanationPanel(${wordIdx})" title="Why this transcription?">ⓘ</span>
-                                        ${exceptionInfo}
+                                                                                <button class="why-icon" onclick="showExplanationPanel(${wordIdx})" aria-label="IPA notes" title="Why this transcription?">?</button>
                                         <div class="cyrillic">
                                             ${processed.syllables.map((syl, sylIdx) => {
                                                 // Determine circle style based on stress source
-                                                const isUserStress = wordData.stressSource === 'user' || wordData.stressSource === 'mismatch';
+                                                const isUserStress = wordData.stressSource === 'user' || wordData.stressSource === 'composer' || wordData.stressSource === 'mismatch';
                                                 const isPlaceholder = wordData.stressSource === 'placeholder';
                                                 const isVerified = ['dictionary', 'wiktionary', 'ё-rule', 'ё-exception'].includes(wordData.stressSource);
                                                 
@@ -3749,9 +3828,11 @@ Border: #c4b5a8, #d4c4b0
                                                 
                                                 if (syl.isStressed) {
                                                     if (isPlaceholder) {
-                                                        tooltip = 'Temporary stress — tap the syllable you need';
-                                                    } else if (isUserStress) {
-                                                        tooltip = `You placed stress on syllable ${sylIdx + 1}`;
+                                                        tooltip = 'Temporary stress — tap to confirm or move';
+                                                    } else if (wordData.stressSource === 'user') {
+                                                        tooltip = `Your choice — syllable ${sylIdx + 1}`;
+                                                    } else if (wordData.stressSource === 'composer') {
+                                                        tooltip = `Composer's score — syllable ${sylIdx + 1}`;
                                                     } else if (wordData.stressSource === 'dictionary') {
                                                         tooltip = 'Stress verified — Vuizur dictionary';
                                                     } else if (wordData.stressSource === 'wiktionary') {
@@ -3781,7 +3862,7 @@ Border: #c4b5a8, #d4c4b0
                                         </div>
                                         <div class="ipa">/${fullIPA}/</div>
                                         ${processed.syllables.length > 1 ? `
-                                            <button class="flip-button" onclick="flipCard(${wordIdx})">⚙</button>
+                                            <button class="flip-button" onclick="flipCard(${wordIdx})" aria-label="Edit syllables"><svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" d="M20 10a8 8 0 1 0-3.3 6.3M20 10v4h-4"/></svg></button>
                                         ` : ''}
                                     </div>
                                     <div class="word-card-back">
