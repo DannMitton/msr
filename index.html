@@ -2667,6 +2667,15 @@ Border: #c4b5a8, #d4c4b0
                     stressSource = 'ё-exception';
                 }
                 
+                // Also check EXCEPTION_WORDS for words with special IPA
+                // These should be treated as dictionary words for stress source tracking
+                const exceptionWord = typeof checkExceptionWord === 'function' ? checkExceptionWord(mainWord) : null;
+                if (exceptionWord && dictionaryStress === -1) {
+                    dictionaryStress = exceptionWord.stressIndex;
+                    stressSource = 'dictionary';  // Exception words count as dictionary entries
+                    console.log('[processText] Found exception word:', mainWord, 'stress:', dictionaryStress);
+                }
+                
                 // RULE: ё always takes stress (one of the few reliable Russian orthography rules)
                 // If word contains ё and we don't have dictionary stress, find the ё syllable
                 if (dictionaryStress === -1) {
@@ -2763,6 +2772,14 @@ Border: #c4b5a8, #d4c4b0
             const wordData = processedWords[wordIndex];
             const currentStress = wordData.processed.stressIndex;
             
+            console.log('[toggleStress] START:', {
+                word: wordData.originalWord,
+                currentStress,
+                clickedSyllable: syllableIndex,
+                stressSource: wordData.stressSource,
+                originalDictionaryStress: wordData.originalDictionaryStress
+            });
+            
             // RULE: If word contains ё, stress CANNOT be moved away from ё syllable
             // ё is always stressed in Russian; allowing unstressed ё violates Grayson's schema
             if (wordData.stressSource === 'ё-rule') {
@@ -2773,17 +2790,23 @@ Border: #c4b5a8, #d4c4b0
 
             // Toggle: if clicking same syllable, remove stress; otherwise set new stress
             const newStress = currentStress === syllableIndex ? -1 : syllableIndex;
+            console.log('[toggleStress] newStress:', newStress);
 
             // Reprocess word with new stress (use correctedWord to preserve ё)
             const wordToUse = wordData.correctedWord || wordData.originalWord;
+            const oldIPA = wordData.processed.syllables.map(s => s.ipa).join('.');
             wordData.processed = processWord(wordToUse, newStress);
+            const newIPA = wordData.processed.syllables.map(s => s.ipa).join('.');
+            console.log('[toggleStress] IPA changed:', oldIPA, '->', newIPA);
             
             // Track original dictionary stress for comparison
             if (wordData.stressSource === 'dictionary' && wordData.originalDictionaryStress === undefined) {
                 wordData.originalDictionaryStress = currentStress;
+                console.log('[toggleStress] Saved originalDictionaryStress:', currentStress);
             }
             
             // Update stressSource based on whether user is changing from dictionary stress
+            const oldSource = wordData.stressSource;
             if (newStress === -1) {
                 // User removed stress — back to 'none'
                 wordData.stressSource = 'none';
@@ -2800,8 +2823,10 @@ Border: #c4b5a8, #d4c4b0
                 // Word was never in dictionary — mark as user
                 wordData.stressSource = 'user';
             }
+            console.log('[toggleStress] stressSource:', oldSource, '->', wordData.stressSource);
             
             // Clear cached IPA editor state so it regenerates with new stress
+            delete wordData.ipaEditorState;
             delete wordData.ipaEditorState;
 
             // Update BOTH views so changes propagate everywhere
