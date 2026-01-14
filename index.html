@@ -3868,7 +3868,8 @@ Border: #c4b5a8, #d4c4b0
                                             ${(() => {
                                                 // Calculate proclitic syllable count for spacing
                                                 let procliticSyllableCount = 0;
-                                                let encliticStartIdx = processed.syllables.length;
+                                                let encliticText = '';
+                                                let mainText = '';
                                                 
                                                 if (wordData.mergedParts && wordData.mergedParts.length > 1) {
                                                     const procliticPart = wordData.mergedParts.find(p => p.type === 'proclitic');
@@ -3880,12 +3881,17 @@ Border: #c4b5a8, #d4c4b0
                                                         const vowels = procliticPart.text.toLowerCase().match(/[аеёиоуыэюя]/g);
                                                         procliticSyllableCount = vowels ? vowels.length : 1;
                                                     }
-                                                    if (encliticPart && mainPart) {
-                                                        // Count vowels in main part
-                                                        const mainVowels = mainPart.text.toLowerCase().match(/[аеёиоуыэюя]/g);
-                                                        encliticStartIdx = mainVowels ? mainVowels.length : processed.syllables.length - 1;
+                                                    if (encliticPart) {
+                                                        encliticText = encliticPart.text.toLowerCase();
+                                                    }
+                                                    if (mainPart) {
+                                                        mainText = mainPart.text.toLowerCase();
                                                     }
                                                 }
+                                                
+                                                // Track cumulative characters to detect when enclitic starts
+                                                let charCount = 0;
+                                                const mainLength = mainText.length;
                                                 
                                                 return processed.syllables.map((syl, sylIdx) => {
                                                 // Determine circle style based on stress source
@@ -3904,10 +3910,24 @@ Border: #c4b5a8, #d4c4b0
                                                     }
                                                 }
                                                 
-                                                // Add spacer class after proclitic or before enclitic
+                                                // Add spacer class after proclitic
                                                 const isAfterProclitic = procliticSyllableCount > 0 && sylIdx === procliticSyllableCount;
-                                                const isEnclitic = sylIdx >= encliticStartIdx;
-                                                const spacerClass = isAfterProclitic ? 'after-clitic' : (isEnclitic && sylIdx === encliticStartIdx ? 'before-clitic' : '');
+                                                
+                                                // For enclitics: check if this syllable contains enclitic characters
+                                                // by looking at whether the syllable text matches or contains the enclitic
+                                                const sylLower = syl.cyrillic.toLowerCase();
+                                                const containsEnclitic = encliticText && sylLower.includes(encliticText);
+                                                const startsWithEnclitic = encliticText && sylLower.startsWith(encliticText);
+                                                
+                                                // If syllable contains enclitic and it's not the whole syllable, we need inline spacing
+                                                // For now, add before-clitic class to syllables that END with the enclitic
+                                                const endsWithEnclitic = encliticText && sylLower.endsWith(encliticText) && sylLower !== encliticText;
+                                                
+                                                let spacerClass = isAfterProclitic ? 'after-clitic' : '';
+                                                // For vowelless enclitics merged into previous syllable, we handle via CSS
+                                                if (encliticText && sylLower === encliticText) {
+                                                    spacerClass = 'before-clitic';
+                                                }
                                                 
                                                 const clickableClass = 'clickable';
                                                 // Add stress mark to stressed syllable
@@ -4049,7 +4069,14 @@ Border: #c4b5a8, #d4c4b0
         function flipCard(wordIdx) {
             const container = document.getElementById(`card-${wordIdx}`);
             if (container) {
+                // Add flipping class for transition effects
+                container.classList.add('flipping');
                 container.classList.toggle('flipped');
+                
+                // Remove flipping class after animation completes
+                setTimeout(() => {
+                    container.classList.remove('flipping');
+                }, 600); // Match transition duration
             }
         }
         
@@ -4177,7 +4204,11 @@ Border: #c4b5a8, #d4c4b0
             const wordData = processedWords[wordIdx];
             if (!wordData) return '';
             const syllables = wordData.processed.syllables;
-            if (syllables.length <= 1) return '';
+            
+            // Always return IPA content for proper sizing
+            if (syllables.length <= 1) {
+                return syllables[0]?.ipa || '';
+            }
             
             // Build IPA string with pipes for boundaries
             const parts = syllables.map(s => s.ipa);
@@ -4199,7 +4230,9 @@ Border: #c4b5a8, #d4c4b0
             const syllables = wordData.processed.syllables;
             
             if (syllables.length <= 1) {
-                return '<div style="color: #888; font-size: 1.1em; text-align: center; padding: 20px;">Single syllable</div>';
+                // Single syllable — show IPA only (no boundaries to edit)
+                const ipa = syllables[0]?.ipa || '';
+                return `<div class="syllable-editor" style="font-size: 2em;">${ipa}</div>`;
             }
             
             const state = getWordIPAWithBoundaries(wordIdx);

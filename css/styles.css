@@ -554,6 +554,13 @@
         .word-card-back {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Subtle transparency at midpoint of flip (when face is edge-on) */
+        .word-card-container.flipping .word-card-front,
+        .word-card-container.flipping .word-card-back {
+            opacity: 0.85;
         }
         
         /* Back face is absolute positioned */
