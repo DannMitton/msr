@@ -3499,8 +3499,9 @@ Border: #c4b5a8, #d4c4b0
             const wordData = processedWords[wordIndex];
             if (!wordData) return;
             
-            // Get card element for positioning
-            const card = document.getElementById(`card-${wordIndex}`);
+            // Get card element for positioning (the visible front face, not container)
+            const cardContainer = document.getElementById(`card-${wordIndex}`);
+            const card = cardContainer?.querySelector('.word-card-front') || cardContainer;
             
             const { processed, originalWord } = wordData;
             
@@ -5501,21 +5502,21 @@ Border: #c4b5a8, #d4c4b0
             };
             
             const page = PAGE_SIZES[pageSize];
-            const margin = 54; // 0.75 inch margins
+            const margin = 50; // Slightly tighter margins
             const contentWidth = page.width - (margin * 2);
             const contentHeight = page.height - (margin * 2);
             
             // ================================================================
             // ZONE HEIGHTS
             // ================================================================
-            const headerHeight = 90;   // Title, poet, composer
-            const footerHeight = 55;   // Compact: 3 lines
+            const headerHeight = 85;   // Title, poet, composer (slightly tighter)
+            const footerHeight = 48;   // Compact: 3 lines (tighter)
             const contentZoneHeight = contentHeight - headerHeight - footerHeight;
             
             // ================================================================
             // LAYOUT CALCULATIONS
             // ================================================================
-            const lineHeight = 52; // Space for IPA + Cyrillic + marginalia room
+            const lineHeight = 48; // Tighter: IPA + Cyrillic + small breathing room
             const wordSpacing = 28;
             
             // Measure and layout words
@@ -5727,20 +5728,20 @@ Border: #c4b5a8, #d4c4b0
                 }
                 
                 // Dynamic header height: full for page 1, compact for continuation pages
-                const effectiveHeaderHeight = (pageNum === 0) ? headerHeight : 40;
+                const effectiveHeaderHeight = (pageNum === 0) ? headerHeight : 32;
                 
                 // Header divider line
                 ctx.strokeStyle = '#cccccc';
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
-                ctx.moveTo(margin, headerY + effectiveHeaderHeight - 10);
-                ctx.lineTo(page.width - margin, headerY + effectiveHeaderHeight - 10);
+                ctx.moveTo(margin, headerY + effectiveHeaderHeight - 8);
+                ctx.lineTo(page.width - margin, headerY + effectiveHeaderHeight - 8);
                 ctx.stroke();
                 
                 // ================================================================
                 // DRAW CONTENT ZONE - Interlinear text
                 // ================================================================
-                let y = pageOffsetY + margin + effectiveHeaderHeight + 20;
+                let y = pageOffsetY + margin + effectiveHeaderHeight + 12;
                 
                 pageLines.forEach((line) => {
                     let x = margin;
