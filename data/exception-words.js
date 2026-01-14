@@ -245,7 +245,7 @@ const EXCEPTION_WORDS = {
             'весна': { ipa: 'vʲɪ.snɑ', stressIndex: 1, rule: 'unstressed е → ɪ (p. 127)' },
             
             // Consonants (Ch. 4)
-            'день': { ipa: 'dʲɛɲ', stressIndex: 0, rule: 'soft н → ɲ (p. 183)' },
+            'день': { ipa: 'dʲeɲ', stressIndex: 0, rule: 'Interpalatal е → /e/, нь → ɲ (p.106, p.183)' },
             'был': { ipa: 'bɨɫ', stressIndex: 0, rule: 'hard л → ɫ (p. 150)' },
             'соль': { ipa: 'solʲ', stressIndex: 0, rule: 'soft л → lʲ (p. 150)' },
             'жить': { ipa: 'ʒɨtʲ', stressIndex: 0, rule: 'always-hard ж forces и → ɨ (p. 165)' },
