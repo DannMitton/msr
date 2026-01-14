@@ -24,11 +24,12 @@ const GOLDEN_TESTS = {
     // ================================================================
     // CLITICS AND PREPOSITIONS (inherently unstressed)
     // Grayson p. 263: particles and prepositions don't carry stress
+    // Word-initial unstressed о → /ɑ/ (Grayson p. 97)
     // ================================================================
     'Clitics and Prepositions': [
-        { word: 'во', stress: -1, expected: 'vɑ', note: 'Voweled preposition, unstressed (p.263)' },
-        { word: 'ко', stress: -1, expected: 'kɑ', note: 'Voweled preposition, unstressed (p.263)' },
-        { word: 'со', stress: -1, expected: 'sɑ', note: 'Voweled preposition, unstressed (p.263)' },
+        { word: 'во', stress: -1, expected: 'vɑ', note: 'Voweled preposition, unstressed, word-initial о → /ɑ/ (p.97, p.263)' },
+        { word: 'ко', stress: -1, expected: 'kɑ', note: 'Voweled preposition, unstressed, word-initial о → /ɑ/ (p.97, p.263)' },
+        { word: 'со', stress: -1, expected: 'sɑ', note: 'Voweled preposition, unstressed, word-initial о → /ɑ/ (p.97, p.263)' },
         { word: 'не', stress: -1, expected: 'ɲɪ', note: 'Particle, unstressed (p.263)' },
         { word: 'ни', stress: -1, expected: 'ɲi', note: 'Particle, unstressed (p.263)' },
         // Note: в, к, с, б merge with following word, not tested standalone
@@ -39,13 +40,13 @@ const GOLDEN_TESTS = {
     // Grayson p. 81-96
     // ================================================================
     'Stressed Vowels': [
-        { word: 'мама', stress: 0, expected: 'mɑ mʌ', note: 'Stressed а → ɑ (p.82)' },
-        { word: 'папа', stress: 0, expected: 'pɑ pʌ', note: 'Stressed а → ɑ (p.82)' },
+        { word: 'мама', stress: 0, expected: 'mɑ mɑ', note: 'Stressed а → ɑ, immediate posttonic а → ɑ (p.82, p.97)' },
+        { word: 'папа', stress: 0, expected: 'pɑ pɑ', note: 'Stressed а → ɑ, immediate posttonic а → ɑ (p.82, p.97)' },
         { word: 'дом', stress: 0, expected: 'dom', note: 'Stressed о → o (p.86)' },
-        { word: 'ночь', stress: 0, expected: 'notʃ', note: 'Stressed о → o (p.86)' },
+        { word: 'ночь', stress: 0, expected: 'notʃʲ', note: 'Stressed о → o, ч always palatalized /tʃʲ/ (p.86, p.176)' },
         { word: 'сон', stress: 0, expected: 'son', note: 'Stressed о → o (p.86)' },
         { word: 'лес', stress: 0, expected: 'lʲɛs', note: 'Stressed е → ɛ (p.89)' },
-        { word: 'мир', stress: 0, expected: 'mʲir', note: 'Stressed и → i (p.96)' },
+        { word: 'мир', stress: 0, expected: 'mʲir', note: 'Stressed и → i, final р not palatalized (no following cluster) (p.96, p.209 fn.277)' },
         { word: 'сын', stress: 0, expected: 'sɨn', note: 'Stressed ы → ɨ (p.94)' },
         { word: 'дух', stress: 0, expected: 'dux', note: 'Stressed у → u (p.93)' },
     ],
@@ -68,7 +69,7 @@ const GOLDEN_TESTS = {
     
     'И Never Reduces': [
         { word: 'игра', stress: 1, expected: 'i ɡrɑ', note: 'Unstressed и stays i (p.96)' },
-        { word: 'книга', stress: 0, expected: 'knʲi ɡʌ', note: 'Unstressed и stays i (p.96)' },
+        { word: 'книга', stress: 0, expected: 'knʲi ɡɑ', note: 'Unstressed и stays i, immediate posttonic а → ɑ (p.96, p.97)' },
     ],
     
     // ================================================================
@@ -76,16 +77,16 @@ const GOLDEN_TESTS = {
     // Grayson p. 203-214
     // ================================================================
     'Palatal Nasal': [
-        { word: 'няня', stress: 0, expected: 'ɲɑ ɲʌ', note: 'н before я → ɲ (p.183)' },
+        { word: 'няня', stress: 0, expected: 'ɲa ɲɑ', note: 'н before я → ɲ, stressed interpalatal → /a/, word-final posttonic я → /ɑ/ (p.183, p.104, MSR extension of p.97)' },
         { word: 'конь', stress: 0, expected: 'koɲ', note: 'нь → ɲ (p.183)' },
-        { word: 'день', stress: 0, expected: 'dʲeɲ', note: 'нь → ɲ (p.183)' },
+        { word: 'день', stress: 0, expected: 'dʲeɲ', note: 'Interpalatal е → /e/, нь → ɲ (p.106, p.183)' },
     ],
     
     'Hard vs Soft Л': [
-        { word: 'был', stress: 0, expected: 'bɨɫ', note: 'Hard л → ɫ (p.183)' },
-        { word: 'была', stress: 1, expected: 'bɨ ɫɑ', note: 'Hard л → ɫ (p.183)' },
-        { word: 'люди', stress: 0, expected: 'lʲu dʲi', note: 'Soft л → lʲ (p.183)' },
-        { word: 'любовь', stress: 1, expected: 'lʲu bofʲ', note: 'Soft л → lʲ (p.183)' },
+        { word: 'был', stress: 0, expected: 'bɨɫ', note: 'Hard л → ɫ (p.184)' },
+        { word: 'была', stress: 1, expected: 'bɨ ɫɑ', note: 'Hard л → ɫ (p.184)' },
+        { word: 'люди', stress: 0, expected: 'lʲu dʲi', note: 'Soft л → lʲ (p.184)' },
+        { word: 'любовь', stress: 1, expected: 'lʲu bofʲ', note: 'Soft л → lʲ (p.184)' },
     ],
     
     // ================================================================
@@ -129,9 +130,9 @@ const GOLDEN_TESTS = {
     // Words with irregular pronunciations
     // ================================================================
     'Exception Words': [
-        { word: 'счастье', stress: 0, expected: 'ʃʲːɑ sʲtʲjɪ', note: 'сч→ʃʲː (p.237)' },
-        { word: 'сердце', stress: 0, expected: 'sʲɛr tsɛ', note: 'рдц→рц, д silent (p.243)' },
-        { word: 'солнце', stress: 0, expected: 'son tsɛ', note: 'лнц→нц, л silent (p.243)' },
+        { word: 'счастье', stress: 0, expected: 'ʃʲːɑ sʲtʲjɪ', note: 'сч→ʃʲː (p.236), exception to interpalatal /a/ (p.287)' },
+        { word: 'сердце', stress: 0, expected: 'sʲɛr tsɨ', note: 'рдц→рц, д silent (p.243), unstressed е after ц → ɨ (p.127)' },
+        { word: 'солнце', stress: 0, expected: 'son tsɨ', note: 'лнц→нц, л silent (p.243), unstressed е after ц → ɨ (p.127)' },
     ],
     
     // ================================================================
@@ -139,9 +140,9 @@ const GOLDEN_TESTS = {
     // Grayson p. 85-86
     // ================================================================
     'Ё Stress Rule': [
-        { word: 'ёлка', stress: 0, expected: 'jol kʌ', note: 'ё always stressed (p.85)' },
+        { word: 'ёлка', stress: 0, expected: 'joɫ kɑ', note: 'ё always stressed, hard л → ɫ, immediate posttonic а → ɑ (p.85, p.184, p.97)' },
         { word: 'моё', stress: 1, expected: 'mɑ jo', note: 'ё always stressed (p.85)' },
-        { word: 'её', stress: 1, expected: 'jɪ jo', note: 'ё always stressed (p.85)' },
+        { word: 'её', stress: 1, expected: 'ji jo', note: 'ё always stressed, first е interpalatal (j on both sides) → /i/ (p.85, p.104)' },
     ],
     
     // ================================================================
@@ -188,7 +189,9 @@ function runGoldenTests() {
         
         for (const test of tests) {
             // processWord is defined in index.html
-            const result = processWord(test.word, test.stress);
+            // Pass isClitic: true for words with stress = -1 (unstressed clitics)
+            const options = test.stress === -1 ? { isClitic: true } : {};
+            const result = processWord(test.word, test.stress, options);
             const actual = result.syllables.map(s => s.ipa).join(' ');
             
             const normalizedActual = normalizeForComparison(actual);

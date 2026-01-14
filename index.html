@@ -2211,11 +2211,20 @@ Border: #c4b5a8, #d4c4b0
                             } else if (position === 'pretonic-immediate') {
                                 // Grayson p. 127: Akanye - unstressed о → [ɑ] in immediate pretonic
                                 ipa += 'ɑ';
+                            } else if (position === 'posttonic-immediate') {
+                                // Grayson p. 97: immediate posttonic о → [ʌ]
+                                // (Unlike а which stays ɑ, о reduces to ʌ)
+                                ipa += 'ʌ';
                             } else if (!lockedSyllables.has(position)) {
                                 // Grayson p. 127: remote positions → [ʌ]
                                 // EXCEPTION: Word-initial о → [ɑ] (same as immediate pretonic)
-                                // Grayson treats word-initial as a special case
-                                if (i === 0 && wordContext.syllableStartInWord === 0) {
+                                // Grayson p. 97 treats word-initial as a special case
+                                const wordCharIdxO = syllableStartInWord + i;
+                                const isCliticWord = wordContext.isClitic || false;
+                                if (wordCharIdxO === 0 || isCliticWord) {
+                                    // Word-initial OR standalone clitic (во, ко, со)
+                                    // Clitics function as immediate pretonic to host word
+                                    // MSR extension: singable /ɑ/ preferred (p.97 parallel)
                                     ipa += 'ɑ';
                                 } else {
                                     ipa += 'ʌ';
@@ -2415,7 +2424,8 @@ Border: #c4b5a8, #d4c4b0
         }
 
         // Process a word with stress information
-        function processWord(word, stressIndex = -1) {
+        function processWord(word, stressIndex = -1, options = {}) {
+            const { isClitic = false } = options;
             const normalized = normalizeText(word);
             
             // Check for exception words with complete IPA override
@@ -2516,7 +2526,8 @@ Border: #c4b5a8, #d4c4b0
                     voicingMap,
                     palatalizationMap,
                     syllableStartInWord,
-                    crossSyllableGeminates
+                    crossSyllableGeminates,
+                    isClitic  // Pass clitic flag for vowel handling
                 });
                 
                 // Update character position for next syllable
@@ -2764,7 +2775,7 @@ Border: #c4b5a8, #d4c4b0
                     // Store the corrected form (with ё) for reprocessing
                     correctedWord: ёException ? ёException.actualForm : mainWord,
                     // Process the full combined word with adjusted stress
-                    processed: processWord(combinedWord, adjustedStress),
+                    processed: processWord(combinedWord, adjustedStress, { isClitic: isStandaloneClitic }),
                     isClitic: hasMergedParts,
                     isStandaloneClitic: isStandaloneClitic,
                     mergedParts: mergedWord.parts,  // Track what was merged
