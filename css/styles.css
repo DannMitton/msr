@@ -752,7 +752,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            min-width: 100%;
+            width: max-content;
             min-height: 100%;
             transform: rotateY(180deg);
             background: linear-gradient(145deg, #f5f0eb 0%, #ebe4dd 100%);
