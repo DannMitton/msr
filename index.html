@@ -949,7 +949,9 @@ Border: #c4b5a8, #d4c4b0
 
         // Prepositions and clitics that attach to following words
         // Grayson p. 263: "particles (such as, бы; же, не and ни)" are unstressed
-        const clitics = new Set(['в', 'к', 'с', 'о', 'у', 'и', 'а', 'но', 'ль', 'ли', 'же', 'бы', 'б', 'не', 'ни']);
+        // Clitics: words that are inherently unstressed
+        // Vowelless ones merge with host word; voweled ones get their own cards but are still unstressed
+        const clitics = new Set(['в', 'к', 'с', 'б', 'во', 'ко', 'со', 'о', 'об', 'у', 'за', 'на', 'по', 'до', 'из', 'от', 'при', 'про', 'и', 'а', 'но', 'да', 'ль', 'ли', 'же', 'ж', 'бы', 'б', 'не', 'ни']);
 
         // ============================================================================
         // NOTATION SETTINGS
@@ -2547,7 +2549,7 @@ Border: #c4b5a8, #d4c4b0
             // === CLITIC MERGING ===
             // Proclitics (vowelless prepositions + particles): attach to FOLLOWING word
             // Grayson p. 263: не and ни are particles, treated as unstressed
-            const proclitics = new Set(['в', 'к', 'с', 'б', 'не', 'ни']);  // Attach forward
+            const proclitics = new Set(['в', 'к', 'с', 'б']);  // Vowelless prepositions only — attach forward
             const enclitics = new Set(['ли', 'ль', 'же', 'ж', 'бы', 'б']);  // Particles, attach backward
             
             // Helper: check if string contains any Cyrillic letters
@@ -3313,8 +3315,28 @@ Border: #c4b5a8, #d4c4b0
                 const mainPart = mergedParts.find(p => p.type === 'main');
                 
                 if (procliticPart && mainPart) {
+                    const procLower = procliticPart.text.toLowerCase();
+                    
+                    // Check for voweled preposition variants
+                    const voweledPrepositions = {
+                        'во': 'в',
+                        'ко': 'к', 
+                        'со': 'с',
+                        'обо': 'об',
+                        'ото': 'от',
+                        'изо': 'из',
+                        'надо': 'над',
+                        'подо': 'под',
+                        'предо': 'пред'
+                    };
+                    
+                    let extraNote = '';
+                    if (voweledPrepositions[procLower]) {
+                        extraNote = ` (the voweled form of ⟨${voweledPrepositions[procLower]}⟩, used before certain consonant clusters)`;
+                    }
+                    
                     explanations.push({
-                        html: `<strong>⟨${procliticPart.text}⟩</strong> is unstressed by definition — it attaches to ⟨${mainPart.text}⟩ like a prefix, even though it is written as a separate word <span class="cite">(p. 263)</span>`,
+                        html: `<strong>⟨${procliticPart.text}⟩</strong>${extraNote} is unstressed by definition — it attaches to ⟨${mainPart.text}⟩ like a prefix, even though it is written as a separate word <span class="cite">(p. 263)</span>`,
                         priority: -1
                     });
                 }
