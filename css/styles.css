@@ -285,7 +285,6 @@
         }
 
         .word-card {
-            --card-height: clamp(110px, 18vw, 150px);
             --card-min-width: 120px;
             position: relative;
             background: linear-gradient(145deg, #fffefb 0%, #faf6f4 100%);
@@ -296,8 +295,10 @@
             padding-bottom: 30px;
             cursor: pointer;
             min-width: var(--card-min-width);
-            min-height: var(--card-height);
+            min-height: 110px;
+            aspect-ratio: 1.05 / 1;
             width: max-content;
+            max-width: 320px;
             box-shadow: 0 2px 6px rgba(163, 61, 61, 0.1);
             display: flex;
             flex-direction: column;
