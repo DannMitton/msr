@@ -2064,16 +2064,20 @@ Border: #c4b5a8, #d4c4b0
                         // Grayson p. 190: р is difficult to palatalize for Anglophones
                         // Grayson p. 209 fn. 277: р palatalizes after stressed и, е, э
                         case 'р': 
-                            // Check if preceded by stressed front vowel
+                            // Grayson p. 209, fn. 277: р palatalizes after stressed и, е, э
+                            // BUT only when followed by a consonant cluster, NOT word-finally
+                            // Examples: смерть /sʲmʲerʲtʲ/, терпеть /tʲirʲ ˈpʲetʲ/, кирпич /kʲirʲ ˈpʲitʃʲ/
+                            // Counter-example: мир /mʲir/ (word-final, no cluster)
                             const rIsPalatalized = palatalizationMap.get(wordCharIdx) ||
-                                nextChar === 'ь' || 
-                                isInterpalatal(char, nextChar);
-                            // Also check preceding vowel in stressed syllable
-                            // (This is a special rule from fn. 277)
+                                nextChar === 'ь';
+                            
+                            // Check for stressed front vowel + following cluster condition
                             const prevCharForR = chars[i - 1];
                             const frontVowels = ['и', 'е', 'э'];
+                            const hasFollowingCluster = nextChar && isConsonant(nextChar) && nextChar !== 'ь';
                             const afterStressedFrontVowel = position === 'stressed' && 
-                                frontVowels.includes(prevCharForR);
+                                frontVowels.includes(prevCharForR) &&
+                                hasFollowingCluster;  // MUST have following cluster
                             
                             if (rIsPalatalized || afterStressedFrontVowel) {
                                 ipa += 'rʲ';
@@ -2257,6 +2261,19 @@ Border: #c4b5a8, #d4c4b0
                                 (i === 0 && wordCharIdxE === 0); // word-initial е gets j, which counts as palatalizing
                             const rightIsPalatalizing = isPalatalizingAgent(nextCharInWord, nextNextCharInWord);
                             const inInterpalatal = leftIsPalatalizing && rightIsPalatalizing;
+                            
+                            // DEBUG: Log interpalatal detection for е
+                            if (wordContext.word.toLowerCase().includes('день')) {
+                                console.log('[DEBUG день е]', {
+                                    afterInterpalatal,
+                                    leftIsPalatalizing,
+                                    nextCharInWord,
+                                    nextNextCharInWord,
+                                    rightIsPalatalizing,
+                                    inInterpalatal,
+                                    position
+                                });
+                            }
                             
                             if (position === 'stressed') {
                                 // Grayson p. 85-86: ё is always stressed /o/

@@ -57,6 +57,21 @@ Word-final я has no following consonant, so neither rule applies.
 
 ---
 
+## 3. UI: Visual indication for unstressed clitics
+
+**Need:** Singers need to know that standalone clitics (во, ко, со, не, etc.) are inherently unstressed and prosodically subordinate to their following host word.
+
+**Proposed solution:** Grey out or visually dim the word card for standalone clitics. This subtly communicates "this word has a definite vowel, but minimize its importance in favour of the stress that follows."
+
+**Implementation ideas:**
+- Reduce opacity on clitic word cards (e.g., opacity: 0.7)
+- Use a muted background colour
+- Add a subtle visual connector to the following word?
+
+**Status:** Queued for UI polish phase.
+
+---
+
 ## Template for Future Entries
 
 ### [Number]. [Brief description]

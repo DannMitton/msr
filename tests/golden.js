@@ -69,7 +69,7 @@ const GOLDEN_TESTS = {
     
     'И Never Reduces': [
         { word: 'игра', stress: 1, expected: 'i ɡrɑ', note: 'Unstressed и stays i (p.96)' },
-        { word: 'книга', stress: 0, expected: 'knʲi ɡɑ', note: 'Unstressed и stays i, immediate posttonic а → ɑ (p.96, p.97)' },
+        { word: 'книга', stress: 0, expected: 'kɲi ɡɑ', note: 'кн→kɲ before и, unstressed и stays i, immediate posttonic а → ɑ (p.96, p.97, p.183)' },
     ],
     
     // ================================================================
@@ -130,7 +130,7 @@ const GOLDEN_TESTS = {
     // Words with irregular pronunciations
     // ================================================================
     'Exception Words': [
-        { word: 'счастье', stress: 0, expected: 'ʃʲːɑ sʲtʲjɪ', note: 'сч→ʃʲː (p.236), exception to interpalatal /a/ (p.287)' },
+        { word: 'счастье', stress: 0, expected: 'ʃʲʃʲɑ sʲtʲjɪ', note: 'сч→ʃʲʃʲ (p.236, Grayson default), exception to interpalatal /a/ (p.287)' },
         { word: 'сердце', stress: 0, expected: 'sʲɛr tsɨ', note: 'рдц→рц, д silent (p.243), unstressed е after ц → ɨ (p.127)' },
         { word: 'солнце', stress: 0, expected: 'son tsɨ', note: 'лнц→нц, л silent (p.243), unstressed е after ц → ɨ (p.127)' },
     ],
