@@ -3560,31 +3560,49 @@ Border: #c4b5a8, #d4c4b0
                 </div>
             `;
             
-            // Position panel to the right of the card, bottom-aligned, flush
+            // Position panel near the card
             if (card) {
                 const rect = card.getBoundingClientRect();
-                const panelWidth = 550; // max-width
-                const panelMaxHeight = window.innerHeight * 0.6; // 60vh
+                const panelWidth = Math.min(350, window.innerWidth - 40); // narrower, responsive
+                const gap = 8; // small gap between card and panel
                 
-                // Left edge of panel flush with right edge of card
-                let left = rect.right;
+                let left, top;
+                let preferRight = true;
                 
-                // If not enough room on right, position to the left of card
-                if (left + panelWidth > window.innerWidth - 20) {
-                    left = rect.left - panelWidth;
-                    panel.style.transformOrigin = 'right bottom';
-                } else {
-                    panel.style.transformOrigin = 'left bottom';
+                // Try right side first
+                if (rect.right + gap + panelWidth <= window.innerWidth - 20) {
+                    left = rect.right + gap;
+                    panel.style.transformOrigin = 'left top';
+                } 
+                // Try left side
+                else if (rect.left - gap - panelWidth >= 20) {
+                    left = rect.left - gap - panelWidth;
+                    panel.style.transformOrigin = 'right top';
+                    preferRight = false;
+                }
+                // Fall back to overlapping/centered on card
+                else {
+                    left = Math.max(20, Math.min(rect.left, window.innerWidth - panelWidth - 20));
+                    panel.style.transformOrigin = 'top center';
                 }
                 
-                // Clamp left to stay on screen
-                left = Math.max(0, left);
+                // Vertical: align top of panel with top of card
+                top = rect.top;
                 
-                // Bottom of panel aligns with bottom of card
-                const bottomFromViewport = window.innerHeight - rect.bottom;
+                // If panel would go off bottom, shift up
+                const panelMaxHeight = window.innerHeight * 0.5;
+                if (top + panelMaxHeight > window.innerHeight - 20) {
+                    top = window.innerHeight - panelMaxHeight - 20;
+                }
                 
+                // Clamp to stay on screen
+                top = Math.max(20, top);
+                
+                panel.style.position = 'fixed';
                 panel.style.left = `${left}px`;
-                panel.style.bottom = `${bottomFromViewport}px`;
+                panel.style.top = `${top}px`;
+                panel.style.bottom = 'auto';
+                panel.style.maxWidth = `${panelWidth}px`;
             } else {
                 // Fallback: center on screen
                 panel.style.left = '50%';

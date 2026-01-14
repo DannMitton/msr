@@ -754,6 +754,7 @@
             left: 0;
             min-width: 100%;
             width: max-content;
+            max-width: calc(100vw - 40px);
             min-height: 100%;
             transform: rotateY(180deg);
             background: linear-gradient(145deg, #f5f0eb 0%, #ebe4dd 100%);
@@ -764,6 +765,7 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            overflow-x: auto;
         }
         
         /* Hidden sizer - removed as it was causing layout issues */
