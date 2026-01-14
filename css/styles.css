@@ -297,9 +297,9 @@
             cursor: pointer;
             min-width: var(--card-min-width);
             min-height: var(--card-height);
-            /* No max-width, no fixed width — let content decide */
+            width: max-content;
             box-shadow: 0 2px 6px rgba(163, 61, 61, 0.1);
-            display: inline-flex;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -512,12 +512,14 @@
         /* Card flip container - sets up 3D perspective */
         .word-card-container {
             perspective: 1000px;
+            width: max-content;
         }
         
         /* Inner wrapper - this is what actually rotates */
         .word-card-inner {
             transition: transform 0.5s ease;
             transform-style: preserve-3d;
+            width: max-content;
         }
         
         /* When flipped, rotate 180° around Y axis */

@@ -5502,21 +5502,21 @@ Border: #c4b5a8, #d4c4b0
             };
             
             const page = PAGE_SIZES[pageSize];
-            const margin = 50; // Slightly tighter margins
+            const margin = 54; // 0.75 inch margins (restored)
             const contentWidth = page.width - (margin * 2);
             const contentHeight = page.height - (margin * 2);
             
             // ================================================================
             // ZONE HEIGHTS
             // ================================================================
-            const headerHeight = 85;   // Title, poet, composer (slightly tighter)
-            const footerHeight = 48;   // Compact: 3 lines (tighter)
+            const headerHeight = 90;   // Title, poet, composer (restored for page 1)
+            const footerHeight = 50;   // Slightly tighter
             const contentZoneHeight = contentHeight - headerHeight - footerHeight;
             
             // ================================================================
             // LAYOUT CALCULATIONS
             // ================================================================
-            const lineHeight = 48; // Tighter: IPA + Cyrillic + small breathing room
+            const lineHeight = 48; // Tighter: fits ~1 more line per page
             const wordSpacing = 28;
             
             // Measure and layout words
@@ -5594,10 +5594,21 @@ Border: #c4b5a8, #d4c4b0
             }
             
             // ================================================================
-            // PAGINATION
+            // PAGINATION - Calculate lines per page (differs for page 1 vs continuation)
             // ================================================================
-            const linesPerPage = Math.floor(contentZoneHeight / lineHeight);
-            const totalPages = Math.max(1, Math.ceil(allLines.length / linesPerPage));
+            const continuationHeaderHeight = 32; // Compact header for pages 2+
+            const page1ContentZone = contentHeight - headerHeight - footerHeight;
+            const page2ContentZone = contentHeight - continuationHeaderHeight - footerHeight;
+            
+            const linesPerPage1 = Math.floor(page1ContentZone / lineHeight);
+            const linesPerPageN = Math.floor(page2ContentZone / lineHeight);
+            
+            // Calculate total pages needed
+            let totalPages = 1;
+            let remainingLines = allLines.length - linesPerPage1;
+            if (remainingLines > 0) {
+                totalPages += Math.ceil(remainingLines / linesPerPageN);
+            }
             
             // Store for export
             currentDocumentMeta.totalPages = totalPages;
@@ -5619,11 +5630,16 @@ Border: #c4b5a8, #d4c4b0
             // ================================================================
             // DRAW ALL PAGES
             // ================================================================
+            let lineIndex = 0; // Track which line we're on globally
+            
             for (let pageNum = 0; pageNum < totalPages; pageNum++) {
                 const pageOffsetY = pageNum * (page.height + pageGap);
-                const startLine = pageNum * linesPerPage;
-                const endLine = Math.min(startLine + linesPerPage, allLines.length);
-                const pageLines = allLines.slice(startLine, endLine);
+                
+                // Different line counts for page 1 vs continuation pages
+                const linesThisPage = (pageNum === 0) ? linesPerPage1 : linesPerPageN;
+                const endLine = Math.min(lineIndex + linesThisPage, allLines.length);
+                const pageLines = allLines.slice(lineIndex, endLine);
+                lineIndex = endLine;
                 
                 // ================================================================
                 // DRAW PAGE BACKGROUND
