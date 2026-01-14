@@ -101,6 +101,17 @@
 **Priority**: Medium (cosmetic refresh)
 **Status**: Design approved, ready to implement
 
+### IMP-006: Stress reassignment modal redesign
+**Description**: The "Who assigned this stress?" modal is visually rough — needs KIMI polish.
+**Current state**: Basic modal with two blue buttons (My choice / Composer's score) and Cancel.
+**Issues**: 
+- Heavy, interrupting UX
+- Button styling feels dated
+- May not need to be a modal at all (could be inline or contextual)
+
+**Priority**: Medium (UX polish)
+**Status**: Awaiting KIMI consultation
+
 ### IMP-005: Why panel pop/transition design
 **Description**: Ask KIMI about modern popup/transition patterns for the "Why" explanation panel.
 **Current state**: Panel anchors to parent card edge, basic fade animation.

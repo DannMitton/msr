@@ -524,6 +524,9 @@
         
         /* Inner wrapper - this is what actually rotates */
         .word-card-inner {
+            position: relative;
+            width: max-content;          /* as wide as the wider face */
+            height: max-content;         /* as tall as the taller face */
             transition: transform 0.5s ease;
             transform-style: preserve-3d;
         }
@@ -533,15 +536,17 @@
             transform: rotateY(180deg);
         }
         
-        /* Both faces need backface hidden for clean flip */
+        /* Both faces fill the anchor container and share backface-visibility */
         .word-card-front,
         .word-card-back {
+            position: absolute;
+            inset: 0;                    /* top:0 right:0 bottom:0 left:0 */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
         
         .word-card-front {
-            position: relative;
+            /* Front is the "natural" position, back is rotated */
         }
         
         /* Note: .stress-indicator styles are defined earlier (lines ~491-680) */
@@ -749,12 +754,8 @@
         
         /* Back of card: syllable boundary editor */
         .word-card-back {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            /* inset: 0 inherited from shared rule above */
             transform: rotateY(180deg);
-            min-height: 100%;
             background: linear-gradient(145deg, #f5f0eb 0%, #ebe4dd 100%);
             border: 2px solid #c4a080;
             border-radius: 8px;
@@ -763,15 +764,31 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
             overflow-x: auto;
         }
         
-        /* Hidden sizer - removed as it was causing layout issues */
-        /* The sizer was intended to make container respect back content width,
-           but visibility:hidden still takes up layout space, causing inconsistent gaps.
-           Cards now size based on front content only. */
+        /* Sizer element: invisible but in-flow, contains content from both faces
+           This establishes the container size, then both faces overlay it */
         .word-card-sizer {
-            display: none;
+            visibility: hidden;
+            padding: 15px;
+            padding-top: 28px;
+            padding-bottom: 40px;
+            min-width: 120px;
+            min-height: 110px;
+        }
+        
+        .word-card-sizer .sizer-front,
+        .word-card-sizer .sizer-back {
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .word-card-sizer .sizer-back {
+            font-size: 2em;  /* Match syllable editor font size */
+            margin-top: 10px;
         }
         
         .card-back-header {
