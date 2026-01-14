@@ -1,0 +1,248 @@
+/**
+ * MSR Golden-Master Tests
+ * 
+ * These are known-good word → IPA pairs verified against Grayson's
+ * Russian Lyric Diction (2012). Run these before any refactoring
+ * to catch regressions.
+ * 
+ * Usage (browser console):
+ *   runGoldenTests()
+ * 
+ * Usage (Node.js - future):
+ *   node tests/golden.js
+ * 
+ * Test format:
+ *   { word, stress, expected, note }
+ *   - word: Cyrillic input
+ *   - stress: syllable index (0-based), or -1 for unstressed/clitic
+ *   - expected: IPA output (spaces between syllables, no slashes)
+ *   - note: Grayson page reference or rule description
+ */
+
+const GOLDEN_TESTS = {
+    
+    // ================================================================
+    // CLITICS AND PREPOSITIONS (inherently unstressed)
+    // Grayson p. 263: particles and prepositions don't carry stress
+    // ================================================================
+    'Clitics and Prepositions': [
+        { word: 'во', stress: -1, expected: 'vɑ', note: 'Voweled preposition, unstressed (p.263)' },
+        { word: 'ко', stress: -1, expected: 'kɑ', note: 'Voweled preposition, unstressed (p.263)' },
+        { word: 'со', stress: -1, expected: 'sɑ', note: 'Voweled preposition, unstressed (p.263)' },
+        { word: 'не', stress: -1, expected: 'ɲɪ', note: 'Particle, unstressed (p.263)' },
+        { word: 'ни', stress: -1, expected: 'ɲi', note: 'Particle, unstressed (p.263)' },
+        // Note: в, к, с, б merge with following word, not tested standalone
+    ],
+    
+    // ================================================================
+    // STRESSED VOWELS (Chapter 3, Section 1)
+    // Grayson p. 81-96
+    // ================================================================
+    'Stressed Vowels': [
+        { word: 'мама', stress: 0, expected: 'mɑ mʌ', note: 'Stressed а → ɑ (p.82)' },
+        { word: 'папа', stress: 0, expected: 'pɑ pʌ', note: 'Stressed а → ɑ (p.82)' },
+        { word: 'дом', stress: 0, expected: 'dom', note: 'Stressed о → o (p.86)' },
+        { word: 'ночь', stress: 0, expected: 'notʃ', note: 'Stressed о → o (p.86)' },
+        { word: 'сон', stress: 0, expected: 'son', note: 'Stressed о → o (p.86)' },
+        { word: 'лес', stress: 0, expected: 'lʲɛs', note: 'Stressed е → ɛ (p.89)' },
+        { word: 'мир', stress: 0, expected: 'mʲir', note: 'Stressed и → i (p.96)' },
+        { word: 'сын', stress: 0, expected: 'sɨn', note: 'Stressed ы → ɨ (p.94)' },
+        { word: 'дух', stress: 0, expected: 'dux', note: 'Stressed у → u (p.93)' },
+    ],
+    
+    // ================================================================
+    // UNSTRESSED VOWEL REDUCTION (Chapter 3, Section 7)
+    // Grayson p. 125-137
+    // ================================================================
+    'Vowel Reduction - Akanye': [
+        { word: 'вода', stress: 1, expected: 'vɑ dɑ', note: 'Immediate pretonic о → ɑ (p.127)' },
+        { word: 'молоко', stress: 2, expected: 'mʌ ɫɑ ko', note: 'Remote о → ʌ, immediate → ɑ (p.127)' },
+        { word: 'хорошо', stress: 2, expected: 'xʌ rɑ ʃo', note: 'Remote о → ʌ, immediate → ɑ (p.127)' },
+        { word: 'голова', stress: 2, expected: 'ɡʌ ɫɑ vɑ', note: 'Remote о → ʌ, immediate → ɑ (p.127)' },
+    ],
+    
+    'Vowel Reduction - Ikanye': [
+        { word: 'весна', stress: 1, expected: 'vʲɪ snɑ', note: 'Unstressed е → ɪ (p.130)' },
+        { word: 'земля', stress: 1, expected: 'zʲɪ mlʲɑ', note: 'Unstressed е → ɪ (p.130)' },
+    ],
+    
+    'И Never Reduces': [
+        { word: 'игра', stress: 1, expected: 'i ɡrɑ', note: 'Unstressed и stays i (p.96)' },
+        { word: 'книга', stress: 0, expected: 'knʲi ɡʌ', note: 'Unstressed и stays i (p.96)' },
+    ],
+    
+    // ================================================================
+    // PALATALIZATION (Chapter 5)
+    // Grayson p. 203-214
+    // ================================================================
+    'Palatal Nasal': [
+        { word: 'няня', stress: 0, expected: 'ɲɑ ɲʌ', note: 'н before я → ɲ (p.183)' },
+        { word: 'конь', stress: 0, expected: 'koɲ', note: 'нь → ɲ (p.183)' },
+        { word: 'день', stress: 0, expected: 'dʲeɲ', note: 'нь → ɲ (p.183)' },
+    ],
+    
+    'Hard vs Soft Л': [
+        { word: 'был', stress: 0, expected: 'bɨɫ', note: 'Hard л → ɫ (p.183)' },
+        { word: 'была', stress: 1, expected: 'bɨ ɫɑ', note: 'Hard л → ɫ (p.183)' },
+        { word: 'люди', stress: 0, expected: 'lʲu dʲi', note: 'Soft л → lʲ (p.183)' },
+        { word: 'любовь', stress: 1, expected: 'lʲu bofʲ', note: 'Soft л → lʲ (p.183)' },
+    ],
+    
+    // ================================================================
+    // VOICING ASSIMILATION (Chapter 6)
+    // Grayson p. 215-225
+    // ================================================================
+    'Voicing Assimilation - Devoicing': [
+        { word: 'трубка', stress: 0, expected: 'trup kɑ', note: 'б→п before к (p.215)' },
+        { word: 'обход', stress: 1, expected: 'ɑp xot', note: 'б→п before х (p.215)' },
+        { word: 'ногти', stress: 0, expected: 'nok tʲi', note: 'г→к before т (p.216)' },
+        { word: 'водка', stress: 0, expected: 'vot kɑ', note: 'д→т before к (p.217)' },
+        { word: 'подход', stress: 1, expected: 'pɑt xot', note: 'д→т before х (p.217)' },
+        { word: 'ложка', stress: 0, expected: 'ɫoʃ kɑ', note: 'ж→ш before к (p.218)' },
+        { word: 'лезть', stress: 0, expected: 'lʲɛsʲtʲ', note: 'з→с before т (p.219)' },
+    ],
+    
+    'Voicing Assimilation - Voicing': [
+        { word: 'вокзал', stress: 1, expected: 'vɑɡ zɑɫ', note: 'к→г before з (p.220)' },
+        { word: 'сбор', stress: 0, expected: 'zbor', note: 'с→з before б (p.220)' },
+        { word: 'просьба', stress: 0, expected: 'prozʲ bɑ', note: 'с→з before б (p.220)' },
+        { word: 'отбой', stress: 1, expected: 'ɑd boj', note: 'т→д before б (p.221)' },
+    ],
+    
+    // ================================================================
+    // SPECIAL CLUSTERS (Chapter 6)
+    // Grayson p. 235-244
+    // ================================================================
+    'Special Clusters': [
+        { word: 'что', stress: 0, expected: 'ʃto', note: 'чт→ʃt (p.240)' },
+        { word: 'конечно', stress: 1, expected: 'kɑ ɲɛ ʃnʌ', note: 'чн→ʃn (p.239)' },
+        { word: 'скучно', stress: 0, expected: 'sku ʃnʌ', note: 'чн→ʃn (p.239)' },
+    ],
+    
+    'Reflexive Verbs': [
+        { word: 'боится', stress: 1, expected: 'bɑ i tːsʌ', note: '-тся→tːsʌ (p.238)' },
+        { word: 'купаться', stress: 1, expected: 'ku pɑ tːsʌ', note: '-ться→tːsʌ (p.238)' },
+    ],
+    
+    // ================================================================
+    // EXCEPTION WORDS (Chapter 8)
+    // Words with irregular pronunciations
+    // ================================================================
+    'Exception Words': [
+        { word: 'счастье', stress: 0, expected: 'ʃʲːɑ sʲtʲjɪ', note: 'сч→ʃʲː (p.237)' },
+        { word: 'сердце', stress: 0, expected: 'sʲɛr tsɛ', note: 'рдц→рц, д silent (p.243)' },
+        { word: 'солнце', stress: 0, expected: 'son tsɛ', note: 'лнц→нц, л silent (p.243)' },
+    ],
+    
+    // ================================================================
+    // Ё WORDS (always stressed)
+    // Grayson p. 85-86
+    // ================================================================
+    'Ё Stress Rule': [
+        { word: 'ёлка', stress: 0, expected: 'jol kʌ', note: 'ё always stressed (p.85)' },
+        { word: 'моё', stress: 1, expected: 'mɑ jo', note: 'ё always stressed (p.85)' },
+        { word: 'её', stress: 1, expected: 'jɪ jo', note: 'ё always stressed (p.85)' },
+    ],
+    
+    // ================================================================
+    // REAL REPERTOIRE TESTS
+    // Words from actual vocal literature
+    // ================================================================
+    'Pushkin/Tchaikovsky Vocabulary': [
+        { word: 'храм', stress: 0, expected: 'xrɑm', note: 'Monosyllable, stressed' },
+        { word: 'брожу', stress: 1, expected: 'brɑ ʒu', note: 'Common verb' },
+        { word: 'улиц', stress: 0, expected: 'u lʲits', note: 'Genitive plural' },
+        { word: 'шумных', stress: 0, expected: 'ʃum nɨx', note: 'Adjective genitive plural' },
+    ],
+    
+};
+
+/**
+ * Normalize IPA for comparison
+ * Strips spaces, stress marks, and brackets for fuzzy matching
+ */
+function normalizeForComparison(ipa) {
+    return ipa
+        .replace(/\s+/g, '')      // Remove spaces
+        .replace(/ˈ/g, '')        // Remove primary stress
+        .replace(/ˌ/g, '')        // Remove secondary stress
+        .replace(/[\/\[\]]/g, '') // Remove slashes/brackets
+        .replace(/\./g, '');      // Remove syllable dots
+}
+
+/**
+ * Run all golden-master tests
+ * Returns { passed, failed, failures[] }
+ */
+function runGoldenTests() {
+    let totalPassed = 0;
+    let totalFailed = 0;
+    const failures = [];
+    
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('MSR Golden-Master Tests');
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    for (const [category, tests] of Object.entries(GOLDEN_TESTS)) {
+        console.log(`\n▶ ${category}`);
+        
+        for (const test of tests) {
+            // processWord is defined in index.html
+            const result = processWord(test.word, test.stress);
+            const actual = result.syllables.map(s => s.ipa).join(' ');
+            
+            const normalizedActual = normalizeForComparison(actual);
+            const normalizedExpected = normalizeForComparison(test.expected);
+            const passed = normalizedActual === normalizedExpected;
+            
+            if (passed) {
+                totalPassed++;
+                console.log(`  ✅ ${test.word}: /${actual}/`);
+            } else {
+                totalFailed++;
+                failures.push({ ...test, actual });
+                console.log(`  ❌ ${test.word}: got /${actual}/, expected /${test.expected}/`);
+                console.log(`     ${test.note}`);
+            }
+        }
+    }
+    
+    console.log('\n═══════════════════════════════════════════════════════════');
+    const total = totalPassed + totalFailed;
+    const passRate = ((totalPassed / total) * 100).toFixed(1);
+    
+    if (totalFailed === 0) {
+        console.log(`🎉 ALL TESTS PASSED: ${totalPassed}/${total} (${passRate}%)`);
+    } else {
+        console.log(`⚠️  ${totalPassed}/${total} passed (${passRate}%)`);
+        console.log(`\nFailed tests:`);
+        failures.forEach(f => {
+            console.log(`  - ${f.word}: expected /${f.expected}/, got /${f.actual}/`);
+        });
+    }
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    return { passed: totalPassed, failed: totalFailed, total, failures };
+}
+
+/**
+ * Run a single test (for debugging)
+ */
+function testWord(word, stress = -1) {
+    const result = processWord(word, stress);
+    const ipa = result.syllables.map(s => s.ipa).join(' ');
+    console.log(`${word} (stress: ${stress}) → /${ipa}/`);
+    return result;
+}
+
+// Expose for browser console
+if (typeof window !== 'undefined') {
+    window.runGoldenTests = runGoldenTests;
+    window.testWord = testWord;
+    window.GOLDEN_TESTS = GOLDEN_TESTS;
+}
+
+// Export for Node.js (future)
+if (typeof module !== 'undefined') {
+    module.exports = { GOLDEN_TESTS, runGoldenTests, testWord, normalizeForComparison };
+}

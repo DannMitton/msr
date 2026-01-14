@@ -2491,8 +2491,9 @@ Border: #c4b5a8, #d4c4b0
             const showStressMarker = !isMonosyllable;
             
             // For monosyllables, vowel quality is always stressed (index 0)
+            // UNLESS stressIndex is explicitly -1 (clitic/unstressed word)
             // For polysyllables, use provided stress or -1 if unknown
-            const effectiveStressIndex = isMonosyllable ? 0 : stressIndex;
+            const effectiveStressIndex = isMonosyllable && stressIndex !== -1 ? 0 : stressIndex;
             
             // Compute voicing assimilation for the entire word (Grayson Ch. 6)
             const voicingMap = analyzeVoicingAssimilation(normalized);
@@ -4299,7 +4300,9 @@ Border: #c4b5a8, #d4c4b0
             if (syllables.length <= 1) {
                 // Single syllable — show IPA only (no boundaries to edit)
                 const ipa = syllables[0]?.ipa || '';
-                return `<div class="syllable-editor" style="font-size: 2em;">${ipa}</div>`;
+                // Add stress mark if this syllable is stressed
+                const stressMarker = syllables[0]?.isStressed ? 'ˈ' : '';
+                return `<div class="syllable-editor" style="font-size: 2em;">${stressMarker}${ipa}</div>`;
             }
             
             const state = getWordIPAWithBoundaries(wordIdx);
@@ -6841,5 +6844,8 @@ Border: #c4b5a8, #d4c4b0
             processText();
         });
     </script>
+    
+    <!-- Golden-master tests (run in console: runGoldenTests()) -->
+    <script src="tests/golden.js"></script>
 </body>
 </html>
