@@ -2521,56 +2521,70 @@ footer a:hover {
 
 
 /* ============================================================================
+/* ============================================================================
    NEW WORD CARD FACE STRUCTURE (2026-01-15)
    IPA on top, Cyrillic in middle, divider, translation below
    ============================================================================ */
 
-/* IPA moved to top of card - discreet styling */
+/* Card face uses flex column with space-between for vertical distribution */
+.word-card-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+/* IPA at top - discreet styling, pushed toward top */
 .word-card-front .ipa-top {
     font-size: 0.9rem;
     font-family: 'Noto Serif', serif;
     color: var(--msr-paper-600, #9a8b7c);
-    margin-bottom: 4px;
     order: 1;
+    margin-top: 0;
 }
 
-/* Cyrillic stays dominant - ensure it's in the middle */
+/* Cyrillic in middle - dominant, vertically centered */
 .word-card-front .cyrillic {
     order: 2;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Visual divider between cyrillic and translation */
+/* Divider and translation grouped at bottom */
 .word-card-front .card-divider {
     width: 60%;
     height: 1px;
     background: var(--msr-paper-400, #d8cdc6);
-    margin: 8px auto;
+    margin: 0 auto 4px auto;
     order: 3;
 }
 
-/* Translation at bottom - italic, same discreet styling as IPA */
 .word-card-front .translation {
     font-size: 0.9rem;
     font-family: 'Noto Serif', serif;
     font-style: italic;
     color: var(--msr-paper-600, #9a8b7c);
-    margin-top: 4px;
     order: 4;
-    min-height: 1.2em; /* Reserve space even when empty */
-}
-
-/* Make card-front a flex column for proper ordering */
-.word-card-front {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    margin-bottom: 0;
+    min-height: 1.2em;
 }
 
 /* Ensure buttons stay positioned correctly */
 .word-card-front .why-icon,
 .word-card-front .flip-button {
     position: absolute;
+}
+
+/* Align card back cyrillic with card front cyrillic */
+.word-card-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Update sizer to match new structure */
