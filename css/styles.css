@@ -1145,6 +1145,12 @@
             display: inline-block;
             width: 0.6em;
         }
+        
+        /* Spacer for proclitics absorbed into first syllable (к, в, с, etc.) */
+        .proclitic-spacer {
+            display: inline-block;
+            width: 0.6em;
+        }
 
         .syllable:hover {
             background-color: #fef6e6;

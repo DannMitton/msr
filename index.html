@@ -4064,6 +4064,7 @@ Border: #c4b5a8, #d4c4b0
                                             ${(() => {
                                                 // Calculate proclitic syllable count for spacing
                                                 let procliticSyllableCount = 0;
+                                                let procliticText = '';
                                                 let encliticText = '';
                                                 let mainText = '';
                                                 
@@ -4075,7 +4076,8 @@ Border: #c4b5a8, #d4c4b0
                                                     if (procliticPart) {
                                                         // Count vowels in proclitic to estimate syllables
                                                         const vowels = procliticPart.text.toLowerCase().match(/[аеёиоуыэюя]/g);
-                                                        procliticSyllableCount = vowels ? vowels.length : 1;
+                                                        procliticSyllableCount = vowels ? vowels.length : 0; // 0 for vowelless proclitics
+                                                        procliticText = procliticPart.text.toLowerCase();
                                                     }
                                                     if (encliticPart) {
                                                         encliticText = encliticPart.text.toLowerCase();
@@ -4134,6 +4136,19 @@ Border: #c4b5a8, #d4c4b0
                                                 
                                                 // Add stress mark to stressed syllable
                                                 let displayText = syl.isStressed ? addStressToSyllable(syl.cyrillic) : syl.cyrillic;
+                                                
+                                                // If proclitic is absorbed into first syllable, split it off with spacing
+                                                const isFirstSyl = sylIdx === 0;
+                                                const sylLowerForProclitic = syl.cyrillic.toLowerCase();
+                                                const hasAbsorbedProclitic = isFirstSyl && procliticText && 
+                                                    sylLowerForProclitic.startsWith(procliticText) && sylLowerForProclitic !== procliticText;
+                                                
+                                                if (hasAbsorbedProclitic) {
+                                                    const procliticDisplay = syl.cyrillic.slice(0, procliticText.length);
+                                                    const mainPartDisplay = syl.cyrillic.slice(procliticText.length);
+                                                    const stressedMain = syl.isStressed ? addStressToSyllable(mainPartDisplay) : mainPartDisplay;
+                                                    displayText = `${procliticDisplay}<span class="proclitic-spacer"></span>${stressedMain}`;
+                                                }
                                                 
                                                 // If enclitic is absorbed, split it off with spacing
                                                 if (hasAbsorbedEnclitic) {
