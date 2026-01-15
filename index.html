@@ -2798,7 +2798,145 @@ Border: #c4b5a8, #d4c4b0
                 };
             });
 
+            // Apply cross-boundary voicing assimilation (Grayson 6.3, pp. 250-257)
+            applyCrossBoundaryVoicing();
+
             renderOutput();
+        }
+        
+        // ============================================================================
+        // CROSS-BOUNDARY VOICING ASSIMILATION (Grayson 6.3, pp. 250-257)
+        // ============================================================================
+        // Rule: Final consonants assimilate voicing to following word's initial consonant
+        // Exception: Punctuation blocks assimilation (Grayson p. 250, Rule #1)
+        // Exception: Sonorants and vowels don't trigger voicing changes
+        
+        function applyCrossBoundaryVoicing() {
+            if (processedWords.length < 2) return;
+            
+            // Voicing pairs: voiceless → voiced
+            const voicingMap = {
+                'p': 'b', 'pʲ': 'bʲ',
+                't': 'd', 'tʲ': 'dʲ',
+                'k': 'ɡ', 'kʲ': 'ɡʲ',
+                's': 'z', 'sʲ': 'zʲ',
+                'f': 'v', 'fʲ': 'vʲ',
+                'ʃ': 'ʒ',
+                'x': 'ɣ',           // Special: x → ɣ (p.257)
+                'ts': 'dz',         // Special: ц → dz (p.256)
+                'tʃʲ': 'dʒʲ',       // Special: ч → dʒʲ (p.256)
+            };
+            
+            // Devoicing pairs: voiced → voiceless
+            const devoicingMap = {
+                'b': 'p', 'bʲ': 'pʲ',
+                'd': 't', 'dʲ': 'tʲ',
+                'ɡ': 'k', 'ɡʲ': 'kʲ',
+                'z': 's', 'zʲ': 'sʲ',
+                'v': 'f', 'vʲ': 'fʲ',
+                'ʒ': 'ʃ',
+            };
+            
+            const voicedObstruents = new Set(['b', 'bʲ', 'd', 'dʲ', 'ɡ', 'ɡʲ', 'z', 'zʲ', 'v', 'vʲ', 'ʒ', 'dz', 'dʒʲ', 'ɣ']);
+            const voicelessObstruents = new Set(['p', 'pʲ', 't', 'tʲ', 'k', 'kʲ', 's', 'sʲ', 'f', 'fʲ', 'ʃ', 'x', 'ts', 'tʃʲ']);
+            const sonorants = new Set(['m', 'mʲ', 'n', 'nʲ', 'ɲ', 'l', 'lʲ', 'ɫ', 'r', 'rʲ', 'j']);
+            const vowels = new Set(['ɑ', 'a', 'o', 'ɔ', 'u', 'ʊ', 'i', 'ɪ', 'ɨ', 'e', 'ɛ', 'ʌ']);
+            
+            for (let i = 0; i < processedWords.length - 1; i++) {
+                const currentWord = processedWords[i];
+                const nextWord = processedWords[i + 1];
+                
+                // Rule #1: Punctuation blocks assimilation
+                if (currentWord.trailingPunctuation && /[.!?;:,]/.test(currentWord.trailingPunctuation)) {
+                    continue;
+                }
+                
+                // Get the last syllable's IPA of current word
+                const currentSyllables = currentWord.processed.syllables;
+                if (!currentSyllables || currentSyllables.length === 0) continue;
+                const lastSyllable = currentSyllables[currentSyllables.length - 1];
+                let lastIPA = lastSyllable.ipa;
+                
+                // Get the first syllable's IPA of next word
+                const nextSyllables = nextWord.processed.syllables;
+                if (!nextSyllables || nextSyllables.length === 0) continue;
+                const firstSyllable = nextSyllables[0];
+                const firstIPA = firstSyllable.ipa;
+                
+                // Extract final consonant(s) from last syllable
+                let finalC = extractFinalConsonant(lastIPA);
+                if (!finalC) continue;
+                
+                // Extract initial consonant(s) from first syllable
+                let initialC = extractInitialConsonant(firstIPA);
+                
+                // No assimilation before sonorants or vowels
+                if (!initialC || sonorants.has(initialC) || vowels.has(firstIPA[0])) {
+                    continue;
+                }
+                
+                // Determine voicing direction
+                if (voicedObstruents.has(initialC)) {
+                    // Voice the final consonant
+                    const voiced = voicingMap[finalC];
+                    if (voiced && voiced !== finalC) {
+                        lastSyllable.ipa = replaceLastConsonant(lastIPA, finalC, voiced);
+                        lastSyllable.crossBoundaryVoicing = { from: finalC, to: voiced, trigger: initialC };
+                    }
+                } else if (voicelessObstruents.has(initialC)) {
+                    // Devoice the final consonant
+                    const voiceless = devoicingMap[finalC];
+                    if (voiceless && voiceless !== finalC) {
+                        lastSyllable.ipa = replaceLastConsonant(lastIPA, finalC, voiceless);
+                        lastSyllable.crossBoundaryVoicing = { from: finalC, to: voiceless, trigger: initialC };
+                    }
+                }
+            }
+        }
+        
+        // Helper: Extract final consonant(s) from IPA string
+        function extractFinalConsonant(ipa) {
+            // Check for affricates and complex consonants first (longest match)
+            if (ipa.endsWith('tʃʲ')) return 'tʃʲ';
+            if (ipa.endsWith('dʒʲ')) return 'dʒʲ';
+            if (ipa.endsWith('ts')) return 'ts';
+            if (ipa.endsWith('dz')) return 'dz';
+            
+            // Check for palatalized consonants
+            const palatalized = ipa.match(/([pbtdkɡszfvʃʒxmnlr])ʲ$/);
+            if (palatalized) return palatalized[0];
+            
+            // Check for single consonants
+            const single = ipa.match(/([pbtdkɡszfvʃʒxɣmnɲlɫrj])$/);
+            if (single) return single[1];
+            
+            return null;
+        }
+        
+        // Helper: Extract initial consonant(s) from IPA string
+        function extractInitialConsonant(ipa) {
+            // Check for affricates first
+            if (ipa.startsWith('tʃʲ')) return 'tʃʲ';
+            if (ipa.startsWith('dʒʲ')) return 'dʒʲ';
+            if (ipa.startsWith('ts')) return 'ts';
+            if (ipa.startsWith('dz')) return 'dz';
+            
+            // Check for palatalized consonants
+            const palatalized = ipa.match(/^([pbtdkɡszfvʃʒxmnlr])ʲ/);
+            if (palatalized) return palatalized[0];
+            
+            // Check for single consonants
+            const single = ipa.match(/^([pbtdkɡszfvʃʒxɣmnɲlɫrj])/);
+            if (single) return single[1];
+            
+            return null;
+        }
+        
+        // Helper: Replace final consonant in IPA string
+        function replaceLastConsonant(ipa, oldC, newC) {
+            // Escape special regex characters
+            const escaped = oldC.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return ipa.replace(new RegExp(escaped + '$'), newC);
         }
 
         // ============================================================================
