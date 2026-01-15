@@ -1,7 +1,6 @@
 # MSR Session Handoff
 
-**Last Updated:** 2026-01-15
-**Current Version:** 4.34 (cross-boundary voicing + proclitic fixes)
+**Last Updated:** 2026-01-15 (Phase-2 modules uploaded)**Current Version:** 4.34 (cross-boundary voicing + proclitic fixes)
 **Stable Baseline:** v4.24-STABLE-BASELINE.zip (rollback point)
 
 ---
@@ -109,7 +108,14 @@ Phased implementation plan ready. Each phase is standalone and shippable:
 
 4. **Tests:** 56/56 → 66/66 (added cross-boundary tests)
 
-5. **Branding discussion:** KLUCH (КЛЮЧ) name proposed by KIMI
+5. 6. **Phase-2 JS Modularization complete** — uploaded to GitHub
+   7.    - `src/core/`: transcribe.js, engine.js, phonology.js, dictionary.js, styles.js
+         -    - `src/ui/`: render.js
+              -    - `src/tests/`: ch6.js
+                   -    - `src/index.js`: Main entry point with module exports
+                        -    - Live site verified working after upload
+
+6. **Branding discussion:** KLUCH (КЛЮЧ) name proposed by KIMI
    - Means "key" in Russian
    - Tagline: "The key to sung Russian phonetics — offline, print-ready, authoritative"
    - Logo concepts explored (K + keyhole + ʲ) — not finalized
