@@ -80,6 +80,7 @@ const GOLDEN_TESTS = {
         { word: 'няня', stress: 0, expected: 'ɲa ɲɑ', note: 'н before я → ɲ, stressed interpalatal → /a/, word-final posttonic я → /ɑ/ (p.183, p.104, MSR extension of p.97)' },
         { word: 'конь', stress: 0, expected: 'koɲ', note: 'нь → ɲ (p.183)' },
         { word: 'день', stress: 0, expected: 'dʲeɲ', note: 'Interpalatal е → /e/, нь → ɲ (p.106, p.183)' },
+        { word: 'очень', stress: 0, expected: 'otʃʲeɲ', note: 'Interpalatal е (between ч and нь) → /e/, нь → ɲ (p.106, p.183)' },
     ],
     
     'Hard vs Soft Л': [

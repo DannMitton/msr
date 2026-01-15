@@ -1,7 +1,8 @@
 # MSR Session Handoff
 
 **Last Updated:** 2026-01-14
-**Current Version:** 4.18 (in progress)
+**Current Version:** 4.25 (audit script added)
+**Stable Baseline:** v4.24-STABLE-BASELINE.zip (rollback point)
 
 ---
 
@@ -24,33 +25,50 @@
 
 5. **Be generous to Future Claude.** Document decisions, edge cases, and procedural commitments in this file.
 
+6. **When debugging transcription issues,** first check if the word is in the exception dictionary — it may be bypassing normal logic entirely.
+
 ---
 
 ## CURRENT STATE
 
 ### Test Suite Status
-- **Golden tests:** 40/55 passing (72.7%) as of last run
+- **Golden tests:** 55/55 passing (100%) ✓
 - **Test file:** `/msr/tests/golden.js`
 - Run with: `runGoldenTests()` in browser console
 
-### Bugs Identified (from test review session)
+### Exception Audit Ready
+- **Audit script:** `/msr/tests/audit-exceptions.js`
+- Run with: `auditExceptions()` in browser console
+- Will identify redundant vs valid exceptions
+- **Action:** Run audit, remove redundant entries, keep true exceptions
 
-**Fixed:**
-1. ✅ во, ко, со — clitic о → /ɑ/ (added isClitic passthrough)
+### Clitic Styling Complete
+- Optical-grey tint on standalone clitics (во, ко, со, не, ни)
+- Reduced shadow
+- No size reduction (rejected — caused "broken picket fence" visual)
 
-**Still to fix:**
-2. ⏳ мир — р palatalization needs following cluster, not just preceding front vowel (p. 209 fn. 277)
-3. ⏳ няня — (a) first vowel interpalatal → /a/, (b) word-final posttonic я → /ɑ/
-4. ⏳ день — interpalatal е → /e/, not /ɛ/ (p. 106)
-5. ⏳ сердце, солнце — unstressed е after ц → /ɨ/, not /ɪ/ (p. 127)
+---
 
-### Test Expectations Corrected
-These were wrong due to speech-based assumptions:
-- мама, папа: posttonic а → /ɑ/ (not /ʌ/)
-- ночь: ч → /tʃʲ/ (always palatalized)
-- книга: posttonic а → /ɑ/, use /ɡ/ not /g/
-- её: first е is interpalatal (j on both sides) → /i/
-- сердце, солнце: unstressed е after ц → /ɨ/
+## PDF-FIRST UI ROADMAP (from KIMI)
+
+Phased implementation plan ready. Each phase is standalone and shippable:
+
+| Phase | Size | What |
+|-------|------|------|
+| 0 | S | Stub inlineCard.js container |
+| 1 | S | CSS underline affordance |
+| 2 | M | Wire underline → Inline-Card |
+| 3 | S | Settings toggle + analytics beacon |
+| 4 | M | Quick-mark lasso mode |
+| 5 | S | Keyboard shortcuts |
+| 6 | M | Undo ring-buffer |
+| 7 | S | Print-lock |
+| 8 | L | Measure & decide on workspace |
+
+**Next steps:** 
+1. Run exception audit
+2. Clean up redundant exceptions
+3. Begin Phase 0
 
 ---
 
@@ -71,48 +89,18 @@ These were wrong due to speech-based assumptions:
 
 ---
 
-## DESIGN DECISIONS & MSR EXTENSIONS
+## SESSION 2026-01-14 ACCOMPLISHMENTS
 
-These fill gaps where Grayson doesn't specify:
-
-1. **Word-final posttonic я** → /ɑ/ (parallels posttonic а pattern)
-   - See: TODO-grayson-questions.md #1
-
-2. **Standalone clitic о** → /ɑ/ (singable, functions as pretonic to host)
-   - во, ко, со get full dark-a, not reduced wedge
-
-3. **Notation preferences:**
-   - Gemination: /ʃʲː/ preferred over /ʃʲʃʲ/ (visual economy)
-   - Toggle available in UI
-
----
-
-## FILES & STRUCTURE
-
-```
-/msr/
-├── index.html          # Main app (6800+ lines)
-├── css/styles.css      # Extracted styles
-├── data/
-│   ├── vuizur.json         # 47k word stress dictionary
-│   ├── exception-words.js  # Pronunciation exceptions
-│   ├── yo-exceptions.js    # е→ё corrections
-│   └── stress-corrections.js
-├── tests/
-│   └── golden.js       # Golden-master test suite
-├── TODO-grayson-questions.md  # Unresolved edge cases
-├── SESSION_HANDOFF.md  # This file
-└── LICENSE             # AGPL-3.0
-```
-
----
-
-## NEXT STEPS
-
-1. Fix remaining 4 bugs (мир, няня, день, сердце/солнце)
-2. Run tests, verify pass rate improves
-3. UI polish: grey out clitic cards
-4. Continue Grayson verification for remaining chapters
+1. **Tests:** 40/55 → 55/55 (100%)
+2. **Bugs fixed:**
+   - Clitic о → /ɑ/ (not /ʌ/)
+   - р palatalization requires following cluster
+   - день exception had wrong IPA (was /ɛ/, fixed to /e/)
+   - няня added as exception
+   - Test expectations corrected for interpalatal, posttonic vowels
+3. **UI:** Clitic optical-grey styling
+4. **Planning:** Full PDF-first roadmap from KIMI
+5. **Infrastructure:** Audit script for exception dictionary
 
 ---
 
