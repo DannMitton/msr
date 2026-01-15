@@ -1,0 +1,70 @@
+/* ============================================================================
+   NEW WORD CARD FACE STRUCTURE (2026-01-15)
+   IPA on top, Cyrillic in middle, divider, translation below
+   ============================================================================ */
+
+/* IPA moved to top of card - discreet styling */
+.word-card-front .ipa-top {
+    font-size: 0.9rem;
+    font-family: 'Noto Serif', serif;
+    color: var(--msr-paper-600, #9a8b7c);
+    margin-bottom: 4px;
+    order: 1;
+}
+
+/* Cyrillic stays dominant - ensure it's in the middle */
+.word-card-front .cyrillic {
+    order: 2;
+}
+
+/* Visual divider between cyrillic and translation */
+.word-card-front .card-divider {
+    width: 60%;
+    height: 1px;
+    background: var(--msr-paper-400, #d8cdc6);
+    margin: 8px auto;
+    order: 3;
+}
+
+/* Translation at bottom - italic, same discreet styling as IPA */
+.word-card-front .translation {
+    font-size: 0.9rem;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    color: var(--msr-paper-600, #9a8b7c);
+    margin-top: 4px;
+    order: 4;
+    min-height: 1.2em; /* Reserve space even when empty */
+}
+
+/* Make card-front a flex column for proper ordering */
+.word-card-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure buttons stay positioned correctly */
+.word-card-front .why-icon,
+.word-card-front .flip-button {
+    position: absolute;
+}
+
+/* Update sizer to match new structure */
+.word-card-sizer .sizer-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.word-card-sizer .ipa-top {
+    font-size: 0.9rem;
+    color: var(--msr-paper-600, #9a8b7c);
+}
+
+.word-card-sizer .translation {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--msr-paper-600, #9a8b7c);
+}

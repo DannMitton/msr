@@ -786,11 +786,35 @@ Border: #c4b5a8, #d4c4b0
             }
             
             // Then check main dictionary
+            // Supports both formats: number (old) or { stress, gloss } (new OpenRussian)
             if (typeof STRESS_DICTIONARY !== 'undefined' && STRESS_DICTIONARY.hasOwnProperty(normalized)) {
-                return STRESS_DICTIONARY[normalized];
+                const entry = STRESS_DICTIONARY[normalized];
+                if (typeof entry === 'number') {
+                    return entry;
+                } else if (entry && typeof entry.stress === 'number') {
+                    return entry.stress;
+                }
             }
             
             return -1;
+        }
+        
+        /**
+         * Look up English gloss/translation for a word
+         * @param {string} word - Russian word
+         * @returns {string|null} English gloss or null if not found
+         */
+        function lookupGloss(word) {
+            const normalized = word.toLowerCase().replace(/[.,!?;:"""''„‚«»\-—–]/g, '');
+            
+            if (typeof STRESS_DICTIONARY !== 'undefined' && STRESS_DICTIONARY.hasOwnProperty(normalized)) {
+                const entry = STRESS_DICTIONARY[normalized];
+                if (entry && typeof entry.gloss === 'string') {
+                    return entry.gloss;
+                }
+            }
+            
+            return null;
         }
         
         /**
@@ -4050,6 +4074,11 @@ Border: #c4b5a8, #d4c4b0
                             console.error(`Validation failed for: ${wordData.originalWord}`);
                         }
                         
+                        // Look up English gloss for the word
+                        const mainPart = wordData.mergedParts?.find(p => p.type === 'main');
+                        const wordForGloss = mainPart ? mainPart.text : wordData.originalWord;
+                        const gloss = lookupGloss(wordForGloss);
+                        
                         // PROVENANCE VIA CIRCLE COLOUR ONLY (no icons)
                         // - Green = verified (dictionary, Wiktionary, ё-rule)
                         // - Blue = user-assigned
@@ -4062,6 +4091,7 @@ Border: #c4b5a8, #d4c4b0
                                 <div class="word-card-inner">
                                     <div class="word-card-front word-card">
                                                                                 <button class="why-icon" onclick="showExplanationPanel(${wordIdx})" aria-label="IPA notes" title="Why this transcription?">?</button>
+                                        <div class="ipa-top">/${fullIPA}/</div>
                                         <div class="cyrillic">
                                             ${(() => {
                                                 // Calculate proclitic syllable count for spacing
@@ -4217,7 +4247,8 @@ Border: #c4b5a8, #d4c4b0
                                                 return '';
                                             })()}
                                         </div>
-                                        <div class="ipa">/${fullIPA}/</div>
+                                        <div class="card-divider"></div>
+                                        <div class="translation">${gloss || ''}</div>
                                                                                 <button class="flip-button" onclick="flipCard(${wordIdx})" aria-label="Edit syllables"><svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M4 12a8 8 0 0 1 8-8c2.8 0 5.2 1.4 6.7 3.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M20 12a8 8 0 0 1-8 8c-2.8 0-5.2-1.4-6.7-3.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M20 4v4h-4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20v-4h4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                                     </div>
                                     <div class="word-card-back">
@@ -4229,8 +4260,9 @@ Border: #c4b5a8, #d4c4b0
                                     </div>
                                     <div class="word-card-sizer">
                                                                                 <div class="sizer-front">
+                                                                                    <div class="ipa-top">/${fullIPA}/</div>
                                                                                     <div class="cyrillic">${processed.syllables.map(s => s.cyrillic).join('')}</div>
-                                                                                    <div class="ipa">/${fullIPA}/</div>
+                                                                                    <div class="translation">${gloss || ''}</div>
                                                                                 </div>
                                                                                 <div class="sizer-back">${getIPAForSizer(wordIdx)}</div>
                                                                             </div>
@@ -4970,7 +5002,7 @@ Border: #c4b5a8, #d4c4b0
             });
             
             // Update the front card IPA display
-            const cardFront = document.querySelector(`#card-${wordIdx} .word-card-front .ipa`);
+            const cardFront = document.querySelector(`#card-${wordIdx} .word-card-front .ipa-top`);
             if (cardFront) {
                 // Build full IPA with boundaries and stress mark
                 const parts = [];
