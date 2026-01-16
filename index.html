@@ -7062,9 +7062,9 @@ function renderInterlinear(){
   if (!stage) return;
   stage.innerHTML = '';
   
-  if (!window.processedWords || !window.processedWords.length) return;
+  if (!processedWords || !processedWords.length) return;
 
-  window.processedWords.forEach((w, idx) => {
+  processedWords.forEach((w, idx) => {
     stage.appendChild( makeBrick(w, idx) );
 
     if (w.lineBreakAfter) {
