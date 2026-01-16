@@ -2528,6 +2528,7 @@ footer a:hover {
 
 /* Card face uses flex column with space-between for vertical distribution */
 .word-card-front {
+   max-width: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
