@@ -7107,7 +7107,7 @@ function addAcuteAndCircle(obj){
     let sText = syl.cyrillic;
     if (syl.isStressed){
       sText = sText.replace(/([аеёиоуыэюя])/i, '$1\u0301');
-      html += `<span style="position:relative;">${sText}<svg class="strCircle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></span>`;
+      html += `<span style="position:relative;">${sText}<svg class="strCircle" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/></svg></span>`;
     } else {
       html += sText;
     }
