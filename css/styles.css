@@ -511,7 +511,13 @@ textarea:focus + .animated-placeholder {
 /* Card flip container - sets up 3D perspective */
 .word-card-container {
     perspective: 1000px;
+    max-width: 280px;
 }
+```
+
+**Step 5:** Commit with message:
+```
+Fix card max-width (target container, not face)
 
 /* Clitic card styling */
 .clitic-card .word-card-front {
