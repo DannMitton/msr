@@ -274,11 +274,9 @@ Border: #c4b5a8, #d4c4b0
                 <button class="view-tab" id="singersTab" onclick="switchView('singers')">Singer's View</button>
             </div>
             
-<div id="workspaceView" style="display: none;">
+            <div id="workspaceView">
                 <div id="output"></div>
             </div>
-          <!-- PHASE 1: Interlinear View -->
-        <section id="interlinear"></section>
             
             <div id="singersView" class="singers-view" style="display: none;">
                 <!-- Metadata Input Panel -->
@@ -4280,11 +4278,8 @@ Border: #c4b5a8, #d4c4b0
             // Equalize card heights per row after render
             requestAnimationFrame(() => {
                 equalizeCardHeights();
-});
-        
-        // PHASE 1: Render interlinear view
-        renderInterlinear();
-    }        
+            });
+        }
         
         /**
          * Equalize card heights within each visual row
@@ -7055,69 +7050,6 @@ Border: #c4b5a8, #d4c4b0
             
             processText();
         });
-    /* ==============  PHASE 1: INTERLINEAR VIEW  ============== */
-
-function renderInterlinear(){
-  const stage = document.getElementById('interlinear');
-  if (!stage) return;
-  stage.innerHTML = '';
-  
-  if (!processedWords || !processedWords.length) return;
-
-  processedWords.forEach((w, idx) => {
-    stage.appendChild( makeBrick(w, idx) );
-
-    if (w.lineBreakAfter) {
-      stage.appendChild( document.createElement('br') );
-    }
-  });
-
-  const pdfBtn = document.getElementById('getPDF');
-  if (pdfBtn) pdfBtn.hidden = false;
-}
-
-function makeBrick(wordObj, idx){
-  const w = document.createElement('span');
-  w.className = 'w';
-  w.dataset.idx = idx;
-  w.dataset.prov = wordObj.stressSource || 'unverified';
-
-  const c = document.createElement('span');
-  c.className = 'c';
-  c.innerHTML = addAcuteAndCircle(wordObj);
-
-  const i = document.createElement('span');
-  i.className = 'i';
-  i.textContent = wordObj.processed.syllables
-    .map(s => (s.isStressed ? 'ˈ' : '') + s.ipa)
-    .join('');
-
-  const g = document.createElement('span');
-  g.className = 'g';
-  g.textContent = lookupGloss(wordObj.originalWord) || '\u00A0';
-
-  w.append(c, i, g);
-  w.addEventListener('click', () => openWordCard(idx));
-  return w;
-}
-
-function addAcuteAndCircle(obj){
-  let html = '';
-  obj.processed.syllables.forEach(syl => {
-    let sText = syl.cyrillic;
-    if (syl.isStressed){
-      sText = sText.replace(/([аеёиоуыэюя])/i, '$1\u0301');
-      html += `<span style="position:relative;">${sText}<svg class="strCircle" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/></svg></span>`;
-    } else {
-      html += sText;
-    }
-  });
-  return html;
-}
-
-function openWordCard(idx){
-  console.log('Card popup for word index:', idx, processedWords[idx]);
-}  
     </script>
     
     <!-- Golden-master tests (run in console: runGoldenTests()) -->
