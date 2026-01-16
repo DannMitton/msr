@@ -2570,12 +2570,30 @@ margin-top: 0;
 .word-card-front .translation {
     font-size: 0.9rem;
     font-family: 'Noto Serif', serif;
-    font-style: italic; 
+    font-style: italic;
+   position: relative;
    line-height: 1.4;
     color: var(--msr-paper-600, #9a8b7c);
     order: 4;
     margin-bottom: 0;
     min-height: 1.2em;
+}
+
+/* Truncated translation (60-120 chars) - fade overlay */
+.word-card-front .translation.truncated {
+    max-height: 2.8em;
+    overflow: hidden;
+}
+
+.word-card-front .translation.truncated::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.2em;
+    background: linear-gradient(to bottom, transparent, var(--msr-paper-200, #f5f0eb));
+    pointer-events: none;
 }
 
 /* Ensure buttons stay positioned correctly */
