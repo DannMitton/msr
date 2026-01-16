@@ -2754,13 +2754,13 @@ margin-top: 0;
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 1.15em;
-    height: 1.15em;
+    width: 1.4em;
+    height: 1.4em;
     transform: translate(-50%, -50%);
     pointer-events: none;
     fill: none;
     stroke: #28a745;
-    stroke-width: 1.6;
+    stroke-width: 2;
 }
 
 .lb {
