@@ -5970,7 +5970,7 @@ Border: #c4b5a8, #d4c4b0
             // ================================================================
             // LAYOUT CALCULATIONS
             // ================================================================
-            const lineHeight = 48; // Tighter: fits ~1 more line per page
+            const lineHeight = 58; // Tighter: fits ~1 more line per page
             const wordSpacing = 28;
             
             // Measure and layout words
@@ -6019,7 +6019,8 @@ Border: #c4b5a8, #d4c4b0
                 
                 return { 
                     ipa: ipaText, 
-                    cyrillic, 
+                    cyrillic,
+                    gloss: lookupGloss(originalWord),
                     width,
                     lineBreakAfter: wd.lineBreakAfter  // Preserve poetry line breaks
                 };
@@ -6232,6 +6233,10 @@ Border: #c4b5a8, #d4c4b0
                         ctx.fillStyle = '#1a1a1a';
                         ctx.font = '600 13px "Noto Serif", serif';
                         ctx.fillText(word.cyrillic, x, y + 16);
+                      // Gloss (smallest, italic, grey)
+                        ctx.fillStyle = '#666666';
+                        ctx.font = 'italic 9px "Noto Serif", serif';
+                        ctx.fillText(word.gloss || '', x, y + 28);
                         
                         x += word.width + wordSpacing;
                     });
