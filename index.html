@@ -3027,6 +3027,20 @@ Border: #c4b5a8, #d4c4b0
         }
         
         // Toggle stress on a syllable (called after single-click confirmed)
+
+      // Open word card from Singer's View click
+function openWordCard(wordIndex) {
+  // Switch to Workspace view
+  switchView('workspace');
+  
+  // Scroll to and highlight the word card
+  const wordCards = document.querySelectorAll('.word-card-container');
+  if (wordCards[wordIndex]) {
+    wordCards[wordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    wordCards[wordIndex].classList.add('highlighted');
+    setTimeout(() => wordCards[wordIndex].classList.remove('highlighted'), 2000);
+  }
+}
         function toggleStress(wordIndex, syllableIndex) {
             const wordData = processedWords[wordIndex];
             const currentStress = wordData.processed.stressIndex;
