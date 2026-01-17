@@ -2710,5 +2710,11 @@ margin-top: 0;
 .word-card-sizer .translation {
     font-size: 0.9rem;
     font-style: italic;
+
+   /* Highlighted word card when clicked from Singer's View */
+   .word-card-container.highlighted {
+        box-shadow: 0 0 10px 3px #667eea;
+        transition: box-shadow 0.3s ease;
+   }
     color: var(--msr-paper-600, #9a8b7c);
 }
