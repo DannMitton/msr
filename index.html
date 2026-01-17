@@ -6351,20 +6351,31 @@ function openWordCard(wordIndex) {
             );
             
             lastRenderTime = Date.now();
-              // Add click handler for word regions
-            canvas.onclick = function(e) {
-              const rect = canvas.getBoundingClientRect();
-              const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
-              const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
-              
-              for (const region of wordClickRegions) {
-                if (clickX >= region.x && clickX <= region.x + region.width &&
-                    clickY >= region.y && clickY <= region.y + region.height) {
-                  openWordCard(region.wordIndex);
-                  return;
-                }
-              }
-            };
+// Add click handler for word regions (using mouseup to work with pan/zoom)
+      let clickStartX = 0;
+      let clickStartY = 0;
+      canvas.addEventListener('mousedown', function(e) {
+        clickStartX = e.clientX;
+        clickStartY = e.clientY;
+      });
+      canvas.addEventListener('mouseup', function(e) {
+        // Only trigger if mouse didn't move much (not a drag)
+        const dx = Math.abs(e.clientX - clickStartX);
+        const dy = Math.abs(e.clientY - clickStartY);
+        if (dx < 5 && dy < 5) {
+          const rect = canvas.getBoundingClientRect();
+          const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+          const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+          
+          for (const region of wordClickRegions) {
+            if (clickX >= region.x && clickX <= region.x + region.width &&
+                clickY >= region.y && clickY <= region.y + region.height) {
+              openWordCard(region.wordIndex);
+              return;
+            }
+          }
+        }
+      });
             updateDocumentStatus('stable');
         }
         
