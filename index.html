@@ -6364,9 +6364,10 @@ function openWordCard(wordIndex) {
         const dy = Math.abs(e.clientY - clickStartY);
         if (dx < 5 && dy < 5) {
           const rect = canvas.getBoundingClientRect();
-          const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
-          const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
-          
+const viewport = document.getElementById('canvasViewport');
+          const scrollX = viewport ? viewport.scrollLeft : 0;
+          const scrollY = viewport ? viewport.scrollTop : 0;
+const clickY = (e.clientY - rect.top) * (canvas.height / rect.height) + scrollY;          
           for (const region of wordClickRegions) {
             if (clickX >= region.x && clickX <= region.x + region.width &&
                 clickY >= region.y && clickY <= region.y + region.height) {
