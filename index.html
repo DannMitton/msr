@@ -943,6 +943,7 @@ Border: #c4b5a8, #d4c4b0
         
         // Global state - array of processed word objects
         let processedWords = [];
+let wordClickRegions = []; // Store word positions for click handling      
 
         // Character normalization map (Latin/Greek to Cyrillic)
         // Also includes pre-revolutionary orthography (Grayson Ch. 9, p. 291)
@@ -5987,7 +5988,6 @@ function openWordCard(wordIndex) {
             const lineHeight = 58; // Tighter: fits ~1 more line per page
             const wordSpacing = 28;
 
-            let wordClickRegions = []; // Store word positions for click handling
             
             // Measure and layout words
             ctx.font = '12px "Noto Serif", serif';
