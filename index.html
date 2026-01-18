@@ -4,10 +4,14 @@
 ================================================================================
 MY SUNG RUSSIAN (MSR) - IPA Transcription Tool for Singers
 ================================================================================
-Version: 4.17
+Version: 4.18
 Last Updated: 2026-01-18
 Developer: Dann Mitton
 Assistant: Claude (Anthropic)
+
+CHANGES IN 4.18:
+- Fixed click region Y offset: now covers full stack (IPA + Cyrillic + Gloss)
+- Changed y offset from +6 to -4 so hotspot starts above IPA line
 
 CHANGES IN 4.17:
 - Fixed wordClickRegions: now clears on each render (no duplicates)
@@ -6261,10 +6265,10 @@ function openWordCard(wordIndex) {
                         ctx.fillStyle = '#666666';
                         ctx.font = 'italic 9px "Noto Serif", serif';
                         ctx.fillText(word.gloss || '', x, y + 28);
-                      // Store click region for this word
+                      // Store click region for this word (covers IPA + Cyrillic + Gloss stack)
                         wordClickRegions.push({
                           x: x,
-                          y: y + 6,
+                          y: y - 4,
                           width: word.width,
                           height: lineHeight,
                           wordIndex: word.originalIndex
