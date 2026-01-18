@@ -231,6 +231,12 @@ Border: #c4b5a8, #d4c4b0
     
     <link rel="stylesheet" href="css/styles.css">
     <style>
+        /* Animation timing custom properties */
+        :root {
+            --modal-duration: 200ms;
+            --modal-easing: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
         /* Word Card Modal for Singer's View */
         .word-card-modal {
             position: fixed;
@@ -249,37 +255,58 @@ Border: #c4b5a8, #d4c4b0
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         .word-card-modal-content {
             position: relative;
             z-index: 1;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow: auto;
+            /* No frame - card floats directly */
+            background: transparent;
+            padding: 0;
+            /* Breathing in animation */
+            opacity: 0;
+            transform: scale(0.92) translateY(8px);
+            transition: opacity var(--modal-duration) var(--modal-easing),
+                        transform var(--modal-duration) var(--modal-easing);
+            will-change: transform, opacity;
+        }
+        .word-card-modal.visible .word-card-modal-content {
+            opacity: 1;
+            transform: scale(1) translateY(0);
         }
         .word-card-modal-content .word-card-container {
             margin: 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
         }
+        /* Floating X - appears on hover, positioned outside card */
         .word-card-modal-close {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
+            top: -12px;
+            right: -12px;
+            width: 28px;
+            height: 28px;
+            background: rgba(60, 60, 60, 0.85);
             border: none;
-            font-size: 24px;
+            border-radius: 50%;
+            font-size: 18px;
+            line-height: 1;
             cursor: pointer;
-            color: #666;
-            padding: 5px 10px;
-            border-radius: 4px;
+            color: white;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 150ms ease, background 150ms ease;
+            z-index: 10;
+        }
+        .word-card-modal-content:hover .word-card-modal-close {
+            opacity: 1;
         }
         .word-card-modal-close:hover {
-            background: #f0f0f0;
-            color: #333;
+            background: rgba(80, 80, 80, 0.95);
         }
         /* Translation/gloss line in word cards */
         .word-card-modal-content .translation {
@@ -296,6 +323,46 @@ Border: #c4b5a8, #d4c4b0
         }
         .word-card-modal-content .translation:empty {
             display: none;
+        }
+        /* Why panel accordion (attached to card bottom in modal) */
+        .word-card-modal-content .why-accordion {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            background: #fafafa;
+            border-top: 2px solid #6b46c1;
+            border-radius: 0 0 8px 8px;
+            margin-top: -8px;
+            transition: max-height 200ms var(--modal-easing),
+                        opacity 150ms ease;
+        }
+        .word-card-modal-content .why-accordion.expanded {
+            max-height: 400px;
+            opacity: 1;
+        }
+        .word-card-modal-content .why-accordion-inner {
+            padding: 12px 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #444;
+        }
+        .word-card-modal-content .why-accordion .why-item {
+            margin: 0 0 8px 0;
+        }
+        .word-card-modal-content .why-accordion .why-item:last-child {
+            margin-bottom: 0;
+        }
+        .word-card-modal-content .why-accordion .cite {
+            color: #888;
+            font-size: 11px;
+        }
+        .word-card-modal-content .why-accordion .explanation-panel-citation {
+            font-size: 11px;
+            color: #888;
+            font-style: italic;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #e0e0e0;
         }
         /* Clickable word overlays in Singer's View */
         .word-overlay {
@@ -493,11 +560,11 @@ Border: #c4b5a8, #d4c4b0
 
         <footer id="mainFooter" class="collapsed" onclick="toggleFooter()">
             <div class="footer-collapsed-label">
-                My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.20</span> — tap for credits & license <span class="footer-arrow">▲</span>
+                My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.21</span> — tap for credits & license <span class="footer-arrow">▲</span>
             </div>
             <div class="footer-main">
             <p>
-                <strong>My Sung Russian (MSR)</strong> <span id="versionNumberExpanded" onclick="event.stopPropagation()">v4.20</span>
+                <strong>My Sung Russian (MSR)</strong> <span id="versionNumberExpanded" onclick="event.stopPropagation()">v4.21</span>
             </p>
             <p style="margin-top: 8px; font-size: 0.85em; line-height: 1.6;">
                 MSR's transcription rules are drawn from Craig Grayson's doctoral dissertation <a href="https://digital.lib.washington.edu/server/api/core/bitstreams/96b596ce-3a65-41c8-a45f-77b2e94ae48a/content" target="_blank" onclick="event.stopPropagation()"><em>Russian Lyric Diction: A Practical Guide with Introduction and Annotations and a Bibliography with Annotations on Selected Sources</em></a> (University of Washington, 2012). Developed and maintained by Dann Mitton (2026). Stress dictionary via <a href="https://github.com/openrussian/add-stress-to-epub" target="_blank" onclick="event.stopPropagation()">openrussian</a> (AGPL-3.0).
@@ -3188,8 +3255,11 @@ function showWordCardModal(wordIndex) {
     }
   });
   
-  // Show modal
+  // Show modal with breathing in animation
   modal.style.display = 'flex';
+  // Trigger reflow, then add visible class for animation
+  modal.offsetHeight;
+  modal.classList.add('visible');
   
   // Close on Escape key
   document.addEventListener('keydown', handleModalEscape);
@@ -3245,7 +3315,15 @@ function flipModalCard(wordIndex) {
 
 function closeWordCardModal() {
   const modal = document.getElementById('wordCardModal');
-  modal.style.display = 'none';
+  // Animate out
+  modal.classList.remove('visible');
+  // Wait for animation to complete before hiding
+  setTimeout(() => {
+    modal.style.display = 'none';
+    // Clean up will-change after animation
+    const content = document.getElementById('wordCardModalContent');
+    if (content) content.style.willChange = 'auto';
+  }, 200);
   document.removeEventListener('keydown', handleModalEscape);
   
   // Refresh Singer's View to reflect any changes
@@ -3971,6 +4049,16 @@ function handleModalEscape(e) {
          * Show explanation panel for a word's transcription
          */
         function showExplanationPanel(wordIndex) {
+            // Check if we're in the modal context
+            const modalContent = document.getElementById('wordCardModalContent');
+            const isInModal = modalContent && modalContent.querySelector('.word-card-container');
+            
+            if (isInModal) {
+                // Use accordion pattern for modal
+                showExplanationAccordion(wordIndex, modalContent);
+                return;
+            }
+            
             // Remove any existing panel
             closeExplanationPanel();
             
@@ -4090,6 +4178,56 @@ function handleModalEscape(e) {
             
             // Close on escape key
             document.addEventListener('keydown', handleExplanationEscape);
+        }
+        
+        /**
+         * Show Why panel as accordion attached to card bottom (modal context)
+         */
+        function showExplanationAccordion(wordIndex, modalContent) {
+            // Remove existing accordion if any
+            const existingAccordion = modalContent.querySelector('.why-accordion');
+            if (existingAccordion) {
+                existingAccordion.classList.remove('expanded');
+                setTimeout(() => existingAccordion.remove(), 200);
+                return; // Toggle off
+            }
+            
+            const wordData = processedWords[wordIndex];
+            if (!wordData) return;
+            
+            const { processed } = wordData;
+            
+            // Generate explanations
+            const explanations = generateCuratedExplanations(wordData);
+            
+            let explanationHTML;
+            if (explanations.length > 0) {
+                explanationHTML = explanations.map(exp => `<p class="why-item">${exp.html}</p>`).join('');
+            } else {
+                explanationHTML = '<p class="why-item">This word follows standard transcription rules.</p>';
+            }
+            
+            // Create accordion element
+            const accordion = document.createElement('div');
+            accordion.className = 'why-accordion';
+            accordion.innerHTML = `
+                <div class="why-accordion-inner">
+                    ${explanationHTML}
+                    <div class="explanation-panel-citation">
+                        Source: Grayson, <em>Russian Lyric Diction</em> (2012)
+                    </div>
+                </div>
+            `;
+            
+            // Append after the card
+            const cardContainer = modalContent.querySelector('.word-card-container');
+            if (cardContainer) {
+                cardContainer.after(accordion);
+                // Trigger expansion animation
+                requestAnimationFrame(() => {
+                    accordion.classList.add('expanded');
+                });
+            }
         }
         
         /**
@@ -6776,9 +6914,9 @@ function handleModalEscape(e) {
                 const label = footer.querySelector('.footer-collapsed-label');
                 if (label) {
                     if (footer.classList.contains('collapsed')) {
-                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.20</span> — tap for credits & license <span class="footer-arrow">▲</span>';
+                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.21</span> — tap for credits & license <span class="footer-arrow">▲</span>';
                     } else {
-                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.20</span> — tap to collapse <span class="footer-arrow">▼</span>';
+                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.21</span> — tap to collapse <span class="footer-arrow">▼</span>';
                     }
                     // Re-attach triple-click handler after innerHTML change
                     attachVersionClickHandlers();
@@ -6789,7 +6927,7 @@ function handleModalEscape(e) {
         // ============================================================================
         // DEVELOPER TOOLS - Hidden Harvest Export
         // ============================================================================
-        // Triple-click the version number (v4.20) in the footer to:
+        // Triple-click the version number (v4.21) in the footer to:
         //   - First time: Unlock "developer mode" (stored in localStorage)
         //   - After unlock: Shows harvest indicator (🌾 + count) next to version
         //   - Click the indicator: Downloads harvest immediately
