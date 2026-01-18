@@ -4,10 +4,17 @@
 ================================================================================
 MY SUNG RUSSIAN (MSR) - IPA Transcription Tool for Singers
 ================================================================================
-Version: 4.18
+Version: 4.19
 Last Updated: 2026-01-18
 Developer: Dann Mitton
 Assistant: Claude (Anthropic)
+
+CHANGES IN 4.19:
+- Click-to-edit in Singer's View: click any word to open its card as a centered modal
+- DOM overlay approach replaces canvas hit-testing (simpler, more reliable)
+- Word card modal: fully functional, must dismiss to continue
+- Subtle hover effect on clickable words
+- Escape key closes modal
 
 CHANGES IN 4.18:
 - Fixed click region Y offset: now covers full stack (IPA + Cyrillic + Gloss)
@@ -223,6 +230,67 @@ Border: #c4b5a8, #d4c4b0
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Word Card Modal for Singer's View */
+        .word-card-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .word-card-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .word-card-modal-content {
+            position: relative;
+            z-index: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+        }
+        .word-card-modal-content .word-card-container {
+            margin: 0;
+        }
+        .word-card-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .word-card-modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        /* Clickable word overlays in Singer's View */
+        .word-overlay {
+            position: absolute;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .word-overlay:hover {
+            background: rgba(100, 80, 200, 0.08);
+        }
+    </style>
     
     <!-- External data files -->
     <script src="data/yo-exceptions.js"></script>
@@ -347,6 +415,7 @@ Border: #c4b5a8, #d4c4b0
                 <!-- Zoomable Canvas Viewport -->
                 <div class="canvas-viewport" id="canvasViewport">
                     <canvas id="singersCanvas"></canvas>
+                    <div id="wordOverlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
                 </div>
                 <!-- Zoom controls -->
                 <div class="viewport-controls">
@@ -3040,15 +3109,136 @@ let wordClickRegions = []; // Store word positions for click handling
 
       // Open word card from Singer's View click
 function openWordCard(wordIndex) {
-  // Switch to Workspace view
-  switchView('workspace');
+  // Show word card in centered modal
+  showWordCardModal(wordIndex);
+}
+
+function showWordCardModal(wordIndex) {
+  const modal = document.getElementById('wordCardModal');
+  const content = document.getElementById('wordCardModalContent');
   
-  // Scroll to and highlight the word card
-  const wordCards = document.querySelectorAll('.word-card-container');
-  if (wordCards[wordIndex]) {
-    wordCards[wordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    wordCards[wordIndex].classList.add('highlighted');
-    setTimeout(() => wordCards[wordIndex].classList.remove('highlighted'), 2000);
+  // Get the existing word card from Workspace (it's already rendered)
+  const existingCard = document.querySelector(`#card-${wordIndex}`);
+  if (!existingCard) {
+    console.error('Word card not found for index:', wordIndex);
+    return;
+  }
+  
+  // Clone the card and insert into modal
+  const cardClone = existingCard.cloneNode(true);
+  cardClone.id = 'modal-card-' + wordIndex;
+  cardClone.setAttribute('data-word-index', wordIndex);
+  
+  // Add close button
+  content.innerHTML = '<button class="word-card-modal-close" onclick="closeWordCardModal()">&times;</button>';
+  content.appendChild(cardClone);
+  
+  // Rewire onclick handlers in the cloned card to use the original wordIndex
+  // Syllable clicks for stress
+  cardClone.querySelectorAll('.syllable.clickable').forEach((syl, sylIdx) => {
+    syl.onclick = function() { 
+      toggleStress(wordIndex, sylIdx); 
+      // Update the modal card display after stress change
+      setTimeout(() => updateModalCard(wordIndex), 50);
+    };
+  });
+  
+  // Why button
+  const whyBtn = cardClone.querySelector('.why-icon');
+  if (whyBtn) {
+    whyBtn.onclick = function() { showExplanationPanel(wordIndex); };
+  }
+  
+  // Flip button
+  const flipBtn = cardClone.querySelector('.flip-button');
+  if (flipBtn) {
+    flipBtn.onclick = function() { flipModalCard(wordIndex); };
+  }
+  
+  // Back close button
+  const backCloseBtn = cardClone.querySelector('.card-back-close');
+  if (backCloseBtn) {
+    backCloseBtn.onclick = function() { flipModalCard(wordIndex); };
+  }
+  
+  // Lock buttons in syllable editor
+  cardClone.querySelectorAll('.lock-btn').forEach((lockBtn) => {
+    const sylIdx = parseInt(lockBtn.getAttribute('data-syllable-index') || lockBtn.closest('[data-syllable-index]')?.getAttribute('data-syllable-index'));
+    if (!isNaN(sylIdx)) {
+      lockBtn.onclick = function() { 
+        toggleLock(wordIndex, sylIdx);
+        setTimeout(() => updateModalCard(wordIndex), 50);
+      };
+    }
+  });
+  
+  // Show modal
+  modal.style.display = 'flex';
+  
+  // Close on Escape key
+  document.addEventListener('keydown', handleModalEscape);
+}
+
+function updateModalCard(wordIndex) {
+  // Re-render workspace to update the source card
+  renderOutput();
+  // Then update the modal with the fresh card
+  setTimeout(() => {
+    const content = document.getElementById('wordCardModalContent');
+    const existingCard = document.querySelector(`#card-${wordIndex}`);
+    if (existingCard && content) {
+      const cardClone = existingCard.cloneNode(true);
+      cardClone.id = 'modal-card-' + wordIndex;
+      
+      // Keep the close button, replace the card
+      const closeBtn = content.querySelector('.word-card-modal-close');
+      content.innerHTML = '';
+      if (closeBtn) content.appendChild(closeBtn);
+      else content.innerHTML = '<button class="word-card-modal-close" onclick="closeWordCardModal()">&times;</button>';
+      content.appendChild(cardClone);
+      
+      // Rewire handlers again
+      cardClone.querySelectorAll('.syllable.clickable').forEach((syl, sylIdx) => {
+        syl.onclick = function() { 
+          toggleStress(wordIndex, sylIdx); 
+          setTimeout(() => updateModalCard(wordIndex), 50);
+        };
+      });
+      
+      const whyBtn = cardClone.querySelector('.why-icon');
+      if (whyBtn) whyBtn.onclick = function() { showExplanationPanel(wordIndex); };
+      
+      const flipBtn = cardClone.querySelector('.flip-button');
+      if (flipBtn) flipBtn.onclick = function() { flipModalCard(wordIndex); };
+      
+      const backCloseBtn = cardClone.querySelector('.card-back-close');
+      if (backCloseBtn) backCloseBtn.onclick = function() { flipModalCard(wordIndex); };
+    }
+  }, 50);
+  
+  // Also update Singer's View canvas
+  renderSingersView();
+}
+
+function flipModalCard(wordIndex) {
+  const modalCard = document.querySelector('#wordCardModalContent .word-card-container');
+  if (modalCard) {
+    modalCard.classList.toggle('flipped');
+  }
+}
+
+function closeWordCardModal() {
+  const modal = document.getElementById('wordCardModal');
+  modal.style.display = 'none';
+  document.removeEventListener('keydown', handleModalEscape);
+  
+  // Refresh Singer's View to reflect any changes
+  renderSingersView();
+}
+
+function handleModalEscape(e) {
+  if (e.key === 'Escape') {
+    closeWordCardModal();
   }
 }
         function toggleStress(wordIndex, syllableIndex) {
@@ -6363,34 +6553,45 @@ function openWordCard(wordIndex) {
             );
             
             lastRenderTime = Date.now();
-// Add click handler for word regions (using mouseup to work with pan/zoom)
-      let clickStartX = 0;
-      let clickStartY = 0;
-      canvas.addEventListener('mousedown', function(e) {
-        clickStartX = e.clientX;
-        clickStartY = e.clientY;
-      });
-      canvas.addEventListener('mouseup', function(e) {
-        // Only trigger if mouse didn't move much (not a drag)
-        const dx = Math.abs(e.clientX - clickStartX);
-        const dy = Math.abs(e.clientY - clickStartY);
-        if (dx < 5 && dy < 5) {
-          const rect = canvas.getBoundingClientRect();
-const viewport = document.getElementById('canvasViewport');
-          const scrollX = viewport ? viewport.scrollLeft : 0;
-          const scrollY = viewport ? viewport.scrollTop : 0;
-          const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
-          const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);          
-          for (const region of wordClickRegions) {
-            if (clickX >= region.x && clickX <= region.x + region.width &&
-                clickY >= region.y && clickY <= region.y + region.height) {
-              openWordCard(region.wordIndex);
-              return;
-            }
-          }
-        }
-      });
+            
+            // ================================================================
+            // CREATE DOM OVERLAYS FOR CLICKABLE WORDS
+            // ================================================================
+            createWordOverlays();
+            
             updateDocumentStatus('stable');
+        }
+        
+        function createWordOverlays() {
+            const overlayContainer = document.getElementById('wordOverlays');
+            if (!overlayContainer) return;
+            
+            // Clear existing overlays
+            overlayContainer.innerHTML = '';
+            
+            const canvas = document.getElementById('singersCanvas');
+            if (!canvas) return;
+            
+            // Calculate scale: canvas internal coords to display coords
+            const dpr = window.devicePixelRatio || 1;
+            const scale = canvas.clientWidth / (canvas.width / dpr);
+            
+            // Canvas offset within viewport
+            const canvasOffsetLeft = canvas.offsetLeft;
+            const canvasOffsetTop = canvas.offsetTop;
+            
+            // Create an overlay for each word
+            wordClickRegions.forEach(function(region) {
+                const overlay = document.createElement('div');
+                overlay.className = 'word-overlay';
+                overlay.style.left = (canvasOffsetLeft + region.x * scale) + 'px';
+                overlay.style.top = (canvasOffsetTop + region.y * scale) + 'px';
+                overlay.style.width = (region.width * scale) + 'px';
+                overlay.style.height = (region.height * scale) + 'px';
+                overlay.setAttribute('data-word-index', region.wordIndex);
+                overlay.onclick = function() { openWordCard(region.wordIndex); };
+                overlayContainer.appendChild(overlay);
+            });
         }
         
         // Simple hash function for document fingerprinting
@@ -7128,5 +7329,13 @@ const viewport = document.getElementById('canvasViewport');
     
     <!-- Remove redundant exceptions (run: removeRedundantExceptions(auditExceptions())) -->
     <script src="tests/remove-redundant.js"></script>
+    
+    <!-- Word Card Modal for Singer's View -->
+    <div id="wordCardModal" class="word-card-modal" style="display: none;">
+        <div class="word-card-modal-backdrop" onclick="closeWordCardModal()"></div>
+        <div class="word-card-modal-content" id="wordCardModalContent">
+            <!-- Word card will be inserted here -->
+        </div>
+    </div>
 </body>
 </html>
