@@ -284,34 +284,6 @@ Border: #c4b5a8, #d4c4b0
             margin: 0;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
         }
-        /* Floating X - appears on hover, positioned outside card */
-        .word-card-modal-close {
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            width: 28px;
-            height: 28px;
-            background: rgba(60, 60, 60, 0.85);
-            border: none;
-            border-radius: 50%;
-            font-size: 18px;
-            line-height: 1;
-            cursor: pointer;
-            color: white;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 150ms ease, background 150ms ease;
-            z-index: 10;
-        }
-        .word-card-modal-content:hover .word-card-modal-close {
-            opacity: 1;
-        }
-        .word-card-modal-close:hover {
-            background: rgba(80, 80, 80, 0.95);
-        }
         /* Translation/gloss line in word cards */
         .word-card-modal-content .translation {
             font-family: 'Noto Sans', sans-serif;
@@ -564,11 +536,11 @@ Border: #c4b5a8, #d4c4b0
 
         <footer id="mainFooter" class="collapsed" onclick="toggleFooter()">
             <div class="footer-collapsed-label">
-                My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.22</span> — tap for credits & license <span class="footer-arrow">▲</span>
+                My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.24</span> — tap for credits & license <span class="footer-arrow">▲</span>
             </div>
             <div class="footer-main">
             <p>
-                <strong>My Sung Russian (MSR)</strong> <span id="versionNumberExpanded" onclick="event.stopPropagation()">v4.22</span>
+                <strong>My Sung Russian (MSR)</strong> <span id="versionNumberExpanded" onclick="event.stopPropagation()">v4.24</span>
             </p>
             <p style="margin-top: 8px; font-size: 0.85em; line-height: 1.6;">
                 MSR's transcription rules are drawn from Craig Grayson's doctoral dissertation <a href="https://digital.lib.washington.edu/server/api/core/bitstreams/96b596ce-3a65-41c8-a45f-77b2e94ae48a/content" target="_blank" onclick="event.stopPropagation()"><em>Russian Lyric Diction: A Practical Guide with Introduction and Annotations and a Bibliography with Annotations on Selected Sources</em></a> (University of Washington, 2012). Developed and maintained by Dann Mitton (2026). Stress dictionary via <a href="https://github.com/openrussian/add-stress-to-epub" target="_blank" onclick="event.stopPropagation()">openrussian</a> (AGPL-3.0).
@@ -3220,8 +3192,8 @@ function showWordCardModal(wordIndex) {
   cardClone.id = 'modal-card-' + wordIndex;
   cardClone.setAttribute('data-word-index', wordIndex);
   
-  // Add close button and card
-  content.innerHTML = '<button class="word-card-modal-close" onclick="closeWordCardModal()">&times;</button>';
+  // Add card (no close button - backdrop click dismisses)
+  content.innerHTML = '';
   content.appendChild(cardClone);
   
   // Rewire onclick handlers in the cloned card to use the original wordIndex
@@ -3284,11 +3256,8 @@ function updateModalCard(wordIndex) {
       const cardClone = existingCard.cloneNode(true);
       cardClone.id = 'modal-card-' + wordIndex;
       
-      // Keep the close button, replace the card
-      const closeBtn = content.querySelector('.word-card-modal-close');
+      // Replace the card content (no close button needed)
       content.innerHTML = '';
-      if (closeBtn) content.appendChild(closeBtn);
-      else content.innerHTML = '<button class="word-card-modal-close" onclick="closeWordCardModal()">&times;</button>';
       content.appendChild(cardClone);
       
       // Rewire handlers again
@@ -4985,9 +4954,12 @@ function handleModalEscape(e) {
             dragGhost.style.left = event.clientX + 'px';
             dragGhost.style.top = event.clientY + 'px';
             
-            // Find the boundary element based on direction
+            // Find the boundary element - check modal first, then workspace
             const boundaryDataIdx = dir === 'left' ? unitIdx : unitIdx + 1;
-            const boundaryEl = document.querySelector(`#card-${wordIdx} .boundary-pipe[data-boundary="${boundaryDataIdx}"]`);
+            let boundaryEl = document.querySelector(`#modal-card-${wordIdx} .boundary-pipe[data-boundary="${boundaryDataIdx}"]`);
+            if (!boundaryEl) {
+                boundaryEl = document.querySelector(`#card-${wordIdx} .boundary-pipe[data-boundary="${boundaryDataIdx}"]`);
+            }
             
             const boundaryX = boundaryEl ? boundaryEl.getBoundingClientRect().left + boundaryEl.offsetWidth / 2 : null;
             
@@ -5001,11 +4973,15 @@ function handleModalEscape(e) {
                 isGeminate,
                 baseConsonant: baseConsonant.replace('ː', ''),
                 startX: event.clientX,
-                boundaryX: boundaryX || event.clientX
+                boundaryX: boundaryX || event.clientX,
+                isModal: !!document.querySelector(`#modal-card-${wordIdx}`)
             };
             
-            // Mark original element
-            const originalEl = document.getElementById(`unit-${wordIdx}-${unitIdx}`);
+            // Mark original element - check modal first
+            let originalEl = document.querySelector(`#modal-card-${wordIdx} #unit-${wordIdx}-${unitIdx}`);
+            if (!originalEl) {
+                originalEl = document.getElementById(`unit-${wordIdx}-${unitIdx}`);
+            }
             if (originalEl) {
                 if (isGeminate) {
                     // Geminate: fade the element (length marker fades separately)
@@ -5033,7 +5009,11 @@ function handleModalEscape(e) {
             
             // If geminate, fade the length marker based on distance from start
             if (dragState.isGeminate) {
-                const originalEl = document.getElementById(`unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+                // Check modal first, then workspace
+                let originalEl = document.querySelector(`#modal-card-${dragState.wordIdx} #unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+                if (!originalEl) {
+                    originalEl = document.getElementById(`unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+                }
                 const lengthMarker = originalEl?.querySelector('.length-marker');
                 if (lengthMarker) {
                     const distance = Math.abs(event.clientX - dragState.startX);
@@ -5076,8 +5056,11 @@ function handleModalEscape(e) {
                 dragGhost = null;
             }
             
-            // Reset original element
-            const originalEl = document.getElementById(`unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+            // Reset original element - check modal first
+            let originalEl = document.querySelector(`#modal-card-${dragState.wordIdx} #unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+            if (!originalEl) {
+                originalEl = document.getElementById(`unit-${dragState.wordIdx}-${dragState.unitIdx}`);
+            }
             if (originalEl) {
                 originalEl.classList.remove('dragging');
                 originalEl.classList.remove('dragging-away');
@@ -5087,12 +5070,21 @@ function handleModalEscape(e) {
                 }
             }
             
+            // Store whether we're in modal context before clearing state
+            const wasInModal = dragState.isModal;
+            const wordIdx = dragState.wordIdx;
+            
             // Execute move if crossed boundary
             if (crossedBoundary) {
                 if (dragState.dir === 'left') {
                     moveIPAUnitLeft(dragState.wordIdx, dragState.unitIdx);
                 } else {
                     moveIPAUnitRight(dragState.wordIdx, dragState.unitIdx);
+                }
+                
+                // If in modal, update the modal card after move
+                if (wasInModal) {
+                    setTimeout(() => updateModalCard(wordIdx), 50);
                 }
             } else {
             }
@@ -6922,9 +6914,9 @@ function handleModalEscape(e) {
                 const label = footer.querySelector('.footer-collapsed-label');
                 if (label) {
                     if (footer.classList.contains('collapsed')) {
-                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.22</span> — tap for credits & license <span class="footer-arrow">▲</span>';
+                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.24</span> — tap for credits & license <span class="footer-arrow">▲</span>';
                     } else {
-                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.22</span> — tap to collapse <span class="footer-arrow">▼</span>';
+                        label.innerHTML = 'My Sung Russian (MSR) <span id="versionNumber" onclick="event.stopPropagation()">v4.24</span> — tap to collapse <span class="footer-arrow">▼</span>';
                     }
                     // Re-attach triple-click handler after innerHTML change
                     attachVersionClickHandlers();
@@ -6935,7 +6927,7 @@ function handleModalEscape(e) {
         // ============================================================================
         // DEVELOPER TOOLS - Hidden Harvest Export
         // ============================================================================
-        // Triple-click the version number (v4.22) in the footer to:
+        // Triple-click the version number (v4.24) in the footer to:
         //   - First time: Unlock "developer mode" (stored in localStorage)
         //   - After unlock: Shows harvest indicator (🌾 + count) next to version
         //   - Click the indicator: Downloads harvest immediately
