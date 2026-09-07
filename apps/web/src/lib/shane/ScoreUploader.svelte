@@ -518,6 +518,25 @@
 		await handleFile(ui.file, answers);
 	}
 
+	/**
+	 * N.108-5. Accept a score that is standing at Continue, if one is.
+	 *
+	 * RULED BY DANN 2026-09-04: Transcribe and Continue to analysis are one
+	 * action, *"one should invoke the other."* This is the half the drawer's
+	 * Transcribe button reaches for. It returns whether it did anything, so
+	 * the caller can say so; every other state, and there are seven, is a
+	 * score that is not waiting on an answer and this must not disturb it.
+	 *
+	 * `accept()` ITSELF IS UNCHANGED, and that is deliberate: one press of
+	 * Continue and one press of Transcribe now run the SAME line, so the two
+	 * paths cannot drift apart into two behaviours.
+	 */
+	export function acceptWaiting(): boolean {
+		if (ui.kind !== 'done') return false;
+		accept();
+		return true;
+	}
+
 	function accept(): void {
 		if (ui.kind !== 'done') return;
 		const page = pageFor(ui.ingested);

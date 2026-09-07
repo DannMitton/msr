@@ -385,34 +385,17 @@ export function isCliticSeated(map: PairingMap, fold: CliticFold): boolean {
 	return p?.kind === 'syllable' && p.cyrillic === fold.seat[0]?.cyrillic;
 }
 
-/**
- * Take one fold's seat back off the map: the Undo beside the sentence.
- *
- * IT REMOVES ONLY WHAT THE SEAT ITSELF WROTE, cell by cell. A note the singer
- * has since decided for themselves carries a different text or a different
- * origin, and it is left exactly as they left it, because R6 says the page
- * prints what the singer decided and nothing here is entitled to overrule that
- * on the way out any more than on the way in.
- *
- * The notes go back to UNDECIDED, which on a lyric-bearing score is the file's
- * own cell again. That is the point: the singer asked for the file back.
- */
-export function revertCliticSeat(map: PairingMap, fold: CliticFold): PairingMap {
-	const next: PairingMap = { ...map };
-	for (const { eventId, slot, cyrillic } of fold.seat) {
-		const p = next[eventId];
-		if (
-			p?.kind === 'syllable' &&
-			p.cyrillic === cyrillic &&
-			p.origin.lineIndex === slot.origin.lineIndex &&
-			p.origin.wordIndex === slot.origin.wordIndex &&
-			p.origin.slotIndex === slot.origin.slotIndex
-		) {
-			delete next[eventId];
-		}
-	}
-	return next;
-}
+/* `revertCliticSeat` IS GONE, N.108-5. It took one fold's seat back off the
+   map, cell by cell, leaving any note the singer had since decided for
+   themselves alone. Its one caller was the Undo beside the seat's sentence in
+   Corrections, and RULED BY DANN 2026-09-04 on his walk of `c574cf8` that
+   sentence and its Undo leave Corrections and the loupe dock entirely: *"I'm
+   not crazy about the idea of that courtesy warning we give about Ilya having
+   concatenated a clitic... I think it's unnecessary."* Ilya seats and says
+   nothing, so there is no surface left to take the seat back from and nothing
+   else in the tree called it. Removed rather than kept dead, on his
+   instruction. Its rule, if it is ever wanted again: remove only what carries
+   both the seat's own text AND the seat's own origin triple. */
 
 /**
  * Seat every fold in one score that the map does not already carry.

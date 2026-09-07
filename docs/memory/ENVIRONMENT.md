@@ -50,7 +50,7 @@ next session the same hour it cost the last one.
 | a `<dialog>` hangs and never resolves | `close` EVENT DOES NOT FIRE` |
 | a hover state latches and will not release on iOS | `drawer-lip:hover` |
 | a drawer test that cannot run on a phone | `NOTHING MOVES IN THE DRAWER` |
-| `resize_window` silently does nothing | `The mobile design session's instruments` |
+| `resize_window` silently does nothing | `THE PANE'S VIEWPORT IS 0 x 0` (it does NOT, corrected 2026-09-07) |
 | a photograph from Dann arrives in an odd format | `ARRIVE AS HEIC` |
 
 ### Driving the app, and observing it honestly
@@ -61,7 +61,9 @@ next session the same hour it cost the last one.
 | a walk harness needs a home | `A WALK HARNESS BELONGS` |
 | `vite preview` serving the wrong thing, or caching | `vite preview` |
 | a code change that will not appear after a rebuild | `VITE PREVIEW BUILDS ITS FILE TABLE AT BOOT` |
-| a fixture file you need the app to fetch | `VITE PREVIEW BUILDS ITS FILE TABLE AT BOOT` |
+| a fixture file you need the app to fetch | `WHAT VITE PREVIEW ACTUALLY SERVES` |
+| a walk from Code that needs a transcription | `THE WALKCLOCK HARNESS` |
+| a click on the page that raises no loupe | `THE PANE'S VIEWPORT IS 0 x 0` |
 | a scroll reset that will not take on a shown box | `DISPLAY NONE KEEPS THE SCROLL OFFSET` |
 | CSS that svelte-check calls dead only after an edit | `A DYNAMIC CLASS MASKS EVERY UNUSED SELECTOR` |
 | a service worker that will not update locally | `Claude Code, and where the building` |
@@ -166,8 +168,16 @@ file.
 | phonology | 216 |
 | dictionary | 235 |
 | web-check | 0 errors, 7 warnings, 4 files |
-| web-test | **908 passed (908)** |
-| score-parser | **481 passed, 5 skipped (486)** |
+| web-test | **984 passed (984)**, and **990 after N.108-5** |
+| score-parser | **534 passed, 5 skipped (539)** |
+
+**READ OUT OF `~/Downloads/ilya-ship.sh` ON 2026-09-07, lines 75 to 79.** The
+script said 984 and 534 that morning. N.108-5 moves gate 4 to **990**: minus one
+for the `revertCliticSeat` test that went with the function, plus seven for
+`apps/web/src/lib/one-action.test.ts`. **That move needs Dann's permission and
+the `sed` needs its `chmod +x` after it.** The paragraphs below are the history
+of this table and are kept because the corrections read as a sequence; the row
+above is the current one.
 
 **CORRECTED 2026-09-01.** This table read `754` and `444` and had done since
 2026-08-24, which is 146 and 37 tests behind the tree. The current numbers are
@@ -2294,13 +2304,110 @@ failure. Twenty minutes.
   file copied into `build/` after the server started 404s; the server's own log
   shows the 404, which is the fastest way to tell this apart from a wrong path.
   Copy the fixture, THEN restart, then fetch it from the page.
-- **`vite preview` serves `build/` here** (adapter-static, `pages: 'build'`),
-  NOT `.svelte-kit/output/client` and NOT `static/`. A file in `static/` reaches
-  the preview only through a rebuild.
+- ~~**`vite preview` serves `build/` here** (adapter-static, `pages: 'build'`),
+  NOT `.svelte-kit/output/client` and NOT `static/`.~~ **WRONG, CORRECTED
+  2026-09-07 by measuring it: it serves `.svelte-kit/output/`, not `build/`.**
+  See `WHAT VITE PREVIEW ACTUALLY SERVES` below. A file in `static/` still
+  reaches the preview only through a rebuild.
 - **`build/` is gitignored**, so a fixture parked there cannot make the ship
   script refuse. Delete it anyway when the walk is done.
 - Do this through `preview_start` / `preview_stop`, not Bash. A Bash-started
   `vite preview` holds port 4173 and then `preview_start` refuses it.
+
+## WHAT VITE PREVIEW ACTUALLY SERVES. Measured 2026-09-07, N.108-5
+
+**Not `apps/web/build`.** The 2026-09-03 entry above said it was, and it cost
+this session two server restarts and a false negative that read as "the harness
+did not take".
+
+| what you want the preview to serve | where it must go |
+|---|---|
+| a `<script>` in `<head>` of the document | `apps/web/.svelte-kit/output/prerendered/pages/index.html` |
+| a fixture the page will `fetch()` | `apps/web/.svelte-kit/output/client/` |
+
+Both are under `.svelte-kit/`, which is gitignored, so nothing parked there can
+make the ship script refuse. **Restart the preview after the file lands**, which
+is what the section above this one is about and is still true.
+
+**How to tell in one line that you are editing the wrong file:** `curl -s
+http://localhost:4173/ | wc -c` against `wc -c` on the file you edited. If the
+byte counts disagree, the server is not serving your file. The document that
+came back was 2894 bytes while `build/index.html` on disk was 4041, and the
+2894-byte file was findable with `find apps/web -name "*.html" -size -10k`.
+
+## THE PANE'S VIEWPORT IS 0 x 0 UNTIL YOU SIZE IT, SO NO CLICK RAISES THE LOUPE. 2026-09-07
+
+**`resize_window` WORKS. The index used to say it silently does nothing; that is
+corrected here rather than left to be rediscovered.** `resize_window` with
+`width: 1440, height: 900` took, and the desk layout appeared.
+
+Before it, `innerWidth`, `innerHeight` and `document.documentElement.clientHeight`
+all read **0**. Ilya's own mobile gate is not the only casualty of that:
+**`document.elementFromPoint` returns `null`**, and the note-click handler in
+`+page.svelte` is delegated on `window` and goes through `elementFromPoint`, so
+**no click raises the loupe at all** and `scrollIntoView({block:'center'})` puts
+the target at `y = 0`. Nothing on screen says why.
+
+**So size the viewport first, then find the element again**: the layout reflows,
+and every rectangle measured before the resize is stale.
+
+Reset it with `resize_window` preset `desktop` when the walk is done.
+
+## THE WALKCLOCK HARNESS: HOW CODE WALKS A TRANSCRIPTION AT ALL. 2026-09-07
+
+**This is the way past `A HIDDEN TAB`, which had sent every transcription walk to
+Dann since 2026-08-19.** That section's diagnosis is exactly right and still
+worth reading: the tab is hidden, Chrome clamps `setTimeout`, the loader yields
+with `setTimeout(0)` every 1500 entries, the second shard is never fetched, and
+`Transcribe` never enables.
+
+**MessageChannel is not throttled.** Inject this into `<head>` of the served
+document (see `WHAT VITE PREVIEW ACTUALLY SERVES` for which file that is), gated
+on a query parameter, then load `/?walkclock=1`:
+
+```
+if (location.search.indexOf('walkclock') !== -1) {
+  var __ch = new MessageChannel(), __q = [];
+  __ch.port1.onmessage = function () { var f = __q.shift(); if (f) f(); };
+  var __native = window.setTimeout.bind(window);
+  window.setTimeout = function (fn, delay) {
+    var args = [].slice.call(arguments, 2);
+    if (typeof fn === 'function' && (!delay || delay <= 4)) {
+      __q.push(function () { fn.apply(null, args); });
+      __ch.port2.postMessage(0);
+      return 0;
+    }
+    return __native.apply(null, arguments);
+  };
+}
+```
+
+The dictionary then loads in about three seconds and `Transcribe` enables.
+
+- **VERSION 2, THE SAME DAY, AND IT IS THE ONE TO USE.** Clamping is not only
+  about 0 ms yields: Chrome rounds EVERY hidden-tab timer up to about a second,
+  so a 600 ms debounce cannot be measured at all and reads as 1071 ms. The
+  harness above was widened to run the page's WHOLE timer clock off the same
+  `MessageChannel`, spinning against `performance.now()` until each timer is
+  due, with `clearTimeout` wrapped to match. A 600 ms timer then fires at
+  600 ms. **It is MORE faithful than the hidden tab, not less: it is what a
+  visible tab does.** It burns a core while a timer is pending, so do not
+  measure CPU or frame timing under it.
+- **MEASURE A DEBOUNCE AT THE TIMER, NOT IN THE DOM.** Svelte's flush is
+  throttled too, so the DOM tells you when a value was painted rather than when
+  the rule fired. Wrap the live `window.setTimeout` from the console, record
+  `{delay, scheduled, fired, cancelled}` for the delay band you care about, and
+  read the log. N.108-5 read five keystrokes as five 600 ms timers, four
+  cancelled and one fired, which no DOM reading could have shown.
+- **WHAT IT MAKES THE INSTRUMENT LIE ABOUT: ordering between a 0 ms timeout and
+  anything else.** It says nothing about what appears on the page.
+- **IT IS ALSO A FREE NEGATIVE CONTROL.** Load the same page WITHOUT
+  `?walkclock` and the dictionary stalls, so anything gated on `canTranscribe`
+  does not happen. N.108-5 used exactly that pair to prove its boot
+  transcription was the new code and not restored text.
+- **Check it took** before believing a null result:
+  `window.setTimeout.toString().indexOf('__q') !== -1`.
+- Delete the injection when the walk is done, and re-grep both files for it.
 
 ## DISPLAY NONE KEEPS THE SCROLL OFFSET, AND CHROME RESTORES IT AFTER YOUR rAF. Learned 2026-09-03
 

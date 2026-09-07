@@ -55,6 +55,11 @@ const strings: Record<string, Record<Language, string>> = {
 	'group.piece':                 { en: 'Piece',                        fr: 'Piece' },
 	'group.text':                  { en: 'Text',                         fr: 'Text' },
 	'group.scoreMarkup':           { en: 'Score markup',                 fr: 'Score markup' },
+	//    `group.input` JOINS THEM, N.108-5, and it is a SEVENTH owed name.
+	//    Dann named the band himself on 2026-09-07: the intake becomes its own
+	//    group between Piece and Text, "named INPUT, painted sage like Text
+	//    (hue names place: it is text)". Same slot treatment as the six above.
+	'group.input':                 { en: 'Input',                        fr: 'Input' },
 	//    The binder station. Its three buttons keep their own ratified
 	//    `binder.*` strings; this names the station they sit in, which had no
 	//    name because it was a bare row inside Source.
@@ -125,7 +130,15 @@ const strings: Record<string, Record<Language, string>> = {
 	// « texte » is the coordinating desk's proposal and Dann has seen it.
 	'input.watermark':             { en: 'text',                         fr: 'texte' },
 	'input.warning':               { en: 'characters. Large texts may be slow to process.', fr: 'caractères. Les textes longs peuvent être lents à traiter.' },
-	'input.transcribe':            { en: 'Transcribe',                   fr: 'Transcrire' },
+	// RENAMED 2026-09-07 BY DANN, N.108-5: the button reads "Transcribe and
+	// fit", because after this ship one press does both halves. It read
+	// `Transcribe` / « Transcrire » and the French was ratified; **that French
+	// is superseded, not lost**, and it is written here so a translator can see
+	// what it was: « Transcrire ». FRENCH IS OWED, so this key carries the
+	// ENGLISH IN BOTH SLOTS, the treatment the `group.*` block above gives its
+	// six owed names and for the same reason: `t()` prints `[MISSING: key]` for
+	// an absent variant, and a stale « Transcrire » would name half an action.
+	'input.transcribe':            { en: 'Transcribe and fit',           fr: 'Transcribe and fit' },
 	'input.transcribeLoading':     { en: 'Loading dictionary\u2026',     fr: 'Chargement du dictionnaire\u2026' },
 	// UNUSED SINCE N.108 increment 2: both receipts say `intake.clear`. Kept
 	// for the same reason `input.placeholder` above is.
@@ -241,6 +254,15 @@ const strings: Record<string, Record<Language, string>> = {
 	//    an absent variant, which would put that literal in a French singer's
 	//    drawer. That is not a translation. The words a French singer needs
 	//    here are Dann's to rule.
+	//
+	//    UNUSED SINCE N.108-5, ALL THREE. RULED BY DANN 2026-09-04 on his walk
+	//    of `c574cf8`: *"I'm not crazy about the idea of that courtesy warning
+	//    we give about Ilya having concatenated a clitic... I think it's
+	//    unnecessary."* The sentence and its Undo left Corrections and the
+	//    loupe dock, and `CliticSeat.svelte` was deleted with them. Ilya still
+	//    seats, at ingest, and says nothing. Kept in place and not deleted on
+	//    his instruction, the same treatment N.108 increments 2 and 4 gave
+	//    their retired strings above.
 	'clitic.seated':               { en: '%s cannot take a note of its own, so Ilya seated it with %s and moved %s notes.', fr: '%s cannot take a note of its own, so Ilya seated it with %s and moved %s notes.' },
 	'clitic.seatedOne':            { en: '%s cannot take a note of its own, so Ilya seated it with %s and moved one note.', fr: '%s cannot take a note of its own, so Ilya seated it with %s and moved one note.' },
 	'clitic.undo':                 { en: 'Undo',                          fr: 'Undo' },

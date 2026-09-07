@@ -76,6 +76,11 @@
 		 * nothing is drilled through here.
 		 */
 		pieceGroup?: Snippet;
+		/**
+		 * N.108-5, RULED BY DANN 2026-09-07. The intake's own group, between
+		 * Piece and Text. It holds the whole intake frame and nothing else.
+		 */
+		inputGroup?: Snippet;
 		textGroup?: Snippet;
 		scoreGroup?: Snippet;
 		/**
@@ -132,7 +137,7 @@
 		onheadingnavigate: (id: string) => void;
 	}
 
-	let { width, raised, isMobile, language, destination, activeTab, activeHeadingId = null, pieceGroup, textGroup, scoreGroup, metadataBody, metadataOpen = false, onmetadatatoggle, voiceTakeover, takeoverActive = false, onexittakeover, ontogglepull, gesturesBlocked = false, ontabchange, onheadingnavigate }: Props = $props();
+	let { width, raised, isMobile, language, destination, activeTab, activeHeadingId = null, pieceGroup, inputGroup, textGroup, scoreGroup, metadataBody, metadataOpen = false, onmetadatatoggle, voiceTakeover, takeoverActive = false, onexittakeover, ontogglepull, gesturesBlocked = false, ontabchange, onheadingnavigate }: Props = $props();
 
 	/* ── THE SILHOUETTE AND THE BOOKMARK TAB ARE GONE (N.108 increment 1a) ──
 	   Ruled by Dann 2026-09-02 on his walk of `2c1cecf`: the desk has no pull,
@@ -454,6 +459,22 @@
 							<div class="band-body" id="station-metadata">{@render metadataBody()}</div>
 						{/if}
 						{@render pieceGroup?.()}
+					</section>
+					<!-- ═══ INPUT. N.108-5, ruled by Dann 2026-09-07: the intake
+					     leaves Piece and takes a band of its own between Piece
+					     and Text, "named INPUT, painted sage like Text (hue names
+					     place: it is text)". Same recipe as its three
+					     neighbours; the only thing that distinguishes it is
+					     which token paints the band.
+
+					     IT HAS NO STATION ROW INSIDE IT, which is the
+					     2026-09-02 ruling untouched: the intake is never closed
+					     and has no id in the open set. So this band is the
+					     region's name and the frame under it is the region,
+					     with nothing between them to open or shut. -->
+					<section class="group group-input">
+						<h2 class="group-band"><span class="band-name">{t('group.input', language)}</span></h2>
+						{@render inputGroup?.()}
 					</section>
 					<!-- ═══ TEXT. Sage, one step down. Notation and Analysis. -->
 					<section class="group group-text">
@@ -981,6 +1002,15 @@
 
 	.group-piece .group-band {
 		background: var(--lang-chip-guide);
+	}
+
+	/* INPUT AND TEXT SHARE ONE TOKEN, N.108-5, and that is Dann's ruling
+	   rather than an economy: "painted sage like Text (hue names place: it is
+	   text)". The intake takes text in, so it is the text hue. They are two
+	   selectors and not one grouped rule, so that ruling one of them a
+	   different colour later is a one-line change in the file that draws it. */
+	.group-input .group-band {
+		background: var(--lang-chip-transcription);
 	}
 
 	.group-text .group-band {

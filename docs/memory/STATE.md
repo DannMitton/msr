@@ -155,7 +155,44 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > `docs/sessions/memo-n108-finishings_r1_2026-09-03.md`. **N.108 is finished,
 > four increments.** French owed for every N.108 string, shown as a table
 > first when it comes.
-> **THE ONE THING: N.111, the clitic seat.** Next step is the desk's: read
+> **N.111 SHIPPED in four commits 2026-09-04 (`7875892`, `c574cf8`,
+> `d5a49ff` and the increment 2 seat) and WALKED BY DANN through increment 3.**
+> Ilya seats a vowelless clitic with its host automatically at ingest of a
+> lyric-bearing score (ruled 2026-09-04: "no vowelless word in Russian can
+> carry its own duration"); the transcription overrules the file ONLY on a
+> clitic fold, anything else withholds (ruled, the Italian case); the vacated
+> note draws nothing; the hand (N.55b's click surface) works on scores with
+> words. Memos: `memo-n111-clitic-seat_r1_2026-09-04.md`,
+> `memo-n111-hand_r1_2026-09-04.md` (§13 the loupe fix). NOT WALKED: `d5a49ff`,
+> the loupe redrawing in the same frame and the bare IPA line.
+>
+> **THE TEXT-TO-SCORE SEQUENCE, RULED BY DANN 2026-09-06** ("be an excellent
+> Project Manager"), one path through the pairing layer, in this order:
+> 1. **N.108-5, cleanup**: the seat sentence and its Undo leave Corrections
+>    (ruled 2026-09-04); Transcribe and Continue to analysis become one
+>    action, either invoking the other (ruled 2026-09-04).
+> 2. **N.112, the text is authoritative** (numbered 2026-09-06): one
+>    text-to-seats function, stable on a round trip; unchanged words keep
+>    their notes, a removed syllable slides the rest left, an added one takes
+>    the next open note; drift retires. Finale's Lyrics window model.
+> 3. **N.113, the melisma** (numbered 2026-09-06): a dock control writing the
+>    `melisma` kind (`pairings.ts:121`, never written by a singer today) and
+>    an extender line on the page. Finale's Edit Word Extensions.
+> 4. **N.114, Type Into Score**: a text field in the loupe's dock for the
+>    taken note; what is typed rewrites that word in the poem, the field marks
+>    the changed word, N.112 re-seats. Two-way; the loupe is the surface
+>    (E.27 binding, N.92). Last because it depends on 2 and 3.
+> **N.115, the singer moves a measure between systems** (numbered
+> 2026-09-06, UNPLACED): Finale's arrow-up on a selected measure pulls it into
+> the previous system and the others respace. Research Finale first (his ask),
+> then find the tree's existing orphaned-measure rule before scoping.
+> Then N.110, the release order N.85 to N.88, N.84, N.83. French for every
+> N.108, N.111, and N.112 to N.114 string comes as one table after 4.
+> Not adopted from Finale, ruled 2026-09-06: Adjust Baselines and the other
+> engraving controls (Ilya does them), Type Into Score on the paper, verses
+> (D3's), Clone.
+> **THE ONE THING: N.108-5, the cleanup.** Desk writes the paste.
+> *(Earlier line, kept:)* Next step was the desk's: read
 > `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
 > After N.111: N.110 (set aside, briefed), the release order N.85 to N.88,
 > N.84, N.83.

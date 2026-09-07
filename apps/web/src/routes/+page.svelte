@@ -69,6 +69,7 @@
 	import type { OpenedLibrary } from '$lib/library';
 	import SyllableStation from '$lib/shane/SyllableStation.svelte';
 	import RootPanel from '$lib/components/Drawer/RootPanel.svelte';
+	import IntakePanel from '$lib/components/Drawer/IntakePanel.svelte';
 	import InspectorPanel from '$lib/components/Drawer/InspectorPanel.svelte';
 	import Paper from '$lib/components/Paper/Paper.svelte';
 	import ReadingAid from '$lib/components/ReadingAid.svelte';
@@ -113,14 +114,12 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import StationHeader from '$lib/components/Drawer/StationHeader.svelte';
 	import Loupe from '$lib/shane/Loupe.svelte';
 	import CorrectionSurface from '$lib/shane/CorrectionSurface.svelte';
-	import CliticSeat from '$lib/shane/CliticSeat.svelte';
+	import { QUIET_MS, transcribeVerdict, type TextArrival } from '$lib/one-action';
 	import {
 		findCliticFolds,
 		isCliticSeated,
-		revertCliticSeat,
 		readScoreText,
 		seatCliticFolds,
-		type CliticFold,
 	} from '$lib/shane/clitic-seat';
 	import {
 		COARSE_TAP_SPACES,
@@ -395,15 +394,13 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	const cliticFolds = $derived(
 		ingestedScore ? findCliticFolds(ingestedScore.result.score, 1) : [],
 	);
-	/* WHAT THE STATION REPORTS is what is actually seated, so an Undo takes the
-	   sentence with it and nothing claims a seat that is not on the page. */
+	/* WHICH FOLDS ARE ACTUALLY ON THE PAGE. It reported a sentence until
+	   N.108-5 removed the sentence; what still reads it is `blankUnderlay`
+	   below, which must blank a run only where the seat really landed. A fold
+	   the singer has since undone by hand is not in this set, and its notes
+	   go back to drawing the file's own cells. */
 	const seatedCliticFolds = $derived(
 		cliticFolds.filter((fold) => isCliticSeated(doc.pairings, fold)),
-	);
-	/* THE DOCK IS ABOUT THE NOTE IN HAND, so it reports the fold on the taken
-	   entry and nothing else. The drawer reports them all. */
-	const dockCliticFolds = $derived(
-		seatedCliticFolds.filter((fold) => fold.cliticEventId === selectedEventId),
 	);
 	/* THE NOTES A SEATED RUN LEFT WITH NOTHING TO SAY. Ruled by Dann 2026-09-04
 	   on the `ка ka` close he walked: inside a seated run an undecided note
@@ -418,16 +415,14 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		return out.size > 0 ? out : undefined;
 	});
 
-	/* THE INGEST SEAT PUSHES NO UNDO ENTRY. The undo stack is the singer's
-	   record of their own acts, and an entry sitting at the bottom of it before
-	   they have done anything would make the first press of the loupe's Undo
-	   pill do something they never asked for. The seat's own Undo lives beside
-	   its sentence in Corrections and works from the map, so it survives a
-	   reload; the pill could not. */
-	function handleCliticUndo(fold: CliticFold): void {
-		pushUndo({ kind: 'text', key: 'loupe.undo.lyrics' });
-		doc.pairings = revertCliticSeat(doc.pairings, fold);
-	}
+	/* THE INGEST SEAT PUSHES NO UNDO ENTRY, and after N.108-5 it offers no
+	   Undo of its own either. RULED BY DANN 2026-09-04 on his walk of
+	   `c574cf8`: the sentence and its Undo leave Corrections and the loupe
+	   dock, and Ilya seats and says nothing. `handleCliticUndo` and
+	   `revertCliticSeat` went with them, because a seat no surface reports is
+	   a seat no surface can take back, and nothing else called either one.
+	   What a singer can still do is what N.111 increment 3 gave them: take any
+	   note with the hand and seat their own text on it. */
 
 	/* N.65 ship B's PLACED-SYLLABLE COUNT, back by Dann's ruling of 2026-08-27
 	   and re-homed onto the LYRIC station's own label, where both containers
@@ -1856,14 +1851,72 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		yoToggles = new Map();
 		syllableOverrides = new Map();
 	}
-	function handleTranscribe() {
-		if (!canTranscribe) return;
+	/**
+	 * The poem in the field, transcribed, and nothing else.
+	 *
+	 * N.108-5 LIFTED THIS OUT OF `handleTranscribe`, because after Dann's
+	 * ruling of 2026-09-04 three callers run it and only one of them is a
+	 * button press: the button, an arriving score, and the dictionary
+	 * finishing its load after a boot that found a poem and a score together.
+	 * What stayed behind in `handleTranscribe` is everything the singer's own
+	 * press is entitled to do and an implicit run is not, which is the breath,
+	 * the console record, and the focus move onto the first word.
+	 *
+	 * N.57: glosses are deliberately NOT wiped here. `runPipeline()` rebuilds
+	 * `lines`, then `keepSurvivingGlosses()` drops only the ones whose word
+	 * moved. The Guide has promised this since before it was true.
+	 */
+	function transcribeText(): void {
+		/* THE TEXT IS RECORDED FIRST, so a `runPipeline` that throws still
+		   counts as having read this text and the join does not sit in a loop
+		   re-running a poem the pipeline cannot take. `transcribeError` is
+		   what a singer sees in that case, and it already is. */
+		transcribedText = doc.inputText;
+		cancelQuietTimer();
+		/* THE SESSION OVERRIDES RESET ON AN IMPLICIT RUN TOO, and this is a
+		   DESK DEFAULT with a real cost, named rather than hidden. They key on
+		   `lineIndex-wordIndex` (`handleStressAssign`), so an edit that adds or
+		   removes a word slides every later position and a kept override lands
+		   on a word the singer never marked. A DROPPED override falls back to
+		   the dictionary, which is right by default; a STALE one prints a wrong
+		   stress on the page. Between losing a mark and printing a wrong one,
+		   this loses the mark. The cost is that a singer who sets a stress and
+		   then fixes a typo loses that stress, which under Dann's widening of
+		   2026-09-07 happens far more often than it did when only the button
+		   ran this. Keeping a mark across an edit needs stable word identity,
+		   which is exactly N.112. */
 		resetSessionState();
-		// N.57: glosses are deliberately NOT wiped here. runPipeline() rebuilds
-		// `lines`, then keepSurvivingGlosses() drops only the ones whose word
-		// moved. The Guide has promised this since before it was true.
 		runPipeline();
 		keepSurvivingGlosses();
+	}
+
+	/**
+	 * N.108-5. TRANSCRIBE ALSO RUNS THE ANALYSIS.
+	 *
+	 * RULED BY DANN 2026-09-04: *"I'm also rethinking the idea of independent
+	 * Transcribe and Continue to score markup actions. I think one should
+	 * invoke the other."* A score standing at Continue is accepted by this
+	 * press, on the uploader's own `accept()` and no second copy of it.
+	 *
+	 * THE ORDER IS THE POINT. `transcribeText()` runs FIRST, so that by the
+	 * time `applyArrival` reaches `buildSlotQueue(lines)` the queue is this
+	 * poem's rather than empty, and the first pass proposes onto the notes.
+	 * Reversed, the accept would merge against nothing and the singer would
+	 * read `0 / 5`.
+	 *
+	 * IT DOES NOT RE-SEAT A SCORE THAT IS ALREADY ATTACHED. Re-running the
+	 * pairing pass when the poem changes under a score is **N.112**, the next
+	 * item in the text-to-score sequence Dann ruled on 2026-09-06, and doing
+	 * it here would be building N.112 early under another name.
+	 */
+	function handleTranscribe() {
+		if (!canTranscribe) return;
+		/* THE BUTTON ALWAYS RUNS THE PIPELINE, even where the join has already
+		   transcribed this exact text. RULED BY DANN 2026-09-07: the button
+		   "keeps its explicit act". A press that measured the text and decided
+		   to do nothing would be a dead control, and the singer pressed it. */
+		transcribeText();
+		uploaderEl?.acceptWaiting();
 		if (lines.length > 0) {
 			// Breath animation: content appears with breath-in
 			triggerPaperBreathIn();
@@ -1898,6 +1951,12 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		doc.inputText = '';
 		lines = [];
 		transcribeMs = 0;
+		/* N.108-5. THE JOIN IS TOLD, or a cleared field would still be
+		   remembered as transcribed and a pending pause would fire over a poem
+		   that is gone. */
+		transcribedText = null;
+		cancelQuietTimer();
+		transcribeWhenDictionaryReady = false;
 		resetSessionState();
 		doc.glossOverrides = new Map();
 		doc.glossAnchors = new Map();
@@ -2155,9 +2214,19 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		}
 		if (needsPipeline) runPipeline();
 	}
-	function handleInput(text: string) {
+	/**
+	 * The one field changed.
+	 *
+	 * N.108-5, RULED BY DANN 2026-09-07. `how` is the field's own reading of
+	 * the `InputEvent`: a paste transcribes at once, a keystroke after the
+	 * quiet pause. It defaults to `paste` because the other callers are a
+	 * poem read out of a PDF or a photograph, which arrive whole, the way a
+	 * paste does.
+	 */
+	function handleInput(text: string, how: TextArrival = 'paste') {
 		doc.inputText = text;
 		nameIfUnnamed();
+		joinText(how);
 	}
 
 	/* ── N.67 step 4a: a different piece has arrived ───────────────── */
@@ -2217,6 +2286,108 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	/** N.59 step 7: the page provenance of the arrival currently being applied. */
 	let arrivalPage: PageProvenance | null = null;
 
+	/**
+	 * N.108-5, WIDENED BY DANN 2026-09-07: whenever text is present, the
+	 * transcription exists.
+	 *
+	 * `transcribedText` IS THE TEXT THE CURRENT `lines` WERE BUILT FROM, and
+	 * `null` when there are none. It replaced a boolean when the join widened
+	 * from "a score arrived" to "the field changed": a singer types, so the
+	 * question is not whether the pipeline has run but whether it has run over
+	 * THIS text. It is session state and is never stored, exactly like `lines`,
+	 * whose freshness it describes.
+	 */
+	let transcribedText = $state<string | null>(null);
+
+	/**
+	 * The text waiting on a dictionary that has not loaded yet.
+	 *
+	 * A "NOT YET" IS NOT A "NO". At boot the poem is restored before
+	 * `loadDictionary` finishes, and a singer can type into the field while it
+	 * is still loading. Both land here and are spent by the effect below.
+	 */
+	let transcribeWhenDictionaryReady = $state(false);
+
+	/** The quiet timer for typing. Never more than one. */
+	let quietTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function cancelQuietTimer(): void {
+		if (quietTimer === null) return;
+		clearTimeout(quietTimer);
+		quietTimer = null;
+	}
+
+	/**
+	 * THE ONE JOIN. Every path that can change the text or need it transcribed
+	 * calls this and nothing else decides.
+	 *
+	 * RULED BY DANN 2026-09-07: "at boot, if the field holds text, transcribe
+	 * once the dictionary is ready, score or no score. On paste, transcribe at
+	 * once. While typing, transcribe after a short pause, never per keystroke."
+	 * The verdict itself is `transcribeVerdict` in `one-action.ts`, out there
+	 * in a `.ts` file on purpose, because a rule written inside a `.svelte`
+	 * file is a rule no vitest in this repository can pin.
+	 *
+	 * `nothing` CANCELS A PENDING TIMER, which is not tidying: a singer who
+	 * types three letters and then clears the field would otherwise have the
+	 * pipeline run 600 ms later over the poem they had just deleted.
+	 */
+	function joinText(how: TextArrival): void {
+		const verdict = transcribeVerdict(
+			{
+				poem: doc.inputText,
+				transcribedText,
+				dictionaryReady: !loaderState.isLoading && loaderState.entryCount > 0,
+			},
+			how,
+		);
+		if (verdict === 'now') {
+			transcribeText();
+		} else if (verdict === 'soon') {
+			cancelQuietTimer();
+			quietTimer = setTimeout(() => {
+				quietTimer = null;
+				/* ASKED AGAIN ON THE WAY OUT, as `paste`, because 600 ms is long
+				   enough for the field to have been cleared or for the button to
+				   have been pressed since. The verdict is the one authority and
+				   this is one more reading of it, not a second opinion. */
+				joinText('paste');
+			}, QUIET_MS);
+		} else if (verdict === 'wait') {
+			cancelQuietTimer();
+			transcribeWhenDictionaryReady = true;
+		} else {
+			cancelQuietTimer();
+		}
+	}
+
+	/**
+	 * Transcribe NOW if the text is not already transcribed, cancelling any
+	 * pending pause.
+	 *
+	 * TWO CALLERS, AND BOTH ARE MOMENTS THAT CANNOT WAIT 600 ms: the singer
+	 * pressing the button, and a score arriving, which reads
+	 * `buildSlotQueue(lines)` in the same tick.
+	 */
+	function flushText(): void {
+		cancelQuietTimer();
+		joinText('paste');
+	}
+
+	/* N.108-5. THE WAIT, SPENT. The flag is read inside `untrack` and the
+	   effect depends on the LOADER ALONE, so writing the flag here cannot
+	   re-trigger the effect that wrote it; nothing about the poem or the
+	   pairings is a dependency, and a singer typing does not reach this. */
+	$effect(() => {
+		const ready = !loaderState.isLoading && loaderState.entryCount > 0;
+		if (!ready) return;
+		untrack(() => {
+			if (!transcribeWhenDictionaryReady) return;
+			transcribeWhenDictionaryReady = false;
+			joinText('paste');
+		});
+	});
+
 	async function handleArrival(
 		ingested: IngestedScore,
 		file: File,
@@ -2224,6 +2395,20 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		page?: PageProvenance,
 	): Promise<void> {
 		arrivalPage = page ?? null;
+		/* N.108-5. CONTINUE TO ANALYSIS ALSO TRANSCRIBES, and this is the one
+		   site that does it, so an upload, a drop that reaches accept and a
+		   boot restore cannot end up with three answers.
+
+		   BEFORE ANYTHING ELSE IN THIS FUNCTION, because `applyArrival` reads
+		   `buildSlotQueue(lines)` for the merge: a poem transcribed after that
+		   line has no way to reach the notes, and the singer would read
+		   `0 / 5` with their poem sitting in the field.
+
+		   IT FLUSHES RATHER THAN SCHEDULING. A pending quiet pause is 600 ms
+		   away and this tick needs the queue, so `flushText` cancels it and
+		   runs. Where the text is already transcribed, which after Dann's
+		   widening of 2026-09-07 is the usual case, this costs nothing. */
+		flushText();
 		// A restore is the song's own score coming back from the vault. It is
 		// never a new arrival and must never be questioned.
 		if (origin === 'restore') {
@@ -2649,20 +2834,31 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 			ingestedScore = null;
 			lines = [];
 			transcribeMs = 0;
+			/* N.108-5. The outgoing song's transcription is forgotten with its
+			   lines, or the incoming song's identical first line would read as
+			   already transcribed. A pending pause goes too: it belongs to a
+			   field the singer has left. */
+			transcribedText = null;
+			cancelQuietTimer();
 			orphanedCount = 0;
 			pairingCursor = 0;
 			noLyricsFile = null;
 			restoreSource = restoreFrom(bytes, next.source?.page);
 			doc = next;
 			await refreshSongs();
-			// A SWITCH IS NOT A BOOT. The singer just chose this song, so Ilya
-			// shows it to them rather than making them press Transcribe to see
-			// what they left. It also has to run: `slotQueue` comes from `lines`,
-			// so without it the placements would come back looking like drift.
-			if (doc.inputText.trim() !== '' && !loaderState.isLoading && loaderState.entryCount > 0) {
-				runPipeline();
-				keepSurvivingGlosses();
-			}
+			/* A SWITCH IS NOT A BOOT. The singer just chose this song, so Ilya
+			   shows it to them rather than making them press Transcribe to see
+			   what they left. It also has to run: `slotQueue` comes from
+			   `lines`, so without it the placements would come back looking
+			   like drift.
+
+			   N.108-5 ROUTES IT THROUGH THE ONE JOIN. This block used to call
+			   `runPipeline` and `keepSurvivingGlosses` itself behind its own
+			   copy of the "is the dictionary ready" test, which was a second
+			   opinion about the same rule and which did nothing at all where
+			   the dictionary was still loading. `joinText` answers `wait`
+			   there, and the loader effect spends it. */
+			joinText('boot');
 		} finally {
 			switching = false;
 		}
@@ -3167,10 +3363,24 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		} catch {
 			// localStorage unavailable
 		}
-		// N.57's note, kept because it still governs: keepSurvivingGlosses() is
-		// deliberately NOT called at boot. The pipeline has not run, so `lines`
-		// is empty and the guard would drop every gloss. It runs on the next
-		// Transcribe, which is also the first moment the glosses can be seen.
+		/* N.57's note, SUPERSEDED BY N.108-5. It said `keepSurvivingGlosses()`
+		   is never called at boot, because the pipeline has not run, `lines` is
+		   empty, and the guard would drop every gloss. IT IS CALLED AT BOOT NOW,
+		   and the reason the guard is safe is the order: `transcribeText()`
+		   runs `runPipeline()` FIRST, so the guard sees the same words that
+		   made the glosses rather than an empty list. */
+		/* N.108-5, RULED BY DANN 2026-09-07: "at boot, if the field holds text,
+		   transcribe once the dictionary is ready, score or no score."
+
+		   THE DICTIONARY IS NOT LOADED ON THIS LINE, and it is not awaited
+		   either: `loadDictionary` below is asynchronous and a boot that waited
+		   on it would hold the whole mount. So this almost always returns
+		   `wait`, and the effect on `loaderState` spends it a second or two
+		   later. Calling it here rather than only in the effect is deliberate:
+		   a browser that has the dictionary in IndexedDB can be ready inside
+		   this tick, and the boot should not then wait for a state change that
+		   has already happened. */
+		joinText('boot');
 		loadDictionary({
 			onStateChange(state) {
 				loaderState = state;
@@ -3183,6 +3393,8 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		handleHashNavigation();
 		return () => {
 			window.removeEventListener('resize', checkMobile);
+			/* N.108-5. A pending quiet pause does not outlive the page. */
+			cancelQuietTimer();
 		};
 	});
 </script>
@@ -3389,12 +3601,34 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 					</div>
 				{/if}
 			{/snippet}
-			<!-- ═══ THE PIECE GROUP (N.108 increment 1). Repertoire, the intake,
-			     Export and import. `RootPanel` is its contents and nothing
-			     else; Analysis left it for Text, and the panel's own header
-			     records what moved and why. -->
+			<!-- ═══ THE PIECE GROUP (N.108 increment 1, NARROWED BY N.108-5).
+			     Repertoire, Export and import, and the name and Metadata that
+			     the band itself carries. THE INTAKE LEFT for a band of its
+			     own, ruled by Dann 2026-09-07; `RootPanel` is still this
+			     group's contents and nothing else. -->
 			{#snippet pieceGroup()}
 				<RootPanel
+					{language}
+					onexport={() => void handleExport()}
+					onimport={() => importInputEl?.click()}
+					onexportall={() => void handleExportAll()}
+					{songLibrary}
+					{sections}
+				/>
+			{/snippet}
+			<!-- ═══ THE INPUT GROUP (N.108-5). RULED BY DANN 2026-09-07: the
+			     intake becomes its own group band between Piece and Text,
+			     named INPUT, painted sage like Text, and it "holds the whole
+			     intake frame (field, receipts, Choose a file, the drop hint,
+			     the button) and nothing else."
+
+			     THE WIRING IS THE SAME WIRING. Every prop below was on
+			     `RootPanel` an hour ago and is passed here unchanged, and the
+			     `sourceScore` snippet came across verbatim with its comments.
+			     Nothing about what the intake does changed; only which band it
+			     stands under. -->
+			{#snippet inputGroup()}
+				<IntakePanel
 					inputText={doc.inputText}
 					{loaderState}
 					{canTranscribe}
@@ -3403,11 +3637,6 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 					oninput={handleInput}
 					ontranscribe={handleTranscribe}
 					onclear={handleClear}
-					onexport={() => void handleExport()}
-					onimport={() => importInputEl?.click()}
-					onexportall={() => void handleExportAll()}
-					{songLibrary}
-					{sections}
 					{wordCount}
 					{hasResults}
 					isMobile={isPhone}
@@ -3464,7 +3693,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 							{/if}
 						{/if}
 					{/snippet}
-				</RootPanel>
+				</IntakePanel>
 			{/snippet}
 			<!-- ═══ THE SCORE MARKUP GROUP (N.108 increment 1). Underlay,
 			     Corrections, Voice, in that order, which is the map Dann ruled
@@ -3592,15 +3821,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 							onclosetuplet={closeTuplet}
 							ontupletdef={applyTupletDefinition}
 							{onhold}
-						>
-							{#snippet seat()}
-								<CliticSeat
-									folds={seatedCliticFolds}
-									{language}
-									onundo={handleCliticUndo}
-								/>
-							{/snippet}
-						</CorrectionSurface>
+						/>
 						<!-- N.108 increment 1a, ruled by Dann 2026-09-02: "You have
 						     corrected 2 notes." renders inside the Corrections
 						     station body, not under Voice. It was in the notices
@@ -4064,11 +4285,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		onclosetuplet={closeTuplet}
 		ontupletdef={applyTupletDefinition}
 		{onhold}
-	>
-		{#snippet seat()}
-			<CliticSeat folds={dockCliticFolds} {language} onundo={handleCliticUndo} />
-		{/snippet}
-	</CorrectionSurface>
+	/>
 	{/if}
 {/if}
 {#if updated.current && !updateDismissed}

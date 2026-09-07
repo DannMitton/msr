@@ -62,20 +62,12 @@
 		 * stations are sized to fit a phone and the queue is not a verb.
 		 */
 		syllables?: Snippet;
-		/**
-		 * N.111: the clitic seat's proposal, at the FOOT of the LYRIC station.
-		 *
-		 * BOTH CONTAINERS RENDER IT, which is this component's whole doctrine:
-		 * one implementation, two shells, so the desk and the phone cannot
-		 * drift. The drawer passes every open fold; the dock passes only the
-		 * fold whose note is the taken entry, because the dock is about the
-		 * note in hand.
-		 *
-		 * AFTER THE SHIFT ROWS, not before them. Dann ruled the station's
-		 * arrangement on his walk of `2238e8b` (the boxed text, then the shift
-		 * rows) and this ship appends rather than reordering it.
-		 */
-		seat?: Snippet;
+		/* N.111's `seat` SNIPPET IS GONE, N.108-5. It rendered `CliticSeat`
+		   at the foot of the LYRIC station in both shells. RULED BY DANN
+		   2026-09-04 on his walk of `c574cf8`: the sentence about the seated
+		   clitic and its Undo leave Corrections and the loupe dock entirely,
+		   and Ilya seats and says nothing. Nothing else ever passed this
+		   snippet, so the prop went with the component. */
 		/** `F3 · quarter · на`, composed by the caller from the taken entry. */
 		readout: string;
 		/** The Undo pill's sentence, or null when nothing can be undone. */
@@ -137,7 +129,6 @@
 		variant = 'dock',
 		portrait = true,
 		syllables = undefined,
-		seat = undefined,
 		readout,
 		undoLabel,
 		selectedBase,
@@ -761,7 +752,6 @@
 				onclick={() => onshift('nextOpen', 'forward')}>&#x2192;</button
 			>
 		</div>
-		{#if seat}{@render seat()}{/if}
 	</section>
 </section>
 

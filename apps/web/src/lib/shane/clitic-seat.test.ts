@@ -22,7 +22,6 @@ import {
 	findCliticFolds,
 	applyCliticSeat,
 	isCliticSeated,
-	revertCliticSeat,
 	seatCliticFolds,
 	readScoreText,
 } from './clitic-seat';
@@ -380,39 +379,20 @@ describe('N.111 increment 3, the automatic seat', () => {
 		expect(pairAt(shown(score, seated), 'счас')).toEqual(['счас', 'тье']);
 	});
 
-	it('takes the seat back off, and leaves the singer’s own work alone', async () => {
-		const score = await parse(xml);
-		const fold = findCliticFolds(score)[0];
-		const seated = seatCliticFolds(score, {});
-		const mine = fold.seat[3].eventId;
-		const withMine = {
-			...seated,
-			[mine]: {
-				kind: 'syllable' as const,
-				cyrillic: 'МОЁ',
-				ipa: 'x',
-				vowel: undefined,
-				origin: { lineIndex: 9, wordIndex: 9, slotIndex: 9, word: 'мое' },
-			},
-		};
-		const reverted = revertCliticSeat(withMine, fold);
-		expect(isCliticSeated(reverted, fold)).toBe(false);
-		expect(reverted[fold.cliticEventId]).toBeUndefined();
-		// The singer's own decision on a note inside the run survives.
-		expect(reverted[mine]).toEqual(expect.objectContaining({ cyrillic: 'МОЁ' }));
-		// And the file's own seating is back everywhere the seat had written.
-		expect(shown(score, reverted).slice(36, 40)).toEqual(['в', 'бью', 'щем', 'МОЁ']);
-	});
+	/* THE REVERT TEST WENT WITH `revertCliticSeat`, N.108-5. It proved that
+	   taking the seat back off left a note the singer had decided for
+	   themselves alone and put the file's own cells back everywhere the seat
+	   had written. The function was removed on Dann's ruling of 2026-09-04,
+	   which took the seat's sentence and its Undo out of Corrections and the
+	   loupe dock; nothing calls it and nothing can. */
 
-	it('mutates nothing, on the way in or the way out', async () => {
+	it('mutates nothing on the way in', async () => {
 		const score = await parse(xml);
-		const fold = findCliticFolds(score)[0];
 		const start = {};
 		const seated = seatCliticFolds(score, start);
 		expect(start).toEqual({});
-		const reverted = revertCliticSeat(seated, fold);
 		expect(Object.keys(seated)).toHaveLength(59);
-		expect(reverted).not.toBe(seated);
+		expect(seated).not.toBe(start);
 	});
 });
 
