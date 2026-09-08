@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N.114 drawing r1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Source+Serif+4:ital@0;1&display=swap">
+<style>
+  :root {
+    --ink-primary: #1a1612; --ink-secondary: #4a4540; --ink-tertiary: #6A655F;
+    --sage: #8B9A7D; --lavender: #8E7E9B; --paper-cream: #F0EBE0; --drawer-bg: #FAF8F5;
+    --rule: #DAD5CC;
+  }
+  body { margin: 0; background: #E9E5DD; color: var(--ink-primary); font: 15px/1.45 "Source Sans 3", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  h2 { font-size: 17px; font-weight: 600; margin: 40px 0 8px; }
+  p.lede { color: var(--ink-secondary); margin: 0 0 12px; max-width: 70ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { font-size: 13px; color: var(--ink-secondary); margin: 8px 0 0; max-width: 360px; }
+  figcaption b { color: var(--ink-primary); }
+  .desk { font-size: 12px; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+
+  /* the drawer */
+  .drawer { width: 360px; background: var(--drawer-bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0 0 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .band { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+  .band.sage { background: var(--sage); }
+  .band.lav { background: var(--lavender); }
+  .band .chev { font-weight: 400; opacity: .9; }
+  .inner { padding: 12px; }
+  .intake { border: 1px dashed #C9C3B8; border-radius: 4px; padding: 10px; background: #fff; }
+  .field { font-family: "Source Serif 4", Georgia, serif; font-size: 15px; line-height: 1.4; color: var(--ink-primary); min-height: 96px; white-space: pre-line; }
+  .field.empty { color: var(--ink-tertiary); }
+  .receipt { display: flex; gap: 10px; align-items: baseline; margin-top: 10px; font-size: 13px; color: var(--ink-secondary); }
+  .receipt .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--sage); font-weight: 600; }
+  .receipt .btn { margin-left: auto; color: var(--ink-tertiary); }
+  .receipt .btn + .btn { margin-left: 0; }
+  .actions { margin-top: 10px; }
+  .ghost { display: inline-block; border: 1px solid #C9C3B8; border-radius: 3px; padding: 4px 10px; font-size: 13px; color: var(--ink-secondary); }
+  .hint { font-size: 12px; color: var(--ink-tertiary); margin: 8px 0 0; }
+  .primary { display: block; margin: 12px 0 0; text-align: center; background: var(--ink-primary); color: #fff; border-radius: 3px; padding: 8px; font-weight: 600; }
+
+  /* the syllable line under the field */
+  .syl-head { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+  .syl-head .chev { color: var(--ink-tertiary); }
+  .syl-head .count { color: var(--ink-tertiary); font-variant-numeric: tabular-nums; }
+  .syl { font-family: "Source Serif 4", Georgia, serif; font-size: 15px; line-height: 1.7; margin: 6px 0 0; }
+  .syl.boxed { background: #fff; border: 1px solid var(--lavender); border-radius: 3px; padding: 6px 8px; }
+  .syl.preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; color: var(--ink-secondary); font-size: 14px; }
+  .s { display: inline; padding: 0 1px; border-radius: 2px; }
+  .s.placed { color: var(--ink-tertiary); }
+  .s.cur { background: #fff; outline: 1px solid var(--lavender); padding: 2px 3px; }
+  .s.mark { text-decoration: underline; text-decoration-color: var(--sage); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .plain .s { cursor: default; }
+
+  /* stations */
+  .station { padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+  .station:last-child { border-bottom: 0; }
+  .st-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-secondary); }
+  .st-head .count { font-weight: 400; text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink-tertiary); }
+  .st-head .chev { font-weight: 400; color: var(--ink-tertiary); }
+  .gone { opacity: .35; text-decoration: line-through; }
+  .note { font-size: 12px; color: var(--ink-tertiary); margin: 6px 0 0; }
+
+  /* the dock */
+  .dock { width: 360px; background: #fff; border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+  .dock .top { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+  .dock .top b { color: var(--ink-primary); font-family: "Source Serif 4", Georgia, serif; font-weight: 400; }
+  .lyric-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; padding: 6px 0; font-size: 13px; color: var(--ink-secondary); }
+  .cell { border: 1px solid #C9C3B8; border-radius: 3px; padding: 3px 9px; font-size: 13px; color: var(--ink-primary); background: #fff; text-align: center; min-width: 26px; }
+  .cell.on { background: var(--lavender); color: #fff; border-color: var(--lavender); }
+  .typed { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .input { border: 1px solid var(--lavender); border-radius: 3px; padding: 4px 8px; font-family: "Source Serif 4", Georgia, serif; font-size: 15px; background: #fff; color: var(--ink-primary); }
+  .input .caret { display: inline-block; width: 1px; height: 1em; background: var(--ink-primary); vertical-align: -2px; margin-left: 1px; }
+  .undo { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+</style>
+</head>
+<body>
+<main>
+  <h1>N.114, Type Into Score. Drawing r1, 2026-09-08</h1>
+  <p class="lede">Source: the frame in <code>STATE.md</code> §THE ONE THING and <code>INBOX.md:92</code>, agreed 2026-09-07. Everything drawn as the tree renders it today is taken from <code>IntakePanel.svelte</code>, <code>SyllableStation.svelte</code>, <code>CorrectionSurface.svelte:744-812</code>, and <code>+page.svelte:4070-4100</code>, read this session. Everything else is marked <span class="desk">desk inference</span> and is yours to wave off. The poem is Pushkin's first line; four of twelve syllables are shown placed.</p>
+
+  <h2>Plate 1. The Input band, no score, and three readings of “collapsed by default”</h2>
+  <p class="lede">The frame says the line is live on text present and collapsed by default, and says nothing about what a collapsed line shows. That is the one taste question in N.114. Three readings, A to C.</p>
+  <div class="row">
+
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <div class="syl-head"><span>Syllables</span><span class="chev">›</span></div>
+            <div class="actions"><span class="ghost">Choose a file</span></div>
+            <p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+          </div>
+          <div class="primary">Transcribe and fit</div>
+        </div>
+      </div>
+      <figcaption><b>Reading A: a bare row.</b> One line, “Syllables”, a chevron, nothing else. Cheapest. Costs a click every time the singer wants to see the division. <span class="desk">desk inference:</span> the word “Syllables” is coined here; the tree retired that header on 2026-08-21 (<code>SyllableStation.svelte</code> head comment).</figcaption>
+    </figure>
+
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <div class="syl-head"><span class="syl preview">Я вас лю-бил: лю-бовь е-щё, быть мо-жет, В ду-ше мо-ей у-гас-ла не сов-сем;</span><span class="chev">›</span></div>
+            <div class="actions"><span class="ghost">Choose a file</span></div>
+            <p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+          </div>
+          <div class="primary">Transcribe and fit</div>
+        </div>
+      </div>
+      <figcaption><b>Reading B: a one-line preview.</b> The first line of the syllabification, clipped, with the chevron. The singer sees that division exists without opening it. Costs a clipped line of Cyrillic, which reads as a fragment. <span class="desk">desk inference:</span> the clip.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span>24 syllables ›</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <div class="actions"><span class="ghost">Choose a file</span></div>
+            <p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+          </div>
+          <div class="primary">Transcribe and fit</div>
+        </div>
+      </div>
+      <figcaption><b>Reading C: the receipt carries it.</b> No new row. The poem's receipt gains a third measure, “24 syllables”, and that measure is the disclosure. Nothing is added to the frame's height. Costs discoverability: a count does not look like a door. <span class="desk">desk inference:</span> the receipt already counts lines and words (<code>IntakePanel.svelte:359-361</code>), so a syllable count is the same kind of thing.</figcaption>
+    </figure>
+  </div>
+  <p class="lede"><b>Desk recommendation: C.</b> It adds no element, it sits with the two counts the receipt already has, and the frame stays the height Dann ruled on 2026-09-07. A is the fallback if C's count does not read as a door on his screen.</p>
+
+  <h2>Plate 2. Opened, without a score: read-only syllabification, hyphens, no box</h2>
+  <div class="row">
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span>24 syllables ⌄</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <p class="syl plain">Я вас лю-бил: лю-бовь е-щё, быть мо-жет,<br>В ду-ше мо-ей у-гас-ла не сов-сем;</p>
+            <div class="actions"><span class="ghost">Choose a file</span></div>
+            <p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+          </div>
+          <div class="primary">Transcribe and fit</div>
+        </div>
+      </div>
+      <figcaption>Plain running text, the same face as the field, hyphens at slot boundaries exactly as <code>SyllableStation</code> builds them today. Nothing to click. No box, because a box is the sign that clicking does something (the frame's own rule).</figcaption>
+    </figure>
+  </div>
+
+  <h2>Plate 3. Opened, with a score: the box appears, placed syllables grey, one cursor</h2>
+  <div class="row">
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span>4 / 24 syllables ⌄</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <div class="receipt"><span class="tag">score</span><span>pushkin-cui.musicxml</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <p class="syl boxed"><span class="s placed">Я</span> <span class="s placed">вас</span> <span class="s placed">лю-</span><span class="s placed">бил:</span> <span class="s cur">лю-</span><span class="s">бовь</span> <span class="s">е-</span><span class="s">щё,</span> <span class="s">быть</span> <span class="s">мо-</span><span class="s">жет,</span><br><span class="s">В</span> <span class="s">ду-</span><span class="s">ше</span> <span class="s">мо-</span><span class="s">ей</span> <span class="s">у-</span><span class="s">гас-</span><span class="s">ла</span> <span class="s">не</span> <span class="s">сов-</span><span class="s">сем;</span></p>
+            <div class="actions"><span class="ghost">Choose a file</span></div>
+            <p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+          </div>
+          <div class="primary">Transcribe and fit</div>
+        </div>
+      </div>
+      <figcaption>The box is <code>SyllableStation</code>'s existing treatment moved: white ground, 1 px lavender rule, placed syllables in tertiary ink, the cursor a white cell with a lavender outline (<code>SyllableStation.svelte:188-189</code>). A click on any syllable moves the cursor, as today. <span class="desk">desk inference:</span> under reading C the count becomes the placed pair, “4 / 24”, once a score is present, so the counter Score markup keeps and this one read the same number.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="drawer">
+        <div class="band lav"><span>Score markup</span><span class="chev">⌃</span></div>
+        <div class="station"><div class="st-head gone"><span>Underlay</span><span class="chev">⌄</span></div><p class="note">Leaves. The queue and the cursor live under the field now.</p></div>
+        <div class="station"><div class="st-head"><span>Corrections <span class="count">4&thinsp;/&thinsp;24</span></span><span class="chev">⌄</span></div></div>
+        <div class="station"><div class="st-head"><span>Voice</span><span class="chev">⌄</span></div></div>
+      </div>
+      <figcaption>Score markup after N.114: Corrections and Voice, and the placed count stays on the Lyric label inside Corrections where N.65 ship B put it. The Underlay station is drawn struck so the removal is visible; nothing else in this band moves.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Plate 4. The loupe dock's Lyric station, with N.114's typed field</h2>
+  <div class="row">
+    <figure>
+      <div class="dock">
+        <div class="top"><span>Taken: <b>note 5, F♯4, quarter</b></span><span>‹ ›</span></div>
+        <div class="station">
+          <div class="st-head"><span>Lyric <span class="count">4&thinsp;/&thinsp;24</span></span></div>
+          <p class="syl" style="margin-top:6px"><span class="s placed">бил:</span> <span class="s cur">лю-</span><span class="s">бовь</span> <span class="s">е-</span><span class="s">щё,</span></p>
+          <div class="lyric-row typed"><span class="input">любовь<span class="caret"></span></span><span class="cell">Place</span></div>
+          <div class="lyric-row"><span>This note sustains the syllable</span><span class="cell">Melisma</span><span></span></div>
+          <div class="lyric-row"><span>Syllables, to the end of the lyric</span><span class="cell">←</span><span class="cell">→</span></div>
+          <div class="lyric-row"><span>Syllables, to the next open note</span><span class="cell">←</span><span class="cell">→</span></div>
+        </div>
+        <div class="undo"><span>Undo: syllable placed</span><span>·</span><span>Redo</span></div>
+      </div>
+      <figcaption>Everything but one row is the station as it ships (<code>CorrectionSurface.svelte:744-812</code>). The new row is the typed field, sitting between the next syllables and the melisma toggle: it opens on the word the cursor is in, the singer retypes it, and Place rewrites that word in the poem. N.112 then re-seats. <span class="desk">desk inference:</span> the row's position, the word “Place”, and that the field opens pre-filled with the cursor's word rather than empty.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="drawer">
+        <div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+        <div class="inner">
+          <div class="intake">
+            <div class="field">Я вас любил: <span class="s mark">любовь</span> ещё, быть может,
+В душе моей угасла не совсем;</div>
+            <div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span>5 / 24 syllables ⌄</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+            <p class="syl boxed"><span class="s placed">Я</span> <span class="s placed">вас</span> <span class="s placed">лю-</span><span class="s placed">бил:</span> <span class="s placed mark">лю-</span><span class="s cur mark">бовь</span> <span class="s">е-</span><span class="s">щё,</span> <span class="s">быть</span> <span class="s">мо-</span><span class="s">жет,</span><br><span class="s">В</span> <span class="s">ду-</span><span class="s">ше</span> <span class="s">мо-</span><span class="s">ей</span> <span class="s">у-</span><span class="s">гас-</span><span class="s">ла</span> <span class="s">не</span> <span class="s">сов-</span><span class="s">сем;</span></p>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>After Place.</b> The frame says the typed word is “marked in the field”. Drawn here as a sage underline on the word, in both the field and the boxed line. <span class="desk">desk inference, and a real constraint:</span> the field is a <code>&lt;textarea&gt;</code> (<code>IntakePanel.svelte:316</code>), and a textarea cannot carry a mark on one word. Marking inside the field means either an overlay behind the textarea or replacing the textarea with an editable block, and both are Code's cost to state. The boxed line can carry the mark for free. Which of the two the mark lives in is the second thing this drawing asks.</figcaption>
+    </figure>
+  </div>
+
+  <h2>What this drawing does not settle</h2>
+  <p class="lede">Whether the syllable line stays open once the singer opens it (per song, per session, or never remembered). What the line shows while the dictionary is loading. The French for any new string, of which there are at most two under reading C (“syllables” on the receipt, and “Place” in the dock); none is written here.</p>
+</main>
+</body>
+</html>

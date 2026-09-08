@@ -509,44 +509,76 @@ export function melismaRuns(map: PairingMap, eventIds: readonly string[]): Melis
 }
 
 /**
- * The notes at the end of the line that the singer's own edit emptied.
+ * The notes the singer's own edit emptied, which draw nothing on either line.
  *
  * **RIDER 0, RULED BY DANN 2026-09-07:** *"it draws nothing, because the singer
- * removed the word."* Past the end of a seated run a vacated note drew the
- * engraved file's old word (`memo-n112-text-authoritative_r1_2026-09-07.md`
- * §8), because the renderer falls through to `ev.syllable?.text` for any event
- * the preview does not name.
+ * removed the word."* A vacated note drew the engraved file's old word
+ * (`memo-n112-text-authoritative_r1_2026-09-07.md` §8), because the renderer
+ * falls through to `ev.syllable?.text` for any event the preview does not name.
  *
- * **THE GATE IS `queueExhausted`, and it is a DESK DEFAULT, 2026-09-07.** The
- * honest question is "did the singer empty this note", and no derived value can
- * see an act. What it can see is whether anything is left to put here: with
- * every slot of the poem placed, a bare note past the last seat has nothing
- * coming to it and is vacated. With slots still unplaced, the same note is one
- * the hand has not reached yet, and blanking it would take away the file's
- * words while the singer is still working from them, which is the affordance
- * N.111's hand relies on.
+ * **IT WAS `vacatedTail` UNTIL N.113a, AND THE TAIL WAS NEVER THE WHOLE OF
+ * IT.** Two things forced the widening, both from Dann's walk of `e1bcb67`:
  *
- * The alternative considered and NOT taken: blank every bare note after the
- * last seat unconditionally. It fixes the same walk and breaks the hand.
+ * 1. **His deletion ruling.** A deletion now vacates its own notes and moves
+ *    nothing else (`reseat.ts`), so a vacated note is usually in the MIDDLE of
+ *    the seated run rather than past the end of it. The old function looked
+ *    only past the last seat and would have found nothing to blank at all.
+ * 2. **The defect he walked.** With a melisma having pushed one syllable off
+ *    the end, deleting `много` left the last note reading `ка ка` on both
+ *    lines. The gate is `queueExhausted`, the displaced syllable left one slot
+ *    unplaced, so the gate read false and the vacated notes kept the file's
+ *    words. A pending displacement must not be able to make the gate lie about
+ *    a note inside the run.
  *
- * IT IS THE TAIL ONLY, which is not a narrowing but a consequence: a deletion
- * closes its holes up (`reseat.ts`), so a note the singer's edit empties is
- * always at the end of the run.
+ * **SO THERE ARE TWO REGIONS, and only one of them is gated.**
+ *
+ * - **INSIDE the run**, between the first seated note and the last, an
+ *   undecided note is vacated ALWAYS, with no gate at all. That is Dann's own
+ *   ruling of 2026-09-04, on the `ка ка` close he walked then: inside a seated
+ *   run an undecided note draws nothing and must not draw the file's stale
+ *   cell. Nothing can be waiting to fill it, because the run has already
+ *   passed it.
+ * - **OUTSIDE the run**, before the first seat or after the last, an undecided
+ *   note is vacated only when the queue is exhausted. **That gate is a DESK
+ *   DEFAULT of 2026-09-07 and it stands unchanged.** With slots still
+ *   unplaced, a note past the last seat is one the hand has not reached, and
+ *   blanking it would take away the file's words while the singer is still
+ *   working from them, which is the affordance N.111's hand relies on.
+ *
+ * The alternative considered and NOT taken, twice now: blank every bare note
+ * unconditionally. It fixes the same walk and breaks the hand.
+ *
+ * WHAT IS STILL NOT COVERED, and it is named rather than hidden: with a
+ * melisma having displaced a slot, deleting the poem's FIRST word leaves the
+ * head notes outside the run with the gate shut, so they keep the file's
+ * words. Closing that needs a gate that can tell a seat the singer SPENT from
+ * one that is waiting, and no derived value can see the difference.
  */
-export function vacatedTail(
+export function vacatedNotes(
 	map: PairingMap,
 	eventIds: readonly string[],
 	queueExhausted: boolean,
 ): Set<string> {
 	const out = new Set<string>();
-	if (!queueExhausted) return out;
+	let first = -1;
 	let last = -1;
 	for (let i = 0; i < eventIds.length; i++) {
-		if (map[eventIds[i]]?.kind === 'syllable') last = i;
+		if (map[eventIds[i]]?.kind === 'syllable') {
+			if (first === -1) first = i;
+			last = i;
+		}
 	}
-	if (last === -1) return out;
-	for (let i = last + 1; i < eventIds.length; i++) {
-		if (map[eventIds[i]] === undefined) out.add(eventIds[i]);
+	/* NO SEAT, NO RUN, NOTHING VACATED. On a lyric-bearing score the singer has
+	   not started placing on, every note keeps the file's own words, which is
+	   what the hand works from. */
+	if (first === -1) return out;
+	for (let i = 0; i < eventIds.length; i++) {
+		if (map[eventIds[i]] !== undefined) continue;
+		if (i > first && i < last) {
+			out.add(eventIds[i]);
+			continue;
+		}
+		if (queueExhausted) out.add(eventIds[i]);
 	}
 	return out;
 }

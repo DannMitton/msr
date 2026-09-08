@@ -1124,6 +1124,19 @@
 		gap: 4px;
 	}
 
+	/* N.113a. THE ROWS TAKE THE GAP THE DOCK'S OTHER ROWS HAVE. Dann's walk of
+	   `e1bcb67`, 2026-09-07: "the dock's Melisma pill sits on the two
+	   shift-arrow pairs with no gap, and the arrow pairs touch each other."
+
+	   FOUR PIXELS, AND IT IS NOT A CHOICE. It is the same 4 px `.cells` puts
+	   between the correction grid's pills, which is what a wrapped row of that
+	   grid already shows vertically, so the LYRIC station's three rows now read
+	   on the same rhythm as the station above them. The rows had `gap` for
+	   their own contents and nothing at all between one row and the next. */
+	.lyric-row + .lyric-row {
+		margin-top: 4px;
+	}
+
 	.lyric-label {
 		flex: 1 1 auto;
 		font-size: 0.75rem;

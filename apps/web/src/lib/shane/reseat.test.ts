@@ -1,5 +1,14 @@
 /**
- * N.112 increment 2. The seats follow the diff.
+ * N.112 increment 2, AMENDED BY N.113a. The seats follow the diff.
+ *
+ * **RULED BY DANN 2026-09-07 on his walk of `e1bcb67`**, reversing the desk
+ * default this file was written to: a deletion vacates its notes and moves
+ * NOTHING else, an insert takes OPEN notes only and never pushes the tail, and
+ * a replacement takes the notes the old word vacated. His words: *"I expected
+ * the mnogo to disappear without affecting the other text underlays."*
+ *
+ * Six expectations below were written for the slide and are rewritten here
+ * rather than deleted, so the ruling reads against what it replaced.
  *
  * THE SHAPE OF THESE TESTS. A poem's words, a queue built from them by hand,
  * and a line of note ids. The queue is hand-built for the same reason
@@ -99,15 +108,18 @@ describe('reseatByDiff', () => {
 		expect(r.removed).toBe(3);
 		expect(r.refreshed).toBe(3);
 		expect(r.seated).toBe(3);
-		expect(r.displaced).toBe(0);
+		expect(r.unseated).toBe(0);
 		// `тесная`'s first seat is the pairing that was already on n3.
 		const kept = r.map.n3;
 		expect(kept.kind === 'syllable' && kept.origin.word).toBe('тесная');
 	});
 
-	it('refreshes a matched word onto the same note when only its neighbour moved', () => {
-		// A word is deleted from the front. `тесная` keeps its three notes'
-		// worth of syllables but they slide back by three.
+	it('leaves a matched word on its own notes when the word before it is deleted', () => {
+		/* A word is deleted from the front. `тесная` STAYS on n3, n4 and n5.
+		   Until N.113a this expected `['тес', 'на', 'я', null, ...]`, because
+		   the removal's three holes were closed up and the tail slid down into
+		   them. Dann reversed that on 2026-09-07: the deletion vacates its own
+		   notes and moves nothing else. */
 		const after = [['тесная']];
 		const nextQueue: Slot[] = [
 			slot('тес', 0, 0, 0, 'тесная'),
@@ -115,24 +127,29 @@ describe('reseatByDiff', () => {
 			slot('я', 0, 0, 2, 'тесная'),
 		];
 		const r = reseatByDiff(seatAll(QUEUE, IDS), IDS, nextQueue, diffWordGrid(WORDS, after), WORDS);
-		expect(line(r.map, IDS)).toEqual(['тес', 'на', 'я', null, null, null, null, null]);
-		const p = r.map.n0;
-		// Re-originated, so the seat now points at the word's NEW coordinate.
+		expect(line(r.map, IDS)).toEqual([null, null, null, 'тес', 'на', 'я', null, null]);
+		expect(r.removed).toBe(3);
+		expect(r.refreshed).toBe(3);
+		const p = r.map.n3;
+		// Re-originated, so the seat now points at the word's NEW coordinate,
+		// on the note it was already sitting on.
 		expect(p.kind === 'syllable' && p.origin.wordIndex).toBe(0);
 		expect(p.kind === 'syllable' && p.origin.word).toBe('тесная');
 	});
 
-	it('closes the tail up when a word is deleted from the middle', () => {
+	it('vacates the note of a word deleted from the middle and moves nothing else', () => {
 		const before = [['раз', 'два', 'три']];
 		const after = [['раз', 'три']];
 		const q1 = [slot('раз', 0, 0, 0, 'раз'), slot('два', 0, 1, 0, 'два'), slot('три', 0, 2, 0, 'три')];
 		const q2 = [slot('раз', 0, 0, 0, 'раз'), slot('три', 0, 1, 0, 'три')];
 		const r = reseatByDiff(seatAll(q1, IDS), IDS, q2, diffWordGrid(before, after), before);
-		expect(line(r.map, IDS).slice(0, 3)).toEqual(['раз', 'три', null]);
+		// Until N.113a: `['раз', 'три', null]`, the tail closed up.
+		expect(line(r.map, IDS).slice(0, 3)).toEqual(['раз', null, 'три']);
 		expect(r.removed).toBe(1);
+		expect(r.seated).toBe(0);
 	});
 
-	it('slides the tail back one note per removed slot when two words go', () => {
+	it('vacates two notes in place when two words go, and the tail holds still', () => {
 		const before = [['раз', 'два', 'три', 'сто']];
 		const after = [['раз', 'сто']];
 		const q1 = [
@@ -143,7 +160,10 @@ describe('reseatByDiff', () => {
 		];
 		const q2 = [slot('раз', 0, 0, 0, 'раз'), slot('сто', 0, 1, 0, 'сто')];
 		const r = reseatByDiff(seatAll(q1, IDS), IDS, q2, diffWordGrid(before, after), before);
-		expect(line(r.map, IDS).slice(0, 4)).toEqual(['раз', 'сто', null, null]);
+		/* Until N.113a: `['раз', 'сто', null, null]`, and the highest-hole-first
+		   order that produced it is deleted with the close-up. There are no
+		   holes to order any more. */
+		expect(line(r.map, IDS).slice(0, 4)).toEqual(['раз', null, null, 'сто']);
 		expect(r.removed).toBe(2);
 	});
 
@@ -164,10 +184,10 @@ describe('reseatByDiff', () => {
 		const r = reseatByDiff(map, IDS, q2, diffWordGrid(before, after), before);
 		expect(line(r.map, IDS).slice(0, 3)).toEqual(['раз', 'два', 'три']);
 		expect(r.seated).toBe(1);
-		expect(r.displaced).toBe(0);
+		expect(r.unseated).toBe(0);
 	});
 
-	it('pushes the tail forward when an inserted word finds no open note', () => {
+	it('leaves an inserted word to the hand when the note after its anchor is taken', () => {
 		const before = [['раз', 'три']];
 		const after = [['раз', 'два', 'три']];
 		const q1 = [slot('раз', 0, 0, 0, 'раз'), slot('три', 0, 1, 0, 'три')];
@@ -177,14 +197,19 @@ describe('reseatByDiff', () => {
 			slot('три', 0, 2, 0, 'три'),
 		];
 		const r = reseatByDiff(seatAll(q1, IDS), IDS, q2, diffWordGrid(before, after), before);
-		expect(line(r.map, IDS).slice(0, 3)).toEqual(['раз', 'два', 'три']);
-		expect(r.seated).toBe(1);
-		// The line is eight notes long and only three are used, so nothing fell
-		// off the end.
-		expect(r.displaced).toBe(0);
+		/* `раз` and `три` sit on n0 and n1 with nothing open between them, so
+		   `два` gets no note at all and goes to the hand. Until N.113a this
+		   called `shiftToEndOfLyric` and produced `['раз', 'два', 'три']`, which
+		   moved a seat the singer had placed. */
+		expect(line(r.map, IDS).slice(0, 3)).toEqual(['раз', 'три', null]);
+		expect(r.seated).toBe(0);
+		expect(r.unseated).toBe(1);
 	});
 
-	it('reports a seat pushed off the end rather than losing it in silence', () => {
+	it('never pushes a seat off the end of the line', () => {
+		// Two notes, both taken, and a word inserted between the two words on
+		// them. Until N.113a the shift threw `три` off the end and reported it
+		// as displaced; now nothing moves and nothing is lost.
 		const before = [['раз', 'три']];
 		const after = [['раз', 'два', 'три']];
 		const short = ['n0', 'n1'];
@@ -195,8 +220,9 @@ describe('reseatByDiff', () => {
 			slot('три', 0, 2, 0, 'три'),
 		];
 		const r = reseatByDiff(seatAll(q1, short), short, q2, diffWordGrid(before, after), before);
-		expect(r.displaced).toBe(1);
-		expect(line(r.map, short)).toEqual(['раз', 'два']);
+		expect(line(r.map, short)).toEqual(['раз', 'три']);
+		expect(r.seated).toBe(0);
+		expect(r.unseated).toBe(1);
 	});
 
 	it('never invents a seat for a word that merely re-divided into more slots', () => {
@@ -382,8 +408,84 @@ describe('reseatByDiff', () => {
 		];
 		const qCut = [slot('раз', 0, 0, 0, 'раз'), slot('три', 0, 1, 0, 'три')];
 		const gone = reseatByDiff(seatAll(qFull, IDS), IDS, qCut, diffWordGrid(full, cut), full);
-		expect(line(gone.map, IDS).slice(0, 3)).toEqual(['раз', 'три', null]);
+		// N.113a: `два`'s note is vacated in place, so `три` stays on n2 and the
+		// hole it leaves is the note the round trip puts `два` back on.
+		expect(line(gone.map, IDS).slice(0, 3)).toEqual(['раз', null, 'три']);
 		const back = reseatByDiff(gone.map, IDS, qFull, diffWordGrid(cut, full), cut);
 		expect(line(back.map, IDS).slice(0, 3)).toEqual(['раз', 'два', 'три']);
+	});
+
+	/* ── N.113a, RULED BY DANN 2026-09-07 ────────────────────────────────
+	   *"I expected the mnogo to disappear without affecting the other text
+	   underlays."* Three pins for the rule itself, on the shape of his walk:
+	   a word deleted from the middle of a long placed line, and a replacement
+	   that changes syllable count in each direction. */
+
+	it('leaves every seat after a deletion exactly where it was', () => {
+		// Six words on six notes. The third goes; the other five do not move.
+		const before = [['раз', 'два', 'три', 'сто', 'шесть', 'семь']];
+		const after = [['раз', 'два', 'сто', 'шесть', 'семь']];
+		const names = ['раз', 'два', 'три', 'сто', 'шесть', 'семь'];
+		const q1 = names.map((w, i) => slot(w, 0, i, 0, w));
+		const q2 = after[0].map((w, i) => slot(w, 0, i, 0, w));
+		const r = reseatByDiff(seatAll(q1, IDS), IDS, q2, diffWordGrid(before, after), before);
+		expect(line(r.map, IDS).slice(0, 6)).toEqual([
+			'раз',
+			'два',
+			null,
+			'сто',
+			'шесть',
+			'семь',
+		]);
+		expect(r.removed).toBe(1);
+		expect(r.refreshed).toBe(5);
+		expect(r.seated).toBe(0);
+	});
+
+	it('gives a replacement only the notes the word it replaced vacated', () => {
+		// Three syllables become five. Two of the five find no open note,
+		// because the word after them is standing on those notes.
+		const before = [['комнатка', 'тесная']];
+		const after = [['бесконечная', 'тесная']];
+		const q2: Slot[] = [
+			slot('бес', 0, 0, 0, 'бесконечная'),
+			slot('ко', 0, 0, 1, 'бесконечная'),
+			slot('неч', 0, 0, 2, 'бесконечная'),
+			slot('на', 0, 0, 3, 'бесконечная'),
+			slot('я', 0, 0, 4, 'бесконечная'),
+			slot('тес', 0, 1, 0, 'тесная'),
+			slot('на', 0, 1, 1, 'тесная'),
+			slot('я', 0, 1, 2, 'тесная'),
+		];
+		const r = reseatByDiff(seatAll(QUEUE, IDS), IDS, q2, diffWordGrid(WORDS, after), WORDS);
+		expect(line(r.map, IDS)).toEqual([
+			'бес',
+			'ко',
+			'неч',
+			'тес',
+			'на',
+			'я',
+			null,
+			null,
+		]);
+		expect(r.seated).toBe(3);
+		expect(r.unseated).toBe(2);
+	});
+
+	it('leaves the surplus notes vacated when a replacement is shorter', () => {
+		// Three syllables become one, so two of the three notes stay bare and
+		// `тесная` does not move down into them.
+		const before = [['комнатка', 'тесная']];
+		const after = [['дом', 'тесная']];
+		const q2: Slot[] = [
+			slot('дом', 0, 0, 0, 'дом'),
+			slot('тес', 0, 1, 0, 'тесная'),
+			slot('на', 0, 1, 1, 'тесная'),
+			slot('я', 0, 1, 2, 'тесная'),
+		];
+		const r = reseatByDiff(seatAll(QUEUE, IDS), IDS, q2, diffWordGrid(WORDS, after), WORDS);
+		expect(line(r.map, IDS)).toEqual(['дом', null, null, 'тес', 'на', 'я', null, null]);
+		expect(r.removed).toBe(3);
+		expect(r.seated).toBe(1);
 	});
 });

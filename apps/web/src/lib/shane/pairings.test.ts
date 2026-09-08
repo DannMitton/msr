@@ -31,7 +31,7 @@ import {
 	toggleMelisma,
 	melismaIds,
 	melismaRuns,
-	vacatedTail,
+	vacatedNotes,
 } from './pairings';
 import type { Pairing, PairingMap, Slot } from './pairings';
 
@@ -296,29 +296,56 @@ describe('melismaRuns', () => {
 	});
 });
 
-describe('vacatedTail', () => {
+describe('vacatedNotes', () => {
 	it('names the bare notes after the last seat once the queue is exhausted', () => {
 		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
-		expect([...vacatedTail(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
+		expect([...vacatedNotes(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
 	});
 
-	it('names nothing while the queue still has slots to place', () => {
+	it('names nothing outside the run while the queue still has slots to place', () => {
 		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
-		expect(vacatedTail(map, IDS, false).size).toBe(0);
+		expect(vacatedNotes(map, IDS, false).size).toBe(0);
 	});
 
 	it('names nothing when no note is seated at all', () => {
-		expect(vacatedTail({}, IDS, true).size).toBe(0);
+		expect(vacatedNotes({}, IDS, true).size).toBe(0);
 	});
 
 	it('leaves a marked note alone, because a melisma is a decision', () => {
 		const map: PairingMap = { n0: syl('ой', 0), n1: { kind: 'melisma' } };
 		// n1 is decided, so it is not vacated; n2 onward are.
-		expect([...vacatedTail(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
+		expect([...vacatedNotes(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
 	});
 
-	it('measures the tail from the last SEATED note, not the last entry', () => {
+	it('measures the run from the last SEATED note, not the last entry', () => {
 		const map: PairingMap = { n0: syl('ой', 0), n4: { kind: 'melisma' } };
-		expect([...vacatedTail(map, IDS, true)]).toEqual(['n1', 'n2', 'n3', 'n5']);
+		expect([...vacatedNotes(map, IDS, true)]).toEqual(['n1', 'n2', 'n3', 'n5']);
+	});
+
+	/* ── N.113a, the defect Dann walked on `e1bcb67` ──────────────────────
+	   *"after a Melisma press had pushed one syllable off the end, deleting
+	   много left the last note reading ка ка on both lines."* The melisma
+	   displaced a slot, so `queueExhausted` was false for ever after, and the
+	   gate that guards the hand's affordance shut the blanking off everywhere.
+	   Inside the run there is no gate any more. */
+
+	it('vacates a hole INSIDE the run even while the queue is not exhausted', () => {
+		// `много`'s note, vacated in place by the deletion, with a displaced
+		// syllable still unplaced so the gate reads false.
+		const map: PairingMap = { n0: syl('ой', 0), n2: syl('да', 1), n3: syl('нет', 2) };
+		expect([...vacatedNotes(map, IDS, false)]).toEqual(['n1']);
+	});
+
+	it('vacates two adjacent holes inside the run with the gate shut', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n3: syl('да', 1) };
+		expect([...vacatedNotes(map, IDS, false)]).toEqual(['n1', 'n2']);
+	});
+
+	it('still keeps the file\'s words past the last seat while slots wait', () => {
+		// The hand's affordance, unchanged: only the hole inside the run goes.
+		const map: PairingMap = { n0: syl('ой', 0), n2: syl('да', 1) };
+		const out = vacatedNotes(map, IDS, false);
+		expect([...out]).toEqual(['n1']);
+		expect(out.has('n3')).toBe(false);
 	});
 });

@@ -25,7 +25,6 @@
 		clipToHead,
 		inkCrop,
 		centreOnPage,
-		insertionBar,
 		pageInset,
 		measureWindow,
 		nearestTarget,
@@ -160,13 +159,6 @@
 	   answer. It is written down rather than inlined so that a change to the
 	   tag's type is a change to something named. */
 	const CHROME = 46.5;
-
-	/* SMuFL's three notehead codepoints, spec-stable and already the registry's
-	   own (`smufl-metadata.ts:85-87`). The insertion bar needs to find the
-	   notehead among the several `<text>` elements in a note's group, and its
-	   character is the one thing that names it without depending on the order
-	   the renderer happens to push its parts in. */
-	const NOTEHEADS = new Set(['\uE0A2', '\uE0A3', '\uE0A4']);
 
 	/* ── THE FRAME IS CUT TO THE PAGE'S INK ──────────────────────────────
 	   Ruled by Dann 2026-08-27: the loupe was too loose around its content,
@@ -394,8 +386,7 @@
 		   builds each one from `staffTop - 3.5 * lineGap` to
 		   `staffBottom + 3.5 * lineGap` around a staff of `4 * lineGap`
 		   (`staff-renderer.ts:1007-1011`), so the rectangle is eleven line gaps
-		   tall and one gap is an eleventh of it. The sage rectangle and the
-		   insertion bar both need it. */
+		   tall and one gap is an eleventh of it. The sage rectangle needs it. */
 		const hitY = Number(first.getAttribute('y'));
 		const hitH = Number(first.getAttribute('height'));
 		/** One line gap, an eleventh of that rectangle. Three things need it. */
@@ -557,9 +548,12 @@
 		   its children carry it. A descendant of `[data-tacet]` is skipped because
 		   the composed H-bar's body sits inside a `scale()` and `getBBox()` on it
 		   returns local coordinates; the group's own box is the drawn one. The
-		   analysis layer, the page's held rectangle and the selection ring are
-		   stripped from the clone at `:594` and after, so they must not size a
-		   crop that will not paint them. */
+		   analysis layer and the page's held rectangle are stripped from the
+		   clone below, so they must not size a crop that will not paint them.
+		   The selection ring is NOT stripped since N.113a and is skipped for
+		   the opposite reason: it is a mark on the music rather than music, and
+		   its box is two and a half times as tall as it is wide, so letting it
+		   size the crop would open the frame around the taken note alone. */
 		const nodes = [...sysEl.querySelectorAll('*')];
 		const gate = nodes.findIndex((el) => el.matches(MUSIC_MARK));
 		const inkXs: number[] = [];
@@ -662,7 +656,27 @@
 		   and it serves both viewports because the head and the body are two
 		   crops of this one clone. */
 		for (const el of clone.querySelectorAll('[data-analysis]')) el.remove();
+		/* THE PAGE'S OWN MARK STAYS, N.113a, AND ONLY THE GROUP'S ATTRIBUTE
+		   COMES OFF. RULED BY DANN 2026-09-07 from his walk of `e1bcb67`: the
+		   loupe marks the taken note "the way the page does, a box on the
+		   notehead". His words on what it replaced: the bar drawn after the
+		   notehead is *"misleading because the insertion point was in the space
+		   after тес"*.
+
+		   The page's mark is a rectangle carrying `data-selection-ring`, built
+		   by `VoiceProfilePane.svelte` from the notehead's measured ink and
+		   inserted at the front of the SYSTEM, so the clone already holds it
+		   and it already sits in the system's coordinate space. Keeping its
+		   `data-note-selected` is the whole change: the pane's stylesheet hides
+		   a ring that has lost that attribute.
+
+		   THE GROUP'S ATTRIBUTE STILL COMES OFF, and it must. Dann struck the
+		   magnified outline on 2026-08-26 because it rode the note's whole
+		   group, whose box includes the transparent hit rectangle, and read as
+		   a tall capsule at 2.4 times. That mark is not this one: the ring is
+		   sized to the notehead's ink, not to the group's box. */
 		for (const el of clone.querySelectorAll('[data-note-selected]')) {
+			if (el.hasAttribute('data-selection-ring')) continue;
 			el.removeAttribute('data-note-selected');
 		}
 		/* THE HIT RECTANGLES ARE RENAMED IN THE CLONE, and that is what keeps
@@ -675,71 +689,6 @@
 			const id = el.getAttribute('data-hit') ?? '';
 			el.removeAttribute('data-hit');
 			el.setAttribute('data-loupe-hit', id);
-		}
-
-		/* FINALE SPEEDY'S INSERTION BAR, at the taken entry, drawn rather than
-		   inherited. Dann's ruling of 2026-08-26 struck the magnified selection
-		   outline: the shipped outline rides the note's whole group and the
-		   group's box includes the transparent hit rectangle, so at 2.4 times it
-		   read as a tall capsule around the entry instead of a bar through it.
-
-		   THE NOTEHEAD IS FOUND BY ITS OWN CHARACTER. SMuFL fixes the three
-		   notehead codepoints (`smufl-metadata.ts:85-87`), and the renderer
-		   emits each as a `<text>` centred on the column
-		   (`staff-renderer.ts:502-505`, `:1061`), so the notehead's inked box is
-		   the one thing in the group that reliably gives both the column's x and
-		   the note's own y. It is measured on the PAGE, which is live and
-		   laid out, and the numbers carry into the clone unchanged because the
-		   clone keeps the system's coordinate space. */
-		let bar = '';
-		if (selectedEventId && hitH > 0) {
-			const group = container
-				.querySelector(`[data-hit="${CSS.escape(selectedEventId)}"]`)
-				?.closest('[data-event-id]');
-			const head = group
-				? [...group.querySelectorAll('text')].find((t) =>
-						NOTEHEADS.has(t.textContent ?? ''),
-					)
-				: undefined;
-			if (head) {
-				/* THE COLUMN'S X FROM THE BOX, THE NOTE'S Y FROM THE ATTRIBUTE.
-				   `glyphAt` centres the notehead on its column by ADVANCE width
-				   (`staff-renderer.ts:502-505`), and `getBBox` on an SVG `<text>`
-				   returns exactly that advance box, so its horizontal centre is
-				   the column to the pixel.
-
-				   ITS VERTICAL EXTENT IS NOT THE NOTEHEAD. The same box is the
-				   font's own ascent and descent, which measured 95 user units
-				   here against a staff of 22, and a bar built from it ran from
-				   above the staff down through the IPA line. The renderer already
-				   knows where the note sits and writes it into the element's `y`,
-				   which is the notehead's centre on the staff, and a notehead is
-				   one stave space tall. Read, not measured. */
-				const noteY = Number(head.getAttribute('y'));
-				const b = (head as SVGGraphicsElement).getBBox();
-				const staffTop = hitY + 3.5 * lineGap;
-				const g = insertionBar(
-					b.x + b.width / 2,
-					staffTop,
-					staffTop + 4 * lineGap,
-					noteY - 0.6 * lineGap,
-					noteY + 0.6 * lineGap,
-					lineGap,
-				);
-				const half = g.thickness / 2;
-				const cap = g.capWidth / 2;
-				/* LAVENDER, ruled by Dann 2026-08-27 on the desktop walk: lavender
-				   is the voice's colour and the bar marks a musical place. The
-				   sage held-measure rectangle stays sage, so the two marks are
-				   two colours doing two jobs: sage says which measure the page is
-				   working on, lavender says where in it the singer stands. */
-				bar =
-					`<g data-insertion-bar="" pointer-events="none" fill="var(--deeper-lavender, #8e7e9b)">` +
-					`<rect x="${g.x - half}" y="${g.top}" width="${g.thickness}" height="${g.bottom - g.top}"/>` +
-					`<path d="M${g.x - cap} ${g.top} L${g.x + cap} ${g.top} L${g.x} ${g.top + g.capHeight} Z"/>` +
-					`<path d="M${g.x - cap} ${g.bottom} L${g.x + cap} ${g.bottom} L${g.x} ${g.bottom - g.capHeight} Z"/>` +
-					`</g>`;
-			}
 		}
 
 		/* ONE SAGE RECTANGLE ON THE PAGE, marking the measure the loupe holds.
@@ -803,7 +752,7 @@
 		);
 
 		frame = {
-			inner: clone.innerHTML + bar,
+			inner: clone.innerHTML,
 			viewBox: `${view.left} ${cropTop} ${viewSpan} ${cropHeight}`,
 			width,
 			left,

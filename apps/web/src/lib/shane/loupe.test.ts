@@ -17,7 +17,6 @@ import {
 	commonInkBox,
 	headBound,
 	inkCrop,
-	insertionBar,
 	isDismissSwipe,
 	measureWindow,
 	nearestTarget,
@@ -136,46 +135,6 @@ describe('isDismissSwipe', () => {
 		expect(isDismissSwipe(0, SWIPE_DISMISS_PX - 1)).toBe(false);
 		expect(isDismissSwipe(0, -120)).toBe(false);
 		expect(isDismissSwipe(-140, 80)).toBe(false);
-	});
-});
-
-describe('insertionBar', () => {
-	// A staff of five lines at a 10 px gap: top 100, bottom 140, middle line 120.
-	const STAFF_TOP = 100;
-	const STAFF_BOTTOM = 140;
-	const GAP = 10;
-
-	it('spans the staff with a gap of air at each end', () => {
-		// A notehead on the middle line, 12 wide and 8 tall.
-		const b = insertionBar(200, STAFF_TOP, STAFF_BOTTOM, 116, 124, GAP);
-		expect(b.x).toBe(200);
-		expect(b.top).toBe(90);
-		expect(b.bottom).toBe(150);
-	});
-
-	it('reaches past the staff to bisect a notehead on ledger lines', () => {
-		// Two ledger lines above: the notehead sits at 76 to 84.
-		const high = insertionBar(200, STAFF_TOP, STAFF_BOTTOM, 76, 84, GAP);
-		expect(high.top).toBe(71);
-		expect(high.bottom).toBe(150);
-
-		const low = insertionBar(200, STAFF_TOP, STAFF_BOTTOM, 156, 164, GAP);
-		expect(low.top).toBe(90);
-		expect(low.bottom).toBe(169);
-	});
-
-	it('scales with the engraving rather than with the screen', () => {
-		const small = insertionBar(0, 0, 4 * 5.5, 10, 18, 5.5);
-		const large = insertionBar(0, 0, 4 * 22, 40, 72, 22);
-		expect(large.thickness / small.thickness).toBeCloseTo(4);
-		expect(large.capWidth / small.capWidth).toBeCloseTo(4);
-		expect(large.capHeight / small.capHeight).toBeCloseTo(4);
-	});
-
-	it('draws a bar, not a barline: the caps are wider than the bar', () => {
-		const b = insertionBar(200, STAFF_TOP, STAFF_BOTTOM, 116, 124, GAP);
-		expect(b.capWidth).toBeGreaterThan(b.thickness * 2);
-		expect(b.bottom).toBeGreaterThan(b.top);
 	});
 });
 

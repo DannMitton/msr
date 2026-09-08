@@ -191,52 +191,13 @@ export function isDismissSwipe(dx: number, dy: number): boolean {
 	return dy >= SWIPE_DISMISS_PX && dy > Math.abs(dx);
 }
 
-/** The insertion bar's geometry, in the system's own coordinate space. */
-export interface InsertionBar {
-	/** The bar's centre line, through the notehead. */
-	x: number;
-	top: number;
-	bottom: number;
-	thickness: number;
-	capWidth: number;
-	capHeight: number;
-}
-
-/**
- * Finale Speedy's insertion bar, at the taken entry.
- *
- * A thin vertical bar bisecting the notehead, with a small inward triangle
- * capping each terminus so the bar never reads as a barline. Dann's ruling of
- * 2026-08-26 replaced the magnified selection outline with this: the shipped
- * outline rides the note's whole group, and the group's box includes the
- * transparent rectangle that makes a 7 px notehead tappable, so at 2.4 times
- * it read as a tall capsule around the entry rather than as a bar through it.
- *
- * IT SPANS THE STAFF, and reaches further only when the notehead sits outside
- * the staff on ledger lines. A bar that stopped at the staff would miss the
- * note it is meant to bisect, and a bar sized to the notehead alone would be
- * too short to read as Speedy's frame.
- *
- * Every number is in line gaps, so the bar scales with the engraving rather
- * than with the screen.
- */
-export function insertionBar(
-	centreX: number,
-	staffTop: number,
-	staffBottom: number,
-	headTop: number,
-	headBottom: number,
-	lineGap: number,
-): InsertionBar {
-	return {
-		x: centreX,
-		top: Math.min(staffTop - lineGap, headTop - lineGap / 2),
-		bottom: Math.max(staffBottom + lineGap, headBottom + lineGap / 2),
-		thickness: lineGap * 0.22,
-		capWidth: lineGap * 0.9,
-		capHeight: lineGap * 0.8,
-	};
-}
+/* THE INSERTION BAR IS GONE, N.113a. `InsertionBar` and `insertionBar` stood
+   here from 2026-08-26 until 2026-09-07, when Dann walked `e1bcb67` and ruled
+   the mark out: the bar drew AFTER the notehead and read as an insertion point
+   between two notes, *"misleading because the insertion point was in the space
+   after тес"*. The loupe now keeps the page's own selection ring in its clone
+   (`Loupe.svelte`, the clone cleanup), so there is one mark for the taken note
+   on both surfaces and no geometry here for a second one. */
 
 /** A glyph's inked box, measured from the rendered face rather than declared. */
 export interface InkBox {

@@ -16,7 +16,7 @@
 		refreshPairings,
 		melismaIds,
 		toggleMelisma,
-		vacatedTail,
+		vacatedNotes,
 		shiftToEndOfLyric,
 		shiftToNextOpenNote,
 		mergeOnUpload,
@@ -451,9 +451,11 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		   reach across while a vacated note does not. */
 		for (const id of melismaMarks) out.add(id);
 		/* RIDER 0, RULED BY DANN 2026-09-07: a note the singer's own edit
-		   vacates draws nothing. The rule and its DESK DEFAULT gate are
-		   `vacatedTail`'s, where a test can reach them. */
-		for (const id of vacatedTail(doc.pairings, eventIds, queueExhausted)) out.add(id);
+		   vacates draws nothing. N.113a widened it from the tail to the whole
+		   run, because his deletion ruling leaves the hole where the word was.
+		   The rule and its DESK DEFAULT gate are `vacatedNotes`', where a test
+		   can reach them. */
+		for (const id of vacatedNotes(doc.pairings, eventIds, queueExhausted)) out.add(id);
 		return out.size > 0 ? out : undefined;
 	});
 
@@ -1217,9 +1219,49 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	   must not have `5` swallowed by the score, and `closest` covers the
 	   contenteditable case as well as inputs. */
 	function handleCorrectionKey(e: KeyboardEvent): void {
-		if (!cursor) return;
+		/* THE FIELD GUARD COMES FIRST, ahead of every branch below it. It used
+		   to sit under the cursor test, which was harmless while the only keys
+		   this function claimed were bare ones. N.113a's Undo and Redo run with
+		   no cursor, so the guard has to be the first thing that happens. */
 		const el = e.target as HTMLElement | null;
 		if (el?.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+		/* ── N.113a. UNDO AND REDO AS HOTKEYS ─────────────────────────────
+		   RULED BY DANN 2026-09-07: *"on the desk, Cmd-Z (macOS) / Ctrl-Z
+		   executes Undo as a hotkey."* Shift-Cmd-Z and Ctrl-Y for Redo are the
+		   DESK DEFAULT that came with it, and so is the field rule: neither
+		   fires while a text field has focus, so the poem keeps the browser's
+		   own undo and a singer typing into the intake is never surprised.
+
+		   THE SAME STACK THE PILLS USE. `handleUndo` and `handleRedo` are the
+		   functions the loupe dock and the Corrections station already call,
+		   so a hotkey and a press cannot diverge (N.111-3b: one stack extended,
+		   never a second one added).
+
+		   IT RUNS WITH NO LOUPE OPEN, which is why it sits above the `cursor`
+		   test rather than inside the switch. The Undo pill in the drawer has
+		   never needed a taken note and neither does this.
+
+		   AN EMPTY STACK IS NOT CLAIMED. With nothing to undo the event is left
+		   alone rather than swallowed, so anything else on the page that wants
+		   Cmd-Z still gets it. */
+		if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+			const k = e.key.toLowerCase();
+			const redo = (k === 'z' && e.shiftKey) || (k === 'y' && !e.shiftKey);
+			const undo = k === 'z' && !e.shiftKey;
+			if (redo && redoStack.length > 0) {
+				handleRedo();
+				e.preventDefault();
+				return;
+			}
+			if (undo && undoStack.length > 0) {
+				handleUndo();
+				e.preventDefault();
+				return;
+			}
+		}
+
+		if (!cursor) return;
 		if (e.metaKey || e.ctrlKey || e.altKey) return;
 
 		switch (e.key) {
