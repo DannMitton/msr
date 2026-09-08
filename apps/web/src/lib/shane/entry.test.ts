@@ -22,6 +22,9 @@ import {
 	currentType,
 	enterEntry,
 	ENTERED_PREFIX,
+	beatAt,
+	beatOfEntry,
+	isCompound,
 	isEnteredId,
 	measureFill,
 	middleLine,
@@ -422,5 +425,120 @@ describe('what a measure holds against its signature', () => {
 	it('says nothing where there is no signature or no measure', () => {
 		expect(measureFill(bar(5, 'quarter'), 0, undefined)).toBeNull();
 		expect(measureFill(bar(5, 'quarter'), 9, FOUR_FOUR)).toBeNull();
+	});
+});
+
+/* ── The beat, N.113b item 2 ──────────────────────────────────────── */
+
+describe('the beat a position falls on', () => {
+	const F = (numerator: number, denominator: number) => ({ numerator, denominator });
+
+	/* The five cases the brief names, and they are Dann's ruling of 2026-09-08
+	   restated as arithmetic. Every expectation here is read off the metre, not
+	   off the function. */
+	it('counts the brief’s five cases', () => {
+		expect(beatAt(F(1, 4), { beats: 4, beatType: 4 })).toEqual({ beat: 2 });
+		expect(beatAt(F(3, 8), { beats: 6, beatType: 8 })).toEqual({ beat: 2 });
+		expect(beatAt(F(1, 8), { beats: 6, beatType: 8 })).toEqual({ beat: 1, pulse: 2 });
+		expect(beatAt(F(1, 8), { beats: 3, beatType: 8 })).toEqual({ beat: 1, pulse: 2 });
+		expect(beatAt(F(9, 8), { beats: 12, beatType: 8 })).toEqual({ beat: 4 });
+	});
+
+	it('calls a signature compound only where Dann’s rule does', () => {
+		expect(isCompound({ beats: 6, beatType: 8 })).toBe(true);
+		expect(isCompound({ beats: 9, beatType: 8 })).toBe(true);
+		expect(isCompound({ beats: 12, beatType: 8 })).toBe(true);
+		expect(isCompound({ beats: 6, beatType: 16 })).toBe(true);
+		expect(isCompound({ beats: 3, beatType: 8 })).toBe(true);
+		// Not compound: the numerator is not a multiple of three.
+		expect(isCompound({ beats: 4, beatType: 8 })).toBe(false);
+		expect(isCompound({ beats: 7, beatType: 8 })).toBe(false);
+		// Not compound: the denominator is neither 8 nor 16, so 6/4 is six
+		// quarters and Ilya does not read the beaming to guess otherwise.
+		expect(isCompound({ beats: 6, beatType: 4 })).toBe(false);
+		expect(isCompound({ beats: 3, beatType: 4 })).toBe(false);
+	});
+
+	it('holds 3/8 to ONE beat, so its every position is inside beat 1', () => {
+		expect(beatAt(F(0, 1), { beats: 3, beatType: 8 })).toEqual({ beat: 1 });
+		expect(beatAt(F(1, 8), { beats: 3, beatType: 8 })).toEqual({ beat: 1, pulse: 2 });
+		expect(beatAt(F(2, 8), { beats: 3, beatType: 8 })).toEqual({ beat: 1, pulse: 3 });
+	});
+
+	it('counts a compound bar’s beats in dotted units, never in its denominator’s', () => {
+		const SIX_EIGHT = { beats: 6, beatType: 8 };
+		// Six eighths, one at a time: two beats, three pulses each.
+		expect(beatAt(F(0, 8), SIX_EIGHT)).toEqual({ beat: 1 });
+		expect(beatAt(F(1, 8), SIX_EIGHT)).toEqual({ beat: 1, pulse: 2 });
+		expect(beatAt(F(2, 8), SIX_EIGHT)).toEqual({ beat: 1, pulse: 3 });
+		expect(beatAt(F(3, 8), SIX_EIGHT)).toEqual({ beat: 2 });
+		expect(beatAt(F(4, 8), SIX_EIGHT)).toEqual({ beat: 2, pulse: 2 });
+		expect(beatAt(F(5, 8), SIX_EIGHT)).toEqual({ beat: 2, pulse: 3 });
+		// And 12/8 is four of them, which is the case that separates this rule
+		// from counting the denominator: twelve eighths is NOT twelve beats.
+		expect(beatAt(F(11, 8), { beats: 12, beatType: 8 })).toEqual({ beat: 4, pulse: 3 });
+	});
+
+	it('divides a simple beat in two and nothing finer', () => {
+		expect(beatAt(F(1, 8), { beats: 4, beatType: 4 })).toEqual({ beat: 1, pulse: 2 });
+		expect(beatAt(F(3, 8), { beats: 4, beatType: 4 })).toEqual({ beat: 2, pulse: 2 });
+		expect(beatAt(F(1, 4), { beats: 3, beatType: 4 })).toEqual({ beat: 2 });
+		expect(beatAt(F(1, 2), { beats: 2, beatType: 2 })).toEqual({ beat: 2 });
+		expect(beatAt(F(1, 4), { beats: 2, beatType: 2 })).toEqual({ beat: 1, pulse: 2 });
+	});
+
+	it('says nothing rather than a pulse ordinal that would collide', () => {
+		// The e and the a of beat 1 in 4/4. Naming either of them `pulse 2` or
+		// `pulse 4` would put two different offsets under one ordinal, so the
+		// beat clause drops and the line says the pitch and the duration.
+		expect(beatAt(F(1, 16), { beats: 4, beatType: 4 })).toBeNull();
+		expect(beatAt(F(3, 16), { beats: 4, beatType: 4 })).toBeNull();
+		expect(beatAt(F(1, 16), { beats: 6, beatType: 8 })).toBeNull();
+	});
+
+	it('says nothing rather than a beat the note is not on', () => {
+		// A triplet eighth into 4/4 lands on no pulse of the beat.
+		expect(beatAt(F(1, 12), { beats: 4, beatType: 4 })).toBeNull();
+		expect(beatAt(F(0, 1), undefined)).toBeNull();
+		expect(beatAt(F(0, 1), { beats: 0, beatType: 4 })).toBeNull();
+		expect(beatAt(F(1, 0), { beats: 4, beatType: 4 })).toBeNull();
+	});
+
+	it('carries past the bar rather than wrapping, so an overfull bar reads on', () => {
+		// Five quarters into 4/4 is beat 6. The tag already says the bar is
+		// overfull; the beat does not lie about where the entry stands.
+		expect(beatAt(F(5, 4), { beats: 4, beatType: 4 })).toEqual({ beat: 6 });
+	});
+});
+
+describe('the beat one entry of a measure stands on', () => {
+	const FOUR_FOUR = { beats: 4, beatType: 4 };
+	const line = [
+		ev('a', P('G', 3)),
+		ev('b', P('A', 3)),
+		{ ...ev('c', P('B', 3), 'eighth'), measureIndex: 1 },
+		{ ...ev('d', P('C', 4), 'eighth'), measureIndex: 1 },
+	];
+
+	it('counts from the barline of the entry’s own measure', () => {
+		expect(beatOfEntry(line, 0, 'a', FOUR_FOUR)).toEqual({ beat: 1 });
+		expect(beatOfEntry(line, 0, 'b', FOUR_FOUR)).toEqual({ beat: 2 });
+		expect(beatOfEntry(line, 1, 'c', FOUR_FOUR)).toEqual({ beat: 1 });
+		expect(beatOfEntry(line, 1, 'd', FOUR_FOUR)).toEqual({ beat: 1, pulse: 2 });
+	});
+
+	it('follows a corrected duration, which `rhythmicPosition` does not', () => {
+		// Every event above carries `rhythmicPosition` 0, and the second note
+		// still reads beat 2 off the sum. Lengthen the first note to a half and
+		// the second moves to beat 3, which is what the singer sees.
+		const corrected = [{ ...line[0], duration: { base: 'half' as const, dots: 0, fraction: durationFraction('half', 0) } }, line[1]];
+		expect(beatOfEntry(corrected, 0, 'b', FOUR_FOUR)).toEqual({ beat: 3 });
+		expect(line[1].rhythmicPosition.fraction).toEqual({ numerator: 0, denominator: 1 });
+	});
+
+	it('says nothing where the entry, the measure or the signature is missing', () => {
+		expect(beatOfEntry(line, 0, 'zz', FOUR_FOUR)).toBeNull();
+		expect(beatOfEntry(line, 9, 'a', FOUR_FOUR)).toBeNull();
+		expect(beatOfEntry(line, 0, 'a', undefined)).toBeNull();
 	});
 });

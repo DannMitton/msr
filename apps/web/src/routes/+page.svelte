@@ -142,6 +142,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import {
 		applyTuplet,
 		arrivalPitch,
+		beatOfEntry,
 		canTie,
 		currentTie,
 		currentType,
@@ -1452,6 +1453,61 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		else if (selectedDots >= 2) parts.push(t('loupe.doubleDot', language));
 		const p = selectedEventId ? shownPairings[selectedEventId] : undefined;
 		if (p && p.kind === 'syllable') parts.push(p.cyrillic);
+		return parts.join(' \u00b7 ');
+	});
+
+	/* ── THE LOUPE'S SECOND LINE (N.113b item 2) ─────────────────────────
+	   RULED BY DANN 2026-09-08 on his walk of `00149c3`: the locator, which
+	   reads `m. 7 · system 3 of 8`, gains a line naming the taken note, its
+	   beat within the measure, and its duration. The shape is plate 4's
+	   `note 5, F♯4, quarter` from the N.114 drawing, which he liked.
+
+	   IT REUSES THE DOCK'S OWN PARTS rather than formatting a second time, and
+	   that is the brief's instruction and the one-term rule together: the dock
+	   under the loupe prints `B♭3 · Quarter · Dot` for the same note in the
+	   same frame, and two spellings of one duration on one screen is the defect
+	   this avoids. The beat clause between them is the only new copy.
+
+	   DESK DEFAULT, and Dann's to wave off in a word: the brief's copy wrote
+	   the duration as `dotted quarter`, which would be a second name for what
+	   `readoutLine` calls `Quarter · Dot` four millimetres away.
+
+	   THE SIGNATURE IS THE SELECTED NOTE'S OWN MEASURE'S, not the held one's,
+	   so a metre change between them cannot be counted in the wrong beat. */
+	const selectedSignature = $derived.by(() => {
+		const ev = selectedEvent;
+		if (!ev) return undefined;
+		return ingestedScore?.result.score.measures.find((m) => m.index === ev.measureIndex)
+			?.timeSignature;
+	});
+
+	const selectedBeat = $derived.by(() => {
+		const ev = selectedEvent;
+		if (!ev) return null;
+		return beatOfEntry(correctedLine, ev.measureIndex, ev.id, selectedSignature);
+	});
+
+	const loupeNoteLine = $derived.by(() => {
+		/* IN A GAP THE LINE SAYS NOTHING. `readoutLine` already names the place
+		   in the dock's own sentence, and a bar standing between two entries has
+		   no note to name, no beat of its own, and no duration. */
+		if (inGap || !selectedEvent) return '';
+		const parts: string[] = [];
+		if (selectedIsRest) parts.push(t('loupe.rest', language));
+		else if (selectedLabel) parts.push(selectedLabel);
+		const b = selectedBeat;
+		if (b) {
+			parts.push(
+				b.pulse === undefined
+					? t('loupe.beat', language).replace('%b', String(b.beat))
+					: t('loupe.beatPulse', language)
+							.replace('%b', String(b.beat))
+							.replace('%p', String(b.pulse)),
+			);
+		}
+		if (selectedBase) parts.push(durationWord(selectedBase));
+		if (selectedDots === 1) parts.push(t('correct.dot', language));
+		else if (selectedDots >= 2) parts.push(t('loupe.doubleDot', language));
 		return parts.join(' \u00b7 ');
 	});
 
@@ -4587,6 +4643,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	<Loupe
 		open={loupeOpen}
 		measureLabel={heldMeasureLabel}
+		noteLine={loupeNoteLine}
 		measureIndex={heldMeasureIndex}
 		ownIds={heldMeasureIds}
 		nextIds={nextMeasureIds}

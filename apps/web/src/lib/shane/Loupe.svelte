@@ -41,6 +41,14 @@
 		open: boolean;
 		/** The held measure's display number, from `Measure.number`. */
 		measureLabel: string | null;
+		/**
+		 * The locator's SECOND LINE (N.113b item 2, ruled by Dann 2026-09-08):
+		 * the taken note, its beat in the measure, and its duration, composed
+		 * from `+page.svelte`'s own readout parts. Empty where there is nothing
+		 * to name, which is a gap or no selection, and the line then does not
+		 * draw at all.
+		 */
+		noteLine?: string;
 		/** The held measure's own index, for finding the system that holds it. */
 		measureIndex: number | null;
 		/** Entry ids in the held measure, in document order. */
@@ -80,6 +88,7 @@
 	let {
 		open,
 		measureLabel,
+		noteLine = '',
 		measureIndex,
 		ownIds,
 		nextIds,
@@ -849,7 +858,10 @@
 		class="loupe"
 		style="left: {frame.left}px; width: {frame.width}px; top: {frame.centreY}px;"
 	>
-		<p class="loupe-tag">{tag}</p>
+		<p class="loupe-tag" class:paired={!!noteLine}>{tag}</p>
+		{#if noteLine}
+			<p class="loupe-note">{noteLine}</p>
+		{/if}
 		<div class="loupe-window" bind:this={windowEl} style="height: {frame.windowHeight}px;">
 			<!-- ARIA-HIDDEN for the reason the accidental glyphs already carry:
 			     this is the page said louder, not a second thing to hear. The
@@ -974,6 +986,27 @@
 		font-size: 0.6875rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
+		color: var(--ink-tertiary, #6a655f);
+	}
+
+	/* THE LOCATOR IS TWO LINES WHEN THERE IS A NOTE TO NAME, and the pair keeps
+	   the gap the single line had: the tag gives up its own bottom margin and
+	   the second line carries it, so the window below does not move when a note
+	   is taken or released. */
+	.loupe-tag.paired {
+		margin-bottom: 1px;
+	}
+
+	/* The second line, N.113b item 2. The measure tag says WHERE the loupe is
+	   and this says WHAT is taken inside it, so it is the same face at the same
+	   size, one step lighter in weight and without the tracking, which is what
+	   makes the pair read as a heading and its subtitle rather than as two
+	   labels. */
+	.loupe-note {
+		margin: 0 0 6px;
+		font-family: var(--font-sans, system-ui, sans-serif);
+		font-size: 0.6875rem;
+		font-weight: 400;
 		color: var(--ink-tertiary, #6a655f);
 	}
 

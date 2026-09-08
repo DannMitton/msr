@@ -335,6 +335,93 @@ describe('staff renderer: melisma (N.113, the singer\'s mark)', () => {
 
 });
 
+/* ── N.113b item 3: the word division follows the WORDS ──────────────
+   The defect, Dann's eye on the page 2026-09-07 late: he marked a melisma on
+   the B♭3 of measure 7 of Without Sun no. 1, whose sustain belongs to the
+   word-final «ня» of «песня», and the page drew a raised HYPHEN where the
+   baseline extender belonged. A hyphen says the word continues. It had ended.
+
+   THE CAUSE, reproduced below rather than described: `cyrPreview` overrides
+   the TEXT under a note and nothing overrode its WORD POSITION, so this file
+   drew the singer's words and reasoned about the publisher's word division.
+   The two part company the moment a seat moves, which is what a melisma mark
+   does to every seat after it.
+
+   THE FIXTURE'S OWN DIVISION is the control: `n2` «по» is `start` and `n3`
+   «гру» is `middle`, so a mark on `n3` draws a spanning hyphen from `n2` and
+   no extender, which the mid-word test above already pins. These cases seat a
+   word-FINAL syllable on `n2` instead, which is what a shift produces, and
+   nothing about the file changes. */
+describe('staff renderer: the singer\'s word division (N.113b item 3)', () => {
+  // The seat, as a shift leaves it: `n2` carries the last syllable of a word
+  // and `n3` opens the next one, where the file has the middle of one word.
+  const SEATED_CYR = { n2: '\u0441\u044c', n3: '\u043d\u043e' };
+
+  it('draws an extender under a WORD-FINAL sustain, and no hyphen across it', () => {
+    const svg = renderDemo({
+      cyrPreview: SEATED_CYR,
+      sylTypePreview: { n2: 'end', n3: 'whole' },
+      melismaPreview: new Set(['n3']),
+    });
+    expect(svg.includes('data-extender="n2"')).toBe(true);
+    expect(svg.includes('data-hyphen="n2"')).toBe(false);
+  });
+
+  it('draws that extender ON THE BASELINE, where the hyphens are raised', () => {
+    const svg = renderDemo({
+      cyrPreview: SEATED_CYR,
+      sylTypePreview: { n2: 'end', n3: 'whole' },
+      melismaPreview: new Set(['n3']),
+    });
+    const ext = svg.match(/<line x1="[\d.]+" y1="([\d.]+)"[^>]*data-extender="n2"/);
+    const hyp = svg.match(/<line x1="[\d.]+" y1="([\d.]+)"[^>]*data-hyphen="/);
+    if (!ext) throw new Error('no extender for n2');
+    if (!hyp) throw new Error('no hyphen anywhere on the system');
+    // `hyphenY = cyrY - 4` in the renderer: the hyphen is RAISED and the
+    // extender sits on the baseline. Read as an inequality rather than as two
+    // literals, because the baseline is placed against the system's own lowest
+    // ink and moves with the music.
+    expect(Number(ext[1]) > Number(hyp[1])).toBe(true);
+  });
+
+  it('is the CHANNEL that fixes it: the same seat without the types draws the hyphen', () => {
+    // The state Dann walked. `n2` draws a word-final syllable and the file
+    // still calls it `start`, so the extender loop skips it and the hyphen
+    // loop reaches across the marked note to the file's next `middle`.
+    const svg = renderDemo({
+      cyrPreview: SEATED_CYR,
+      melismaPreview: new Set(['n3']),
+    });
+    expect(svg.includes('data-extender="n2"')).toBe(false);
+    expect(svg.includes('data-hyphen="n2"')).toBe(true);
+  });
+
+  it('keeps hyphens and draws no extender after a MID-WORD sustain', () => {
+    const svg = renderDemo({
+      cyrPreview: { n2: '\u043f\u043e', n3: '\u0433\u0440\u0443' },
+      sylTypePreview: { n2: 'start', n3: 'middle', n5: 'middle', n6: 'end' },
+      melismaPreview: new Set(['n3']),
+    });
+    expect(svg.includes('data-extender="n2"')).toBe(false);
+    expect(svg.includes('data-hyphen="n2"')).toBe(true);
+  });
+
+  it('takes the file\'s own division for any note the singer has not seated', () => {
+    // `n5` and `n6` are absent from the override, so «зи»/«сь» keep the
+    // file's `middle`/`end` and the hyphen between them still draws.
+    const svg = renderDemo({ sylTypePreview: { n2: 'whole' } });
+    expect(svg.includes('data-hyphen="n5"')).toBe(true);
+    // `n2` is now `whole`, so the hyphen the file drew from it is gone.
+    expect(svg.includes('data-hyphen="n2"')).toBe(false);
+  });
+
+  it('changes not one byte when the channel is absent', () => {
+    expect(renderDemo({ cyrPreview: SEATED_CYR })).toBe(
+      renderDemo({ cyrPreview: SEATED_CYR, sylTypePreview: {} }),
+    );
+  });
+});
+
 describe('staff renderer: turning-layer accidentals and tuplets (increment 3)', () => {
   const svg = renderDemo();
 

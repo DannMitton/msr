@@ -31,6 +31,7 @@ import {
 	toggleMelisma,
 	melismaIds,
 	melismaRuns,
+	pairedSyllableType,
 	vacatedNotes,
 } from './pairings';
 import type { Pairing, PairingMap, Slot } from './pairings';
@@ -347,5 +348,82 @@ describe('vacatedNotes', () => {
 		const out = vacatedNotes(map, IDS, false);
 		expect([...out]).toEqual(['n1']);
 		expect(out.has('n3')).toBe(false);
+	});
+});
+
+/* ── N.113b item 3: where inside its word each seated syllable stands ── */
+
+describe('pairedSyllableType', () => {
+	const seat = (
+		cyrillic: string,
+		lineIndex: number,
+		wordIndex: number,
+		slotIndex: number,
+		word: string,
+	): Pairing => ({
+		kind: 'syllable',
+		cyrillic,
+		ipa: '',
+		vowel: undefined,
+		origin: { lineIndex, wordIndex, slotIndex, word },
+	});
+
+	it('opens, carries and closes a polysyllable', () => {
+		const map: PairingMap = {
+			a: seat('\u043f\u043e', 0, 0, 0, '\u043f\u043e\u0433\u0440\u0443\u0437\u0438\u0441\u044c'),
+			b: seat('\u0433\u0440\u0443', 0, 0, 1, '\u043f\u043e\u0433\u0440\u0443\u0437\u0438\u0441\u044c'),
+			c: seat('\u0437\u0438', 0, 0, 2, '\u043f\u043e\u0433\u0440\u0443\u0437\u0438\u0441\u044c'),
+			d: seat('\u0441\u044c', 0, 0, 3, '\u043f\u043e\u0433\u0440\u0443\u0437\u0438\u0441\u044c'),
+		};
+		expect(pairedSyllableType(map)).toEqual({ a: 'start', b: 'middle', c: 'middle', d: 'end' });
+	});
+
+	it('calls a one-syllable word WHOLE, which takes an extender of its own', () => {
+		const map: PairingMap = { a: seat('\u0442\u044b', 0, 0, 0, '\u0442\u044b') };
+		expect(pairedSyllableType(map)).toEqual({ a: 'whole' });
+	});
+
+	it('keeps two words apart, so the second opens rather than continues', () => {
+		const map: PairingMap = {
+			a: seat('\u043f\u0435\u0441', 0, 3, 0, '\u043f\u0435\u0441\u043d\u044f'),
+			b: seat('\u043d\u044f', 0, 3, 1, '\u043f\u0435\u0441\u043d\u044f'),
+			c: seat('\u0443', 0, 4, 0, '\u0443\u043d\u044b\u043b\u0430\u044f'),
+			d: seat('\u043d\u044b', 0, 4, 1, '\u0443\u043d\u044b\u043b\u0430\u044f'),
+			e: seat('\u043b\u0430', 0, 4, 2, '\u0443\u043d\u044b\u043b\u0430\u044f'),
+			f: seat('\u044f', 0, 4, 3, '\u0443\u043d\u044b\u043b\u0430\u044f'),
+		};
+		// This is Dann's own measure 7: «пе-сня у-ны-ла-я». «ня» closes its
+		// word, which is what earns the sustain after it a baseline extender.
+		expect(pairedSyllableType(map)).toEqual({
+			a: 'start',
+			b: 'end',
+			c: 'start',
+			d: 'middle',
+			e: 'middle',
+			f: 'end',
+		});
+	});
+
+	it('separates two seats that share a coordinate but not a word', () => {
+		// Score-origin seats carry `lineIndex 0` with their own running
+		// `wordIndex` (`memo-n113a-walk_r1_2026-09-07.md` §9.2), so they share
+		// a coordinate space with the poem's line 0. The word text is what
+		// keeps them apart, and without it these four would read as one word.
+		const map: PairingMap = {
+			a: seat('\u043c\u043e\u0441', 0, 0, 0, '\u043c\u043e\u0441\u043a\u0432\u0430'),
+			b: seat('\u043a\u0432\u0430', 0, 0, 1, '\u043c\u043e\u0441\u043a\u0432\u0430'),
+			c: seat('\u0434\u0430', 0, 0, 0, '\u0434\u0430'),
+		};
+		expect(pairedSyllableType(map)).toEqual({ a: 'start', b: 'end', c: 'whole' });
+	});
+
+	it('says nothing for a melisma, an empty note, or an empty map', () => {
+		const map: PairingMap = {
+			a: { kind: 'melisma' },
+			b: { kind: 'empty' },
+		};
+		expect(pairedSyllableType(map)).toBeUndefined();
+		expect(pairedSyllableType({})).toBeUndefined();
+		expect(pairedSyllableType(undefined)).toBeUndefined();
 	});
 });

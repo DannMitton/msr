@@ -72,6 +72,7 @@
 	import {
 		withPairedVowel,
 		pairedCyrillic,
+		pairedSyllableType,
 		applyBlank,
 		melismaIds,
 		type PairingMap,
@@ -819,6 +820,15 @@
 	// underlay has no other source for the word under the note.
 	const cyrPreview = $derived(pairedCyrillic(pairings, blankUnderlay));
 
+	/* N.113b item 3: the word division of the words the page is drawing. It
+	   travels with `cyrPreview` because it describes the same text: the
+	   renderer takes the singer's Cyrillic over the file's, and until this
+	   channel existed it took the FILE's word position under it, so a syllable
+	   that ended a word could reach the hyphen loop wearing a `start`. Derived
+	   here for `cyrPreview`'s own reason: this component holds `pairings`, and
+	   a prop carrying a projection of that map could go stale against it. */
+	const sylTypePreview = $derived(pairedSyllableType(pairings));
+
 	/* N.113. THE SINGER'S MELISMA, as its own channel to the renderer.
 	   Derived here rather than passed in, because this component already holds
 	   `pairings` and a second prop carrying a projection of it could go stale
@@ -974,6 +984,7 @@
 					...(ipaPreview ? { ipaPreview } : {}),
 					...(withheldIpa ? { withheldIpa } : {}),
 					...(cyrPreview ? { cyrPreview } : {}),
+					...(sylTypePreview ? { sylTypePreview } : {}),
 					...(melismaPreview ? { melismaPreview } : {}),
 					...(notationFont ? { font: notationFont.prepared, fontFamily: notationFont.family } : {}),
 				}).pages.map(stripBackingRect)
@@ -1275,7 +1286,22 @@
 <style>
 	/* N.92, the selection state. Display only, and it appears ONLY on the
 	   selected note, per the ship's own constraint against marks that appear on
-	   everything. Sage is Studio's accent for the score document.
+	   everything.
+
+	   LAVENDER, ruled by Dann 2026-09-08 on his walk of `00149c3`. It was sage,
+	   on the reasoning that sage is Studio's accent for the score document, and
+	   this is the same ruling he made against the same reasoning at
+	   `CorrectionSurface.svelte:845` on 2026-08-28: lavender codes music and
+	   voice, and a box on a notehead is a mark on the music. `--deeper-lavender`
+	   is the token the voice anchor, the Corrections station and the drawer's
+	   music stations already carry.
+
+	   ONE RULE PAINTS BOTH SURFACES, and that is why the loupe needs no edit.
+	   Since N.113a the loupe clones this rectangle rather than stripping it, in
+	   the block `Loupe.svelte` opens with THE PAGE'S OWN MARK STAYS, so the
+	   page's box on the taken note and the loupe's box on the taken note are the
+	   same mark drawn twice. Giving them two colours would say they were two
+	   things.
 
 	   `outline` rather than a painted shape: it adds no geometry to the SVG, so
 	   it cannot collide with a notehead, a stem, or the underlay, and it cannot
@@ -1285,7 +1311,7 @@
 	   the score, and the drawer manipulates while the page displays and prints. */
 	:global(rect[data-selection-ring]) {
 		fill: none;
-		stroke: var(--sage, #8b9a7d);
+		stroke: var(--deeper-lavender, #8e7e9b);
 		stroke-width: 2;
 		pointer-events: none;
 	}

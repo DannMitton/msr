@@ -434,3 +434,137 @@ function gcd(a: number, b: number): number {
 	return b === 0 ? a || 1 : gcd(b, a % b);
 }
 
+/* ── The beat, N.113b item 2 ────────────────────────────────────────
+   The loupe's second line names the taken note's beat within its measure, and
+   this is the arithmetic behind it. It lives beside `measureFill` because that
+   is the other function that judges a measure against its own signature, and
+   the two must not drift apart on what a beat is. */
+
+/** Where a position inside a measure falls, counted in the metre's own beats. */
+export interface BeatPosition {
+	/** The beat, counted from 1. */
+	beat: number;
+	/** The pulse inside that beat, counted from 1. Absent on the beat itself. */
+	pulse?: number;
+}
+
+/**
+ * COMPOUND METRE, RULED BY DANN 2026-09-08 on his walk of `00149c3`, and it is
+ * not optional: **6/8 is two beats of a dotted quarter, not six.**
+ *
+ * When the numerator is a multiple of 3 and the denominator is 8 or 16, the
+ * beat is the dotted unit, which lasts THREE of the denominator's own units,
+ * and the measure holds numerator ÷ 3 of them. So 6/8 and 9/8 and 12/8 and
+ * 6/16 are compound, and 3/8 is compound too and holds exactly one beat.
+ * Every other signature counts the denominator's unit as the beat.
+ *
+ * 6/4 and 9/4 are NOT compound here. The denominators the rule names are 8 and
+ * 16, which is Dann's ruling as he made it, and a 6/4 that a composer means as
+ * two dotted halves cannot be told from one meant as six quarters without
+ * reading the beaming. Ilya does not guess it.
+ */
+export function isCompound(signature: { beats: number; beatType: number }): boolean {
+	return (
+		signature.beats % 3 === 0 &&
+		signature.beats > 0 &&
+		(signature.beatType === 8 || signature.beatType === 16)
+	);
+}
+
+/**
+ * The beat a position falls on, from its distance past the barline in whole
+ * notes.
+ *
+ * Exact throughout: every value here is a ratio of small integers and nothing
+ * is compared as a float, so a dotted quarter in 6/8 lands on beat 2 rather
+ * than on 1.9999999999999998.
+ *
+ * A POSITION THAT IS NOT ON A BEAT reads as the beat plus its pulse within it.
+ * The pulse is the beat's own division and nothing finer: THREE in a compound
+ * metre, which is Dann's 6/8 case, and TWO in a simple one. Where no whole
+ * pulse names the offset, this returns `null` rather than a beat the note is
+ * not on, and the second line then says the pitch and the duration and stays
+ * silent about the beat.
+ *
+ * THE DIVISION DOES NOT HALVE ITSELF TO FIT, and refusing to is the point. A
+ * pulse ordinal means nothing without the division it counts against, so a rule
+ * that divided by two for an eighth and by four for a sixteenth would print
+ * `pulse 2` for the and of beat 1 and `pulse 2` for the e of beat 1, on the
+ * same page, with nothing on the line to tell them apart. Silence on the beat
+ * clause is honest and a colliding ordinal is not.
+ *
+ * WHAT IT COSTS, stated rather than hidden: a sixteenth-note onset in a simple
+ * metre, and any tuplet onset in any metre, draws no beat clause at all.
+ */
+export function beatAt(
+	onset: { numerator: number; denominator: number },
+	signature: { beats: number; beatType: number } | undefined,
+): BeatPosition | null {
+	if (!signature || !(signature.beats > 0) || !(signature.beatType > 0)) return null;
+	if (!(onset.denominator > 0) || onset.numerator < 0) return null;
+
+	/* The beat's length in whole notes, as a fraction: three of the signature's
+	   own units in a compound metre, one in a simple one. */
+	const beatNum = isCompound(signature) ? 3 : 1;
+	const beatDen = signature.beatType;
+
+	/* `onset / beatLength`, kept as a ratio of integers. */
+	const num = onset.numerator * beatDen;
+	const den = onset.denominator * beatNum;
+	if (!Number.isSafeInteger(num) || !Number.isSafeInteger(den) || den === 0) return null;
+
+	const beatIndex = Math.floor(num / den);
+	const remNum = num - beatIndex * den; // the offset into the beat, as remNum/den
+	if (remNum === 0) return { beat: beatIndex + 1 };
+
+	/* The offset, named in pulses of the beat's own division. One pulse is
+	   `1 / division` of a beat, so the offset in pulses is
+	   `remNum * division / den`, and a fraction there is a position no pulse
+	   names. */
+	const division = isCompound(signature) ? 3 : 2;
+	const p = (remNum * division) / den;
+	if (!Number.isInteger(p)) return null;
+	return { beat: beatIndex + 1, pulse: p + 1 };
+}
+
+/**
+ * The beat one entry of a measure stands on, in the line as the singer has
+ * corrected it.
+ *
+ * THE ONSET IS SUMMED HERE RATHER THAN READ OFF THE EVENT, and that is a
+ * departure from what `VocalLineEvent.rhythmicPosition` offers. The parser sets
+ * that field from its own cursor and `applyCorrections` carries it through
+ * unchanged (`correction.ts:371`, the `...ev` spread), so lengthening the first
+ * note of a bar leaves every later note in the bar claiming the beat it stood
+ * on before the correction. The loupe is the surface the singer makes that
+ * correction ON, so it is the last place that may print a stale beat. Summing
+ * `duration.fraction` across the measure is the same arithmetic `measureFill`
+ * runs three lines up, and it tracks corrections, entered notes and deletions
+ * because it reads the corrected line.
+ *
+ * The two agree on an uncorrected score: the parser's cursor also starts at
+ * zero at every barline (`musicxml-parser.ts:418`), including a pickup's.
+ */
+export function beatOfEntry(
+	line: readonly VocalLineEvent[],
+	measureIndex: number,
+	eventId: string,
+	signature: { beats: number; beatType: number } | undefined,
+): BeatPosition | null {
+	if (!signature) return null;
+	let num = 0;
+	let den = 1;
+	for (const e of line) {
+		if (e.measureIndex !== measureIndex) continue;
+		if (e.id === eventId) return beatAt({ numerator: num, denominator: den }, signature);
+		const f = e.duration.fraction;
+		if (!f || !(f.denominator > 0)) return null;
+		num = num * f.denominator + f.numerator * den;
+		den = den * f.denominator;
+		const g = gcd(Math.abs(num), den);
+		num /= g;
+		den /= g;
+	}
+	return null;
+}
+

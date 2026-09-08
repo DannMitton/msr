@@ -256,6 +256,24 @@ export interface StaffRenderOptions {
    */
   cyrPreview?: Record<string, string>;
   /**
+   * N.113b item 3. Per event id, WHERE INSIDE ITS WORD the syllable the singer
+   * paired to this note stands, overriding `ev.syllable?.type`.
+   *
+   * WHY IT HAS TO EXIST: `cyrPreview` above overrides the TEXT and nothing
+   * overrode the word position, so this file drew hyphens and extenders from
+   * the file's own word division while drawing the singer's words. The two
+   * agree only while every seat sits where the publisher's underlay put it.
+   * The moment one moves, which is what a melisma mark does to every seat after
+   * it, the file says `start` under a syllable that ends a word.
+   *
+   * WHAT IT COST, Dann's eye on the page 2026-09-07 late: he marked a melisma
+   * on the B♭3 of measure 7 of Without Sun no. 1, whose sustain belongs to the
+   * word-final «ня» of «песня», and the page drew a raised HYPHEN, which says
+   * the word continues, where the baseline extender belonged. `pairings.ts`'s
+   * `pairedSyllableType` is the canonical statement of the rule that fills this.
+   */
+  sylTypePreview?: Record<string, 'whole' | 'start' | 'middle' | 'end'>;
+  /**
    * True only for the system that ends the PIECE. Gould r96 gives the
    * beam-thick-plus-thin final barline to the end of a movement, and r224
    * restates it: only the bar that actually ends the piece takes it. Before
@@ -316,7 +334,7 @@ export interface StaffRenderOptions {
 // `finalBarline` joins font/clef/ipaPreview in the Omit: it is read straight
 // off `options` rather than defaulted here, and leaving it out of the Omit
 // makes `Required` demand a default that would be meaningless.
-const DEFAULTS: Required<Omit<StaffRenderOptions, 'font' | 'clef' | 'ipaPreview' | 'withheldIpa' | 'cyrPreview' | 'melismaPreview' | 'finalBarline' | 'targetWidth' | 'incomingAccidentals'>> = {
+const DEFAULTS: Required<Omit<StaffRenderOptions, 'font' | 'clef' | 'ipaPreview' | 'withheldIpa' | 'cyrPreview' | 'sylTypePreview' | 'melismaPreview' | 'finalBarline' | 'targetWidth' | 'incomingAccidentals'>> = {
   staffMidY: 96,
   lineGap: 12,
   leftMargin: 92,
@@ -2540,7 +2558,11 @@ export function renderAnalyzedStaff(
         ipa,
         withheld,
         align: isMelisma ? 'start' : 'middle',
-        sylType: syl?.type,
+        /* N.113b item 3: THE WORD DIVISION FOLLOWS THE WORDS. `cyr` two lines
+           up takes the singer's pairing over the file's syllable, so the word
+           position has to take the same override or the hyphen and extender
+           loops reason about a different word than the one on the page. */
+        sylType: options.sylTypePreview?.[ev.id] ?? syl?.type,
         evId: ev.id,
       });
     }

@@ -705,6 +705,60 @@ export function pairedCyrillic(
 }
 
 /**
+ * WHERE INSIDE ITS WORD each paired syllable stands, in the renderer's own
+ * vocabulary, so hyphens and extenders are drawn from the words on the page
+ * rather than from the words the publisher engraved.
+ *
+ * N.113b item 3, and the defect it closes is Dann's, seen on the page
+ * 2026-09-07 late. `staff-renderer.ts` took its Cyrillic from `pairedCyrillic`
+ * and its word position from `ev.syllable?.type`, which is the FILE's own
+ * division. The two agree only while every seat sits where the publisher's
+ * underlay put it. A melisma mark shifts every seat after it by one, so on
+ * Without Sun no. 1 the word-final «ня» of «песня» reached the renderer wearing
+ * the `start` of the syllable the file had engraved there, the extender loop
+ * skipped it, and the hyphen loop drew a raised dash under the sustained note.
+ * A hyphen says the word continues. It had ended.
+ *
+ * THE WORD IS THE KEY, and it is three fields rather than two.
+ * `origin.lineIndex` and `origin.wordIndex` alone are not a word: score-origin
+ * seats carry `lineIndex 0` with their own running `wordIndex`
+ * (`memo-n113a-walk_r1_2026-09-07.md` §9.2, 59 of 96 seats on the walk
+ * fixture), so they share a coordinate space with the poem's own line 0.
+ * `origin.word` carries the word's cleaned Cyrillic verbatim and separates
+ * them.
+ *
+ * `slotIndex` IS THE ORDINAL WITHIN THE WORD, which is what makes this a count
+ * rather than a guess: the first slot opens the word, the last closes it, and a
+ * word with one slot is `whole`. The largest `slotIndex` present is the word's
+ * last, and a word only partly placed cannot make that wrong here, because a
+ * word runs out of slots only when the notes run out, and a melisma run needs a
+ * marked note after the syllable that opens it.
+ */
+export function pairedSyllableType(
+	map: PairingMap | undefined,
+): Record<string, 'whole' | 'start' | 'middle' | 'end'> | undefined {
+	if (!map) return undefined;
+	const key = (o: SlotOrigin) => `${o.lineIndex}\u0000${o.wordIndex}\u0000${o.word}`;
+	const last = new Map<string, number>();
+	for (const p of Object.values(map)) {
+		if (p.kind !== 'syllable' || !p.cyrillic) continue;
+		const k = key(p.origin);
+		const seen = last.get(k);
+		if (seen === undefined || p.origin.slotIndex > seen) last.set(k, p.origin.slotIndex);
+	}
+	const out: Record<string, 'whole' | 'start' | 'middle' | 'end'> = {};
+	for (const [id, p] of Object.entries(map)) {
+		if (p.kind !== 'syllable' || !p.cyrillic) continue;
+		const end = last.get(key(p.origin));
+		if (end === undefined) continue;
+		const first = p.origin.slotIndex <= 0;
+		const closes = p.origin.slotIndex >= end;
+		out[id] = first && closes ? 'whole' : first ? 'start' : closes ? 'end' : 'middle';
+	}
+	return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/**
  * Mark every blanked event with the EMPTY STRING, in place, without disturbing
  * an event that already has something to say.
  *

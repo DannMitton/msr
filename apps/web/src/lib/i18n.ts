@@ -319,6 +319,24 @@ const strings: Record<string, Record<Language, string>> = {
 	// The same tag where the page's systems cannot be read. NOT ESTABLISHED
 	// beats an invented system number.
 	'loupe.measureTagShort':       { en: 'm.\u00a0%m',                    fr: 'mes.\u00a0%m' },
+	// THE LOCATOR'S SECOND LINE, N.113b item 2, ruled by Dann 2026-09-08 on his
+	// walk of `00149c3`: the tag gains a line naming the taken note, its beat in
+	// the measure, and its duration. These two keys are the beat clause alone;
+	// the pitch and the duration beside it are the dock's own parts
+	// (`+page.svelte`'s `readoutLine`), so the loupe and the dock say a
+	// duration in the same words.
+	//
+	// COMPOUND METRE IS IN THE NUMBER, not in the string: `entry.ts`'s `beatAt`
+	// counts 6/8 as two beats of a dotted quarter, so `%b` is already the beat
+	// a singer would count. `%p` is the pulse inside it, and its clause appears
+	// only where the note is off the beat.
+	//
+	// FRENCH IS OWED. Both keys carry the ENGLISH IN BOTH SLOTS, the treatment
+	// `input.transcribe` and the `group.*` block get for the same reason: `t()`
+	// prints `[MISSING: key]` for an absent variant, and Dann has not seen this
+	// French. Add them to the table owed after N.114.
+	'loupe.beat':                  { en: 'beat %b',                      fr: 'beat %b' },
+	'loupe.beatPulse':             { en: 'beat %b, pulse %p',            fr: 'beat %b, pulse %p' },
 	// The named Undo pill. It reads the change it will reverse, stated in the
 	// direction the change happened. Absent when nothing can be undone.
 	'loupe.undo':                  { en: 'Undo: %s',                     fr: 'Annuler\u00a0: %s' },
