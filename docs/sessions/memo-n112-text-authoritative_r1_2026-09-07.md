@@ -27,6 +27,12 @@ N.112: the text is authoritative
 | `apps/web/src/lib/shane/SyllableStation.svelte` | The drift line, its `drift` prop and `.station-drift` / `.station-count` deleted. |
 | `apps/web/src/lib/i18n.ts:1086` | `station.textChanged` deleted. |
 
+**Changed again by the walk defects of §9:** `reseat.ts` (the ownership test,
+the verified `seatIndex`, the anchor), `reseat.test.ts` (+4),
+`one-action.ts` (`rebuildSource`), `one-action.test.ts` (+4), and
+`+page.svelte` (`poemQueue` named; `handleStartPlacementOver` flushes and reads
+`rebuildSource`; `reseatAcross` takes the previous grid).
+
 ---
 
 ## 2. The diff's rules, in one paragraph
@@ -308,3 +314,189 @@ seats after it have not moved, delete a word and check the tail closes up, and
 reload.
 
 **Owed after the walk:** your ruling on §8, what a vacated note draws.
+
+---
+
+## 9. Two walk defects on `b191867`, found by Dann 2026-09-07
+
+Both are fixed, gated and walked. **Gate 4 moves 1030 → 1038** (see §9.5).
+
+### 9.1 The insert anchored on a seat that matched only by position
+
+**What Dann walked.** On the alias's real state (the Mussorgsky poem, the
+engraved fixture, a hand-placed `Ком` at note 0 from N.111-3b's walk, and "4
+placements have no note in this score, kept"), replacing `безответная` with
+`бесконечная` in line 2 seated the new word on **system 1's notes 1 to 5**,
+giving `Ком – бес – ко – неч – на – я`, while system 2 kept `без – от – вет –
+на – я`. Changing it back seated `безответная` on the same wrong notes.
+
+**The cause, established by reproduction.** `readScoreText` joins a score's
+whole underlay into **one line** (`clitic-seat.ts:449`), so a seat made from the
+score's own words carries `lineIndex 0` with a running `wordIndex`. Those
+coordinates collide head-on with the poem's first line. `reseatByDiff` consulted
+`diff.moved` **by position alone** and never read `origin.word`, which is the
+discriminator Dann ruled on 2026-08-13 and which `SlotOrigin`'s own doc comment
+exists to carry. So a score coordinate was silently reinterpreted as a poem
+coordinate: it answered the anchor lookup, and it was itself rewritten with the
+poem's word.
+
+**How N.111-3b's walk put such a seat there.** That walk placed by hand while the
+dictionary was stalled, so `lines` was empty, `slotQueue` fell back to
+`scoreTextQueue`, and the placed pairing took a **score** origin. One seat with
+a score origin at the head of the piece is enough.
+
+**The positive control**, run with the word check disabled and again with it on:
+
+| state | word check off | word check on |
+|---|---|---|
+| every seat a score coordinate | `Ком тес ти ми бес ко неч на я _ _ …` | untouched, nothing seated |
+| score coordinates at the head, poem seats after | `Ком тес ти ми на я …` (four seats silently rewritten) | `Ком нат ка тес на я … тень бес ко неч на я` |
+
+**The fix**, `reseat.ts`:
+
+- **A seat this diff cannot speak for is left exactly as it is.** `reseatByDiff`
+  takes the poem the seats were made against (`before`, the previous word grid)
+  and re-keys only a seat whose `origin.word` is what stood at its coordinate in
+  that poem. Three real seats fail that test and all three are now kept
+  untouched: one made from the score's own words, one carried in from another
+  score by `mergeOnUpload`, and one stored before `origin.word` existed. They are
+  counted in a new `kept`.
+- **`seatIndex` verifies the word, not only the position**, so a kept seat can
+  never anchor an insert.
+- **The anchor is the last seat of the previous matched word**, tracked with an
+  explicit `anchorFound` rather than `anchor === -1`, because -1 had to mean two
+  different things.
+- **Ahead of every seat, the anchor is the first poem seat**, so replacing the
+  poem's first word still lands the new word in its place. Without this the head
+  case left the head bare and slid the poem forward by a word, which the run
+  caught.
+- **A slot this pass just seated is an anchor like any other.** Without that, a
+  multi-syllable head insert re-derived the same target each time and pushed its
+  predecessor along: `гор ни ца` came out `ца ни гор`. Also caught by the run.
+- **With no poem seat at all, nothing is seated.** DESK DEFAULT: every seat
+  belongs to the score's own words or to another song, so there is no run to
+  insert into and any target is a guess. The queue and the hand are undisturbed.
+
+**Pinned by four tests** in `reseat.test.ts`: a score-coordinate seat is left
+standing; an insert never anchors on a seat that matches only by position; a
+pairing on an event id this score has not got is absent for anchoring; nothing
+is seated when no previous matched word has a seat.
+
+### 9.2 The walk of 9.1, on a production build
+
+The state was reconstructed on the pane's own profile: the original poem, the
+engraved fixture, a hand-placed seat at note 0 carrying a **score** origin, and
+four placements on ids this score has not got. The prior profile state was
+recorded before anything was changed.
+
+| reading | before the edit | after the edit |
+|---|---|---|
+| system 1 | `Ком нат ка тес на я ти ха я ми ла я` | **unchanged** |
+| system 2 | `тень неп рог ляд на я тень бе зот вет на я ду ма глу бо ка я` | `тень неп рог ляд на я тень **бес ко неч на я** ду ма глу бо ка я` |
+| seats | 100 | 100 |
+
+Changing it back restored system 2 to `бе зот вет на я` with system 1 again
+unchanged. The four placements on unknown ids came through byte-identical, and
+the hand-placed score-origin seat at note 0 kept its content and its origin.
+
+### 9.3 Start placement over rebuilt from the score's words
+
+**What Dann walked.** After Start placement over the last note of the piece was
+bare and `одинокая` ended on `ка`.
+
+**Which queue it used, measured.** The drawer's Lyric header prints
+`placed / queue length`, and it is the honest instrument here. With the poem in
+the field it reads **`96 / 96`**. With the poem cleared, so that `slotQueue`
+falls back, it reads **`12 / 95`** against the same 96 notes. So:
+
+- the poem's queue is **96 slots** and ends on `я`;
+- the score's own queue is **95 slots** and ends on `ка`, because this
+  engraving lost its final `я` off the end (N.111, 2026-09-04).
+
+`firstPass` over 96 notes and 95 slots seats 95 and leaves the last note bare,
+with `одинокая` reading `о ди но ка`. **The rebuild used the score's own words.**
+
+**The cause.** `slotQueue` falls back to `scoreTextQueue` when
+`buildSlotQueue(lines)` is empty, and `lines` is empty whenever the
+transcription has not run over the current text, which at boot is the window
+before the dictionary lands. The test was "has the poem been TRANSCRIBED", where
+Dann's ruling of 2026-09-07 asks "is text PRESENT".
+
+**The fix.** `rebuildSource(poem, poemSlots)` in `one-action.ts`, lifted out of
+the component so a test can reach it, exactly as N.108-5 lifted
+`transcribeVerdict`:
+
+- text present and the queue built → `poem`;
+- no text at all → `score`, which is N.111's fallback and stays;
+- text present and no queue yet → `none`, and the button does nothing.
+
+`handleStartPlacementOver` calls `flushText()` first, so under Dann's own ruling
+the transcription exists by the time the queue is read. `none` is a DESK
+DEFAULT: rebuilding from the score's words there is the defect, and rebuilding
+from an empty queue would erase every placement, so leaving them standing is the
+reversible answer.
+
+**Walked, on a production build.** Warm, with the poem transcribed: Start
+placement over gives `96 / 96` and the tail `мо я ночь о ди но ка я`, so the
+last note carries `я`. Cold, with the dictionary still loading: the press leaves
+all 96 seats standing and the tail unchanged, where the old path would have
+rebuilt.
+
+**Pinned by four tests** in `one-action.test.ts`, including that the score is
+never read while text is present, at any queue length.
+
+### 9.4 Three instrument faults, all mine, all recorded
+
+1. **Counting Cyrillic `<text>` elements counts NOTES, not syllables.** A fused
+   clitic is one element: `"в бью"` is one string on one note.
+2. **Reading the Underlay station's chips is not reading the queue.** The
+   station is absent from the DOM in states where the queue is full, so "0
+   chips" read as "empty queue" twice. The `n / m` on the Lyric header is the
+   honest instrument, and it is what settled §9.3.
+3. **Setting the textarea to `''` does not clear the transcription.**
+   `transcribeVerdict` answers `nothing` for an empty field, so `lines` keeps the
+   previous poem and the queue never changes. The receipt's own Clear is the
+   only path that empties `lines`.
+
+### 9.5 Gates
+
+All five run for real, before and after.
+
+| gate | script literal | this run |
+|---|---|---|
+| 1 phonology | `216 passed (216)` | same |
+| 2 dictionary | `235 passed (235)` | same |
+| 3 web-check | `found 0 errors and 7 warnings in 4 files` | same |
+| 4 web-test | `1030 passed (1030)` | **`1038 passed (1038)`** |
+| 5 score-parser | `534 passed \| 5 skipped (539)` | same |
+
+**+4** in `reseat.test.ts`, **+4** in `one-action.test.ts`. 1030 + 8 = 1038.
+
+```bash
+sed -i '' 's/1030 passed (1030)/1038 passed (1038)/' ~/Downloads/ilya-ship.sh
+```
+
+```bash
+chmod +x ~/Downloads/ilya-ship.sh
+```
+
+### 9.6 NOT ESTABLISHED
+
+**NOT ESTABLISHED beats a complete invented answer.**
+
+1. **Dann's own map was never read.** The state for §9.2 was RECONSTRUCTED from
+   his description, not exported from his session. The reconstruction reproduces
+   the mechanism and the control proves the fix, but whether his hand-placed seat
+   carried a score origin is inference from N.111-3b's walk conditions, not a
+   measurement of his file.
+2. **Why his insert anchored at note 0 rather than at the last score-coordinate
+   seat is not established.** The reproduction anchors at the last such seat.
+   Reaching note 0 exactly needs only one of them to be the sole positional
+   match, which his map may well have had, but that is reasoning.
+3. **No new string, English or French**, and none retired, so nothing is owed.
+4. **The pane's own browser profile was changed by this walk**, deliberately and
+   after recording what was there: the poem, 94 seats and the song name. Nothing
+   on Dann's machine was touched.
+5. **§9.3's cold case was walked with the dictionary stalled in a hidden pane**,
+   which is the pane's own condition rather than a singer's. The warm case is the
+   one a singer meets, and it was walked too.

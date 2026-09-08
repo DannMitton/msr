@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { QUIET_MS, transcribeVerdict, type TranscribeState } from './one-action';
+import { QUIET_MS, rebuildSource, transcribeVerdict, type TranscribeState } from './one-action';
 
 const POEM = 'Ночь была темна';
 
@@ -93,5 +93,33 @@ describe('transcribeVerdict', () => {
 		// deliberate rather than a drift.
 		expect(QUIET_MS).toBeGreaterThan(300);
 		expect(QUIET_MS).toBeLessThan(1000);
+	});
+});
+
+/* ── N.112 walk finding 2, Dann 2026-09-07 ────────────────────────────
+   "Make the rebuild use the poem whenever text is present." After Start
+   placement over the last note came back bare, because the rebuild ran from
+   the score's own words and this alias's engraving lost its final `я`. */
+describe('rebuildSource', () => {
+	it('reads the poem whenever text is present and the transcription has run', () => {
+		expect(rebuildSource('Комнатка тесная', 6)).toBe('poem');
+	});
+
+	it('reads the score only when the singer has typed nothing', () => {
+		expect(rebuildSource('', 0)).toBe('score');
+		expect(rebuildSource('   \n  ', 0)).toBe('score');
+	});
+
+	it('reads NEITHER while text is present and the queue is not built yet', () => {
+		// At boot the poem is restored before the dictionary lands. Rebuilding
+		// from the score's words here is the defect; rebuilding from an empty
+		// queue would erase every placement.
+		expect(rebuildSource('Комнатка тесная', 0)).toBe('none');
+	});
+
+	it('never reads the score while text is present, at any queue length', () => {
+		for (const n of [0, 1, 95, 96]) {
+			expect(rebuildSource('Комнатка', n)).not.toBe('score');
+		}
 	});
 });

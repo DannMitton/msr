@@ -114,7 +114,7 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import StationHeader from '$lib/components/Drawer/StationHeader.svelte';
 	import Loupe from '$lib/shane/Loupe.svelte';
 	import CorrectionSurface from '$lib/shane/CorrectionSurface.svelte';
-	import { QUIET_MS, transcribeVerdict, type TextArrival } from '$lib/one-action';
+	import { QUIET_MS, rebuildSource, transcribeVerdict, type TextArrival } from '$lib/one-action';
 	import {
 		diffWordGrid,
 		emptyDiff,
@@ -354,10 +354,9 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	const scoreTextQueue = $derived(
 		ingestedScore ? (readScoreText(ingestedScore.result.score, 1)?.queue ?? []) : [],
 	);
-	const slotQueue = $derived.by(() => {
-		const own = buildSlotQueue(lines);
-		return own.length > 0 ? own : scoreTextQueue;
-	});
+	/** The singer's OWN queue, from their transcription. Empty until it runs. */
+	const poemQueue = $derived(buildSlotQueue(lines));
+	const slotQueue = $derived(poemQueue.length > 0 ? poemQueue : scoreTextQueue);
 	/* N.55b: the pairing layer, wired. `refreshPairings` brings a re-divided
 	   word's TEXT forward: the nucleus the singer paired is still the same
 	   nucleus, so its text is stale rather than wrong.
@@ -498,16 +497,43 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	 */
 	function handleStartPlacementOver(): void {
 		if (!ingestedScore) return;
+		/* N.112 walk finding 2, Dann 2026-09-07: after this button the last note
+		   of the piece was bare, because the rebuild had run from the SCORE's
+		   own words rather than from the poem.
+
+		   THE CAUSE. `slotQueue` falls back to `scoreTextQueue` when
+		   `buildSlotQueue(lines)` is empty, and `lines` is empty whenever the
+		   transcription has not run over the current text: at boot before the
+		   dictionary lands, and after any path that cleared it. The engraving
+		   this alias uses lost its final `я` off the end (N.111, 2026-09-04),
+		   so the score's queue is one slot shorter than the poem's and the last
+		   note came back bare.
+
+		   THE FIX IS DANN'S OWN RULING OF 2026-09-07 applied here: *"whenever
+		   text is present, the transcription exists."* `flushText` is N.108-5's
+		   join and it runs the pipeline in this same tick when the text has not
+		   been read yet, so `poemQueue` below is the singer's own whenever it
+		   can be.
+
+		   IF THE POEM STILL HAS NO QUEUE, THIS DOES NOTHING. DESK DEFAULT: text
+		   is present but the dictionary has not landed, and rebuilding from the
+		   score's words would be the defect this fixes. Doing nothing leaves
+		   every placement standing, which is the reversible answer; the singer
+		   presses again once the drawer stops saying it is loading. */
+		flushText();
+		const source = rebuildSource(doc.inputText, poemQueue.length);
+		if (source === 'none') return;
+		const rebuildQueue = source === 'poem' ? poemQueue : scoreTextQueue;
 		const parsed = ingestedScore.result.score;
 		doc.pairings = seatCliticFolds(
 			parsed,
 			firstPass(
 				parsed.vocalLine.filter((ev) => ev.type !== 'rest').map((ev) => ev.id),
-				slotQueue,
+				rebuildQueue,
 			),
 		);
 		orphanedCount = 0;
-		pairingCursor = Math.min(Object.keys(doc.pairings).length, Math.max(0, slotQueue.length - 1));
+		pairingCursor = Math.min(Object.keys(doc.pairings).length, Math.max(0, rebuildQueue.length - 1));
 	}
 
 	/**
@@ -1998,13 +2024,19 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		   pipeline's step 1 alone, lifted so this can ask what the words are
 		   without asking what they sound like. */
 		resetTranscriptionView();
+		const prevGrid = transcribedGrid;
 		const nextGrid = wordGrid(doc.inputText);
-		const diff =
-			transcribedGrid.length === 0 ? emptyDiff() : diffWordGrid(transcribedGrid, nextGrid);
+		const diff = prevGrid.length === 0 ? emptyDiff() : diffWordGrid(prevGrid, nextGrid);
 		transcribedGrid = nextGrid;
 		carryOverridesAcross(diff);
 		runPipeline();
-		reseatAcross(diff);
+		/* THE RE-SEAT IS HANDED THE PREVIOUS GRID, NOT THE NEW ONE, and it is a
+		   parameter rather than a read of `transcribedGrid` because that has
+		   already been advanced by the line above. It needs the poem the seats
+		   were made against, so it can tell a seat that describes THIS poem
+		   from one made from the score's own words or carried in from another
+		   song. Walk defect on `b191867`, memo §9. */
+		reseatAcross(diff, prevGrid);
 		/* N.57's anchor check STAYS, and it is now a second gate rather than
 		   the mechanism. The diff has already moved every gloss whose word
 		   survived; this drops any whose anchor no longer matches the word now
@@ -2063,9 +2095,9 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	 * no-op, which is the property `handleStartPlacementOver` already relies
 	 * on.
 	 */
-	function reseatAcross(diff: TextDiff): void {
+	function reseatAcross(diff: TextDiff, before: readonly (readonly string[])[]): void {
 		if (diff.unchanged || !ingestedScore) return;
-		const result = reseatByDiff(doc.pairings, eventIds, slotQueue, diff);
+		const result = reseatByDiff(doc.pairings, eventIds, slotQueue, diff, before);
 		doc.pairings = seatCliticFolds(ingestedScore.result.score, result.map);
 		/* THE QUEUE'S CURSOR IS CLAMPED, not recomputed. A shorter poem can
 		   leave it past the end, which would arm nothing and make the next

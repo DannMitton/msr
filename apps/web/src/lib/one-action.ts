@@ -104,3 +104,30 @@ export function transcribeVerdict(
 	if (!state.dictionaryReady) return 'wait';
 	return how === 'typing' ? 'soon' : 'now';
 }
+
+/**
+ * Which queue a REBUILD of the placements must read. N.112, walk finding 2.
+ *
+ * RULED BY DANN 2026-09-07, on his walk of `b191867`: *"make the rebuild use
+ * the poem whenever text is present."* After Start placement over the last note
+ * of the piece came back bare, because the rebuild had run from the score's own
+ * words, and this alias's engraving lost its final `я` off the end (N.111,
+ * 2026-09-04), so that queue is one slot shorter than the poem's.
+ *
+ * THE FALLBACK ITSELF IS NOT THE DEFECT and stays. N.111 added it so the hand
+ * works on a lyric-bearing score the singer has typed no poem for, and
+ * `slotQueue`'s own comment already says the singer's text wins wherever they
+ * have typed any (N.10, E.31 Path C). What was wrong is the TEST: `slotQueue`
+ * asks whether the poem has been TRANSCRIBED, and this asks whether text is
+ * PRESENT, which is the question Dann's ruling names.
+ *
+ * `none` IS NOT `score`. Text is present and the transcription has not run,
+ * which at boot means the dictionary has not landed. Rebuilding from the
+ * score's words there is exactly the defect; rebuilding from an empty queue
+ * would erase every placement. Doing nothing leaves them standing and the
+ * singer presses again.
+ */
+export function rebuildSource(poem: string, poemSlots: number): 'poem' | 'score' | 'none' {
+	if (poem.trim().length === 0) return 'score';
+	return poemSlots > 0 ? 'poem' : 'none';
+}

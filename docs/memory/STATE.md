@@ -252,6 +252,34 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > overruling the file's witness in a second case and his ruling of 2026-09-04
 > allows that only on a clitic fold.
 >
+> **N.112 SHIPPED `b191867` 2026-09-07 AND WALKED BY DANN, who found TWO
+> defects; both are FIXED, GATED AND WALKED BY CODE 2026-09-07 and await his
+> ship and his walk.** Memo §9.
+> 1. **The insert anchored on a seat that matched only by position.** Replacing
+>    a word in line 2 seated the new word on system 1's notes 1 to 5. CAUSE,
+>    reproduced: `readScoreText` joins a score's underlay into ONE line
+>    (`clitic-seat.ts:449`), so a seat made from the score's own words carries
+>    `lineIndex 0` with a running `wordIndex` and collides with the poem's first
+>    line; `reseatByDiff` read `diff.moved` by POSITION and never consulted
+>    `origin.word`, the discriminator Dann ruled 2026-08-13. FIX: a seat the diff
+>    cannot speak for is left exactly as it stands and can never anchor
+>    (`reseat.ts` takes the previous word grid); the anchor is the previous
+>    matched word's seat, with `anchorFound` separate from `anchor`. Walked:
+>    system 1 unchanged, system 2 corrected in place, both directions.
+> 2. **Start placement over rebuilt from the score's own words.** MEASURED off
+>    the Lyric header: the poem's queue is **96** slots and ends on `я`, the
+>    score's own is **95** and ends on `ка` (this engraving lost its final `я`,
+>    N.111), so `firstPass` left the last note bare. FIX: `rebuildSource` in
+>    `one-action.ts`, his ruling of 2026-09-07 applied here, plus a `flushText`
+>    first. Walked warm (`96 / 96`, last note `я`) and cold (nothing rebuilt,
+>    seats stand).
+>
+> **GATE 4 MOVES 1030 → 1038 AND NEEDS HIS PERMISSION; the `sed` needs its
+> `chmod +x`.** No new file, so nothing new to `git add`. No new string.
+>
+> **STILL HIS TO RULE, unchanged: what a note the re-seat VACATES draws**
+> (memo §8).
+>
 > **THE ONE THING after the ship: N.113, the melisma.**
 > *(Earlier line, kept:)* Next step was the desk's: read
 > `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
