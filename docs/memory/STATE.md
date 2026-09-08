@@ -11,9 +11,8 @@ name itself, which is why every previous attempt was stale within the hour and
 cost a minute at the next session's open, twice.
 
 What it names instead is a **FLOOR**: everything described below was true at or
-before **`e347311`**, "N.104: the page shows every bar the singer counts",
-established 2026-08-29 as the floor of
-`docs/sessions/memo-n104-loupe-head_r1_2026-08-29.md`. A floor cannot go stale,
+before **`e1bcb67`**, "N.113: the melisma", shipped and walked 2026-09-07
+(the previous floor, `e347311` of 2026-08-29, is in `../sessions/LOG.md`). A floor cannot go stale,
 because further commits only move HEAD forward and never make the floor false.
 If the tree is ahead of it, that is expected and tells you only that work has
 landed since.
@@ -44,411 +43,69 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > the current one thing and nothing else, which is what `README.md` sends you
 > here for.
 
-> **Closed 2026-09-02, moved to `../sessions/LOG.md` block 7 at the close:**
-> N.104 (`ea300ef`), N.105 (`21e9ce2`), N.102 increments 1, 1a, 1b
-> (`0ed0fd8`, `3dd37e4`, `e7c2e43`), N.106 (`bb73488`), N.103 (`62967a7`),
-> N.107 (`d22084c`), N.109 (rode in `2c1cecf`). All walked or proved.
+> **Closed and moved to `../sessions/LOG.md` block 8 at the close of the
+> 2026-09-07 session:** N.108 (five increments, `2c1cecf` to `5f6a2f3`),
+> N.111 (`7875892`, `c574cf8`, `d5a49ff`, `a186f20`), N.112 (`b191867`,
+> `1b3054a`), and N.113 (`e1bcb67`, walked 2026-09-07). All walked by Dann.
 >
-> **N.108 increment 1, the frames (record of its placing).** RULED BY DANN 2026-09-02:
-> "N.108 comes before the release and the release waits for it." That is the
-> named displacement CONTRACT §6 requires; the release order N.85 to N.88
-> waits behind N.108. Design's revision 3 returned as a working prototype
-> (`docs/sessions/n108-drawer-prototype_r2_2026-09-02.html`, memo
-> `n108-design-return_r3_2026-09-02.md`), both written by Design straight
-> into the tree. Two desk overrides of it, recorded in the build brief: one
-> map at every size (Metadata on the Piece band everywhere), and Back on the
-> left of the takeover band. Build brief, three increments each ending in a
-> ship and a walk: `docs/sessions/brief-n108-build_r1_2026-09-02.md`.
-> Status: increments 1 and 1a SHIPPED and walked; 2 is next. Usage read 2026-09-02 evening:
-> Fable 29%, shared pool 21%, both reset Sunday; nothing scarce.
+> **THE TEXT-TO-SCORE SEQUENCE, RULED BY DANN 2026-09-06**, one path through
+> the pairing layer: 1 N.108-5 cleanup DONE; 2 N.112 the text is
+> authoritative DONE; 3 N.113 the melisma DONE; 4 N.114 Type Into Score,
+> NEXT. Then N.110 (set aside, briefed), N.115, N.116, the release order
+> N.85 to N.88, N.84 (Guide and Learn, deferred until N.114), N.83.
 >
-> **INCREMENT 1 SHIPPED `2c1cecf` 2026-09-02 and WALKED BY DANN on the
-> alias.** The frames stand. His walk found, and he ruled, all 2026-09-02
-> late evening, from drawings `drawing-n108-pull_r1/r2/r3`:
-> - **The slab is gone.** No fill behind the groups; they float on the desk
->   of the document showing. His words: "allowing the Drawer to fully become
->   a floating control set." (Code had given the slab one fixed tone, which
->   showed as a wrong-coloured corner under the Score markup desk.)
-> - **Desk: no pull, no chevron, no collapse.** The drawer is always
->   present. `ilya:drawerCollapsed` retires. Below the width where drawer
->   and paper both fit (about 1340 px, Code to measure), the layout is the
->   phone's.
-> - **Phone: the VERTICAL model returns**, drawer rising from the bottom, one
->   horizontal labelled pull on the bottom edge reading PAPER with the
->   drawer up and DRAWER with the paper up; a swipe in the motion's
->   direction is a second way in. **This AMENDS the 2026-08-19 ruling
->   (`claude/ruling-drawer-horizontal-motion-and-bare-chevron_2026-08-19.md`)
->   in both parts, motion and label**, on his word tonight: "The vertical
->   model for mobile that you offered is fine. Let's go with that." The desk
->   found this only after quoting the 08-18 pull without the 08-19 amendment
->   (tether 17, broken and caught by Dann).
-> - **The migration lands every returning singer on the opening state once**
->   (old open set dropped), desk ruling; his old Repertoire and Analysis had
->   come across open and pushed Score markup off the bottom.
-> - "You have corrected 2 notes." moves inside Corrections.
-> - The intake stays two fields until increment 2, as briefed.
-> **INCREMENT 1a SHIPPED `60e6615` 2026-09-02 and WALKED BY DANN, desk and
-> phone.** His words: "Yes! It works just as you say :)" Desk breakpoint
-> measured at exactly 1400 px (520 + 816 + 2 × 32); a 1366 laptop takes the
-> phone's layout, accepted. Migration key is now `{"v":2,"open":[]}`.
-> Groups take a 16 px side inset. NOT walked: the loupe covering the pull on
-> the phone (nothing unreachable; dismiss the loupe first). Memo:
-> `docs/sessions/memo-n108-frames-1a_r1_2026-09-02.md`.
-> **INCREMENT 2 SHIPPED `cedf246` and `2fe7ebd` 2026-09-03 and WALKED BY
-> DANN on the alias, seven steps.** Memo
-> `docs/sessions/memo-n108-intake_r1_2026-09-03.md` (§7 is the watermark).
-> Walked: paste gives `TEXT · 8 lines`; Transcribe adds `38 words`; the
-> control dropped on the poem gives the confirm panel, then `5 / 5` on Score
-> markup with the poem intact; Clear on the score removes the SCORE line,
-> Underlay, and Corrections and leaves the poem; Replace on the poem selects
-> it; the clear survives a reload. **RULED BY DANN 2026-09-03 on the walk:
-> the intake watermarks are retired** (amends N.65, 2026-08-20); the
-> oversized-sans convention the deleted component carried (700, -0.01em,
-> line-height 1.04, 40 px, from the r2 mockup) now lives only in memo §7.
-> Findings, both for the increment 3 paste: (1) the drawer takes the 175 ms
-> tab slide and Dann ruled it still (`Drawer.svelte:1148-1162`); (2) Metadata
-> fields tagged *from score* survive Clear on the score
-> (`handleClearScore`, `+page.svelte:1779`). Also seen, not acted on: the
-> SCORE receipt shows the file name before Continue to analysis, where memo
-> §6.7 says after; the "not the same music" dialog does not fire when no
-> placements exist. Numbered on the walk: **N.111**, the clitic seat, below.
-> Inbox, on his word: "one piece at a time".
-> **INCREMENT 3 BUILT AND WALKED BY CODE 2026-09-03, AWAITING DANN'S SHIP AND
-> HIS WALK.** Memo `docs/sessions/memo-n108-takeover_r1_2026-09-03.md`. Commit
-> message `N.108-3: the takeover in the new dress`. Floor `2fe7ebd`. Five gates
-> at baseline before and after; no line of `~/Downloads/ilya-ship.sh` changes.
-> The takeover wears the Score markup band with Back on its left, the 20 px
-> frame, and the station label recipe; the ONE self-scroll is written on EXIT,
-> not entry, because `display: none` keeps a scroll offset and Chrome restores
-> it after `requestAnimationFrame` (measured). No new string, English or French:
-> the band reuses `group.scoreMarkup`, Back reuses `inspector.back`, the title
-> reuses `voice.heading`. The prototype's Back chevron was drawn and removed,
-> because `inspector.back` is already `← Back`. Both riders ride: the tab slide
-> is gone from `.drawer-content` and stays on `.main-content`, and Clear on the
-> score now calls `clearScoreFilled`, so the fields that score filled empty and
-> the singer's own survive, walked and proved through a reload.
+> **IN CODE NOW: N.113a**, pasted 2026-09-07 late evening. Five items from
+> the N.113 walk: (1) RULED, reversing the desk's N.112 default: deleting a
+> word vacates its notes and moves nothing; an insert takes open notes only;
+> (2) defect: after a melisma shift, a vacated tail note drew the file's word
+> (`ка ка`); (3) the dock's Melisma pill and the shift arrows need the dock's
+> gap; (4) RULED: Cmd-Z / Ctrl-Z undo, Shift-Cmd-Z / Ctrl-Y redo, not while a
+> field has focus; (5) the loupe marks the taken note with a box on the
+> notehead, not a caret after it. When it returns: read the memo against the
+> tree, move `ilya-ship.sh:79-80` to the new counts, `git add` the memo,
+> ship as `N.113a: the walk findings`, walk on the alias.
 >
-> **HIS TO RULE, THE ONE OPEN THING (memo §2): the ritual's phases do not fit
-> their box.** At 1366 x 768 the box is 672 px; summary is 1042, capture 1295,
-> characteristics 1485. The dress is not the cause: at 1400 x 900 the wizard's
-> own column is 995 px inside an 852 px drawer, so no chrome height absorbs it.
-> Design measured a placeholder. Nothing is broken; the ritual has scrolled
-> inside itself since N.73 S3. Three ways out are listed in the memo and none is
-> chosen, because it is taste.
+> **THE ONE THING after N.113a: N.114, Type Into Score.** Frame agreed
+> 2026-09-07 (Dann's idea, desk-adjusted; INBOX): the syllabified line moves
+> from Score markup to sit under the field inside the Input band, live on
+> text present, collapsed by default; without a score it is read-only
+> syllabification (hyphens, no box); with a score the box appears and a
+> click moves the cursor. Score markup keeps Corrections, Voice, and a placed
+> count. The loupe dock keeps the hands: taken note, next syllables, shifts,
+> Undo and Redo, and N.114's typed field, which rewrites that word in the
+> poem and marks it in the field; N.112 re-seats. Drawing before Code.
 >
-> **Spent by this increment:** the increment 2 finding "the drawer takes the
-> 175 ms tab slide (`Drawer.svelte:1148-1162`)". Those rules are deleted.
->
-> **INCREMENT 3 SHIPPED `42f6871` 2026-09-03 and WALKED BY DANN, desk and
-> phone, four steps.** His words: "It looks ravishing" and "it looks great
-> on mobile." Both riders walked. DESK DEFAULT on the fit, not waved off: the
-> ritual keeps its inner scroll (memo §2). **N.108 IS CLOSED.** Move its whole
-> record to LOG.md at the close of this session.
-> Ruled on the walk, riding with the next Code paste: a top inset on the
-> drawer so Piece clears the banner (INBOX, 2026-09-03). Also owed from memo
-> §9: the empty-paper hint still says "chevron on the left".
-> **INCREMENT 4 SHIPPED `8fbc8d7` 2026-09-03 and WALKED BY DANN on the alias:
-> the top inset, the pill ends on 54 buttons (audit in memo §5.2), one Choose
-> a file that asks poem-or-score on a picture, and the bottom-pull hint. His
-> words: "they all look as they should." Both desk defaults stood: the
-> correction grid as pills, the TRANSCRIPTION / SCORE MARKUP pair square. Memo
-> `docs/sessions/memo-n108-finishings_r1_2026-09-03.md`. **N.108 is finished,
-> four increments.** French owed for every N.108 string, shown as a table
-> first when it comes.
-> **N.111 SHIPPED in four commits 2026-09-04 (`7875892`, `c574cf8`,
-> `d5a49ff` and the increment 2 seat) and WALKED BY DANN through increment 3.**
-> Ilya seats a vowelless clitic with its host automatically at ingest of a
-> lyric-bearing score (ruled 2026-09-04: "no vowelless word in Russian can
-> carry its own duration"); the transcription overrules the file ONLY on a
-> clitic fold, anything else withholds (ruled, the Italian case); the vacated
-> note draws nothing; the hand (N.55b's click surface) works on scores with
-> words. Memos: `memo-n111-clitic-seat_r1_2026-09-04.md`,
-> `memo-n111-hand_r1_2026-09-04.md` (§13 the loupe fix). NOT WALKED: `d5a49ff`,
-> the loupe redrawing in the same frame and the bare IPA line.
->
-> **THE TEXT-TO-SCORE SEQUENCE, RULED BY DANN 2026-09-06** ("be an excellent
-> Project Manager"), one path through the pairing layer, in this order:
-> 1. **N.108-5, cleanup**: the seat sentence and its Undo leave Corrections
->    (ruled 2026-09-04); Transcribe and Continue to analysis become one
->    action, either invoking the other (ruled 2026-09-04).
-> 2. **N.112, the text is authoritative** (numbered 2026-09-06): one
->    text-to-seats function, stable on a round trip; unchanged words keep
->    their notes, a removed syllable slides the rest left, an added one takes
->    the next open note; drift retires. Finale's Lyrics window model.
-> 3. **N.113, the melisma** (numbered 2026-09-06): a dock control writing the
->    `melisma` kind (`pairings.ts:121`, never written by a singer today) and
->    an extender line on the page. Finale's Edit Word Extensions.
-> 4. **N.114, Type Into Score**: a text field in the loupe's dock for the
->    taken note; what is typed rewrites that word in the poem, the field marks
->    the changed word, N.112 re-seats. Two-way; the loupe is the surface
->    (E.27 binding, N.92). Last because it depends on 2 and 3.
 > **N.115, the singer moves a measure between systems** (numbered
-> 2026-09-06, UNPLACED): Finale's arrow-up on a selected measure pulls it into
-> the previous system and the others respace. Research Finale first (his ask),
-> then find the tree's existing orphaned-measure rule before scoping.
-> Then N.110, the release order N.85 to N.88, N.84, N.83. French for every
-> N.108, N.111, and N.112 to N.114 string comes as one table after 4.
-> Not adopted from Finale, ruled 2026-09-06: Adjust Baselines and the other
-> engraving controls (Ilya does them), Type Into Score on the paper, verses
-> (D3's), Clone.
-> **N.108-5 SHIPPED `5f6a2f3` 2026-09-07 and WALKED BY DANN 2026-09-07,
-> three steps:** four bands (Piece, INPUT in sage, Text, Score markup), the
-> button "Transcribe and fit", the seat sentence gone, and the transcription
-> that is always there (boot, paste, 600 ms typing pause; walked: the page
-> drew at boot with no press, and a typed letter appeared after the pause as
-> a VERIFY stack). Memo `memo-n108-5-cleanup_r1_2026-09-07.md`. Open from it:
-> implicit runs reset stress overrides (N.112's), and the "Text changed 59"
-> drift line (N.112 retires it).
-> **N.111-3b BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
-> WALK.** Memo `docs/sessions/memo-n111-3b-loupe_r1_2026-09-07.md`. Commit
-> message `N.111-3b: the loupe stays open, and the hand can go back`. Floor
-> `5f6a2f3` plus the uncommitted `*/` in `IntakePanel.svelte`, which rides with
-> it. Five gates at baseline before and after; **gate 4 stays 995 and no line of
-> `~/Downloads/ilya-ship.sh` changes.** All four rulings of 2026-09-07 land: the
-> loupe stays open after a placing click (the cause was N.111-3a's own redraw
-> detaching the click target, so `closest('.loupe')` answered null and the
-> geometry test dismissed; the guard is `gestureBeganOnSurface`, read at
-> `pointerdown`); Undo and Redo on the dock, ONE stack extended, not a second
-> added, with `pairingCursor` in the snapshot and placement pushing
-> `loupe.undo.placed`; the receipt tag reads POEM; the CSS comment verified on a
-> production build with a positive control. **Two new English strings, French
-> owed on both** (`loupe.redo` = `Redo: %s`, `loupe.undo.placed` = `syllable
-> placed`), plus the POEM tag, whose `« texte »` is retired. **ONE UNTRACKED
-> FILE: the memo. `git add` it before the ship.** Open from it: an undo across a
-> re-ingest could restore old pairings, which is the shipped behaviour of Undo
-> and not new; and the dock readout omits the syllable at the first raise.
-> **SHIPPED `a186f20` 2026-09-07 and WALKED BY DANN, two steps:** the loupe
-> stayed open on the placing click, Undo took it back, Redo put it back, POEM
-> on the receipt. **N.111 IS CLOSED.** Move its record to LOG.md at the close
-> of this session.
-> **N.112 BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
-> WALK.** Brief `docs/sessions/brief-n112-text-authoritative_r1_2026-09-07.md`,
-> memo `docs/sessions/memo-n112-text-authoritative_r1_2026-09-07.md`. Commit
-> message `N.112: the text is authoritative`. Floor `a186f20`. **BOTH
-> increments in ONE commit.** `text-diff.ts` is the one place the old and new
-> texts are compared: `wordGrid` is `processText`'s step 1 lifted (not copied)
-> so the diff and the pipeline cannot disagree about a word, then a flat
-> longest-common-subsequence over the word sequence, which makes a line split
-> or join invisible. Overrides re-key through it, so N.108-5's reset is over.
-> `reseat.ts` carries the seats: a matched word keeps its notes, a removed
-> word's seats go and the tail closes up, a new word takes the notes after the
-> word before it. Drift retires: `reconcilePairings` is reduced to
-> `refreshPairings` (kept for `handleReset`, which re-runs the pipeline without
-> a diff), and `PairingDrift`, `Reconciliation`, `auditPairings`, `driftCount`,
-> the Underlay drift line and `station.textChanged` are all deleted. **NO NEW
-> STRING, so no French is owed.** **GATE 4 MOVES 995 → 1030 AND NEEDS DANN'S
-> PERMISSION; the `sed` needs its `chmod +x`.** **SIX FILES TO `git add`,
-> including the brief.** Walked on a production build against
-> `sunless-01-engraved.musicxml` and the Mussorgsky poem: the punctuation round
-> trip is a no-op, an edit in line 2 leaves line 4 and the whole tail unmoved,
-> deleting a word closes the tail up by two to 94 seats, a reload holds, and
-> two presses of Transcribe give a byte-identical map.
+> 2026-09-06, UNPLACED): Finale's arrow-up on a selected measure. Research
+> Finale first (his ask), then find the tree's orphaned-measure rule.
 >
-> **HIS TO RULE, ONE LINE (memo §8): what a note the re-seat VACATES draws.**
-> Today it draws the engraved file's own word. N.111's desk default of
-> 2026-09-04 says an undecided note *inside a seated run* draws nothing, and a
-> vacated tail note is past the end of the run, so the rule does not reach it.
-> N.112 makes it common. Not built, because extending it would be Ilya
-> overruling the file's witness in a second case and his ruling of 2026-09-04
-> allows that only on a clitic fold.
+> **N.116, Learn as the book** (numbered 2026-09-07, UNPLACED). Step 1 DONE:
+> `docs/sessions/inventory-n116-learn-grayson_r1_2026-09-07.md` and
+> `n116-dann-lit-review-sung-russian_2026-09-07.md`. Step 2, the desk's
+> proposed sequence for a singer, needs the inventory read in full and
+> Grayson chapters 1, 8, 9. Rule: every chapter from Grayson cited as his;
+> Dann's additions marked as his.
 >
-> **N.112 SHIPPED `b191867` 2026-09-07 AND WALKED BY DANN, who found TWO
-> defects; both are FIXED, GATED AND WALKED BY CODE 2026-09-07 and await his
-> ship and his walk.** Memo §9.
-> 1. **The insert anchored on a seat that matched only by position.** Replacing
->    a word in line 2 seated the new word on system 1's notes 1 to 5. CAUSE,
->    reproduced: `readScoreText` joins a score's underlay into ONE line
->    (`clitic-seat.ts:449`), so a seat made from the score's own words carries
->    `lineIndex 0` with a running `wordIndex` and collides with the poem's first
->    line; `reseatByDiff` read `diff.moved` by POSITION and never consulted
->    `origin.word`, the discriminator Dann ruled 2026-08-13. FIX: a seat the diff
->    cannot speak for is left exactly as it stands and can never anchor
->    (`reseat.ts` takes the previous word grid); the anchor is the previous
->    matched word's seat, with `anchorFound` separate from `anchor`. Walked:
->    system 1 unchanged, system 2 corrected in place, both directions.
-> 2. **Start placement over rebuilt from the score's own words.** MEASURED off
->    the Lyric header: the poem's queue is **96** slots and ends on `я`, the
->    score's own is **95** and ends on `ка` (this engraving lost its final `я`,
->    N.111), so `firstPass` left the last note bare. FIX: `rebuildSource` in
->    `one-action.ts`, his ruling of 2026-09-07 applied here, plus a `flushText`
->    first. Walked warm (`96 / 96`, last note `я`) and cold (nothing rebuilt,
->    seats stand).
+> **N.110, the [i] extractor harness**: set aside by Dann, briefed
+> (`brief-n110-i-extractor-harness_r1_2026-09-02.md`), not built.
 >
-> **GATE 4 MOVES 1030 → 1038 AND NEEDS HIS PERMISSION; the `sed` needs its
-> `chmod +x`.** No new file, so nothing new to `git add`. No new string.
+> **The print fix**: the page prints white; cause found
+> (`staff-renderer.ts:2740` cream rect, `stripBackingRect` strips only the
+> white page rect). Paste written 2026-09-07 (INBOX), never run; its own
+> Code thread whenever, different files from the sequence.
 >
-> **STILL HIS TO RULE, unchanged: what a note the re-seat VACATES draws**
-> (memo §8).
+> **French owed, one table after N.114:** every N.108, N.111, N.112 to
+> N.114 string (`group.input`, `input.transcribe`, `input.watermark` as
+> « poème », `intake.*`, `loupe.redo`, `loupe.undo.placed`,
+> `loupe.undo.melisma*`, `loupe.melisma`, `paper.empty.mobile`).
 >
-> **SHIPPED `1b3054a` 2026-09-07 and WALKED BY DANN:** Start placement over
-> gave the last note its `я`; the line-2 replacement seated on system 2 with
-> system 1 untouched; the cursor on the poem's final `я`. **N.112 IS CLOSED.**
-> Move its record to LOG.md at the close of this session.
-> **N.113 BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
-> WALK.** Brief `docs/sessions/brief-n113-melisma_r1_2026-09-07.md`, memo
-> `docs/sessions/memo-n113-melisma_r1_2026-09-07.md`. Commit message
-> `N.113: the melisma`. Floor `1b3054a`. **Rider 0 rides with it.**
+> **Open and unplaced, small:** N.102 increment 1c (turning-layer
+> courtesies), N.94, N.82 (the watch band's French), N.89 (document
+> furniture, ratified from drawings), and the `#` marker in Dann's engraved
+> IPA verse (his file, not Ilya).
 >
-> **WHAT WAS ALREADY THERE, found before building (tether 16):** the extender,
-> melisma detection, Gould r5 left-alignment and the slur all exist in
-> `staff-renderer.ts` and all read the FILE, so nothing has ever drawn for the
-> singer. N.113 is one channel (`melismaPreview`) and one control, not a
-> drawing job. `toggleMelisma`, `melismaRuns` and `vacatedTail` live in
-> `pairings.ts` where tests reach them; the renderer implements `melismaRuns`'
-> rule over its own geometry.
->
-> The control is ONE toggle in the dock's LYRIC station, which is where the
-> N.92 schematic drew it and whose comment said "it was never ruled" until now.
-> Undecided: mark. Seated: shift forward, then mark (DESK DEFAULT, his to wave
-> off). Marked: clear to undecided, never to `empty` (E.46). One undo entry per
-> press on the existing snapshot stack, Redo as N.111-3b built it.
->
-> **RIDER 0 gates on `queueExhausted`, a DESK DEFAULT:** with every slot placed,
-> a bare note past the last seat is vacated and blanks on both lines; with slots
-> still unplaced it keeps the file's words, because that is the affordance the
-> hand works from.
->
-> **BOTH GATES MOVE AND BOTH NEED HIS PERMISSION: gate 4 1038 → 1056, gate 5
-> 534/539 → 541/546.** One `sed` does both; the `chmod +x` is not optional.
-> **FOUR NEW ENGLISH STRINGS, FRENCH OWED ON ALL FOUR** (`loupe.melisma`
-> = `Melisma`, ADOPTED from Finale and Gould; `loupe.lyric.melisma`,
-> `loupe.undo.melisma`, `loupe.undo.melismaOff`, coined). **TWO UNTRACKED
-> FILES: the brief and the memo.**
->
-> Walked on a production build on the engraved Sunless fixture, seven steps:
-> the extender after a word-final syllable, the spanning hyphen mid-word (one,
-> centred), Undo and Redo of each, the reload, the undecided last note, and
-> rider 0's deletion taking the drawn Cyrillic from 96 to 94 with no stray.
->
-> **HIS TO RULE, memo §7.1: whether the extender should take the hyphen's
-> stroke weight and vertical offset.** The brief asked for both "a rule on the
-> lyric baseline" and "match the hyphen's", which conflict. The file's own
-> convention was kept (baseline, 0.5 px, against the hyphen's raised 1 px) with
-> its documented semantic reason. Changing it would also change how the file's
-> own melismas draw.
->
-> **THE ONE THING after the ship: N.114, Type Into Score**, which is last in
-> the sequence because it depends on N.112 and N.113.
-> *(Earlier line, kept:)* Next step was the desk's: read
-> `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
-> After N.111: N.110 (set aside, briefed), the release order N.85 to N.88,
-> N.84, N.83.
-
-> Nine ships this session before N.108, all walked or proved: N.104, N.105,
-> N.102 (three), N.106, N.103, N.107.
->
-> **N.108. RULED BY DANN 2026-09-02, from the three-choice drawing
-> (`docs/sessions/drawing-n108-three-choices_r1_2026-09-02.png`): CHOICE 2,
-> "frames, no fold".** Three frames as Design drew them; an open station
-> grows inside its group; the other groups stay where they are; the drawer
-> scrolls once something is open. Design's fold (open one station, fold the
-> other two groups) is REJECTED: the drawer must not rearrange under the
-> singer's hand. Design's return filed: `docs/sessions/n108-design-return_r1_2026-09-02.md`,
-> `n108-design-mockups_r1_2026-09-02.html`, `n108-design-sources_r1_2026-09-02.md`
-> (all untracked until added). **Still his to rule: the fourth radius** (the
-> ruled three cannot draw a divot; Design's candidate is 20 px). Not built;
-> the GUI track still waits on the beta line or a named displacement.
->
-> **RULED BY DANN 2026-09-02, later the same day, on drawings:**
-> - **The fourth radius is 20 px**, a surface radius, from
->   `docs/sessions/drawing-n108-radius_r1_2026-09-02.png` (16, 20, 24). His
->   words: "20 looks terrific." Amends "three radii, no fourth" (2026-08-18).
-> - **Group headers are option A of
->   `docs/sessions/drawing-n108-group-headers_r1_2026-09-02.png`:** a band of
->   full-strength colour with reverse text in a light neutral; File borrows
->   Guide's cobalt `--quiet-cobalt`, Text sage, Score markup lavender. His
->   words: "I honestly prefer mine." Two facts ride with it, for Design to
->   solve inside A: cream on the ruled sage measures 2.7:1 and on lavender
->   3.3:1 at label size, under WCAG's 4.5:1; and cobalt on File overrides
->   "hue names place" for Guide, on purpose.
-> - **The first group is named PIECE**, not File. His words: "not every
->   *piece* will be a song: some will be arias." Working names now: Piece,
->   Text, Score markup. French deferred by his ruling; when it comes, the
->   "song" strings ("New song", "songs", the binder copy, N.67's ruled French)
->   move to "piece" wording, shown as a table first.
-> - **Design's second brief is written and packed:**
->   `docs/sessions/n108-design-pack/` holds the r2 brief (a working HTML
->   prototype is the deliverable), its README, and copies of E.27, E.44, the
->   2026-08-18 dispositions ruling, and N.70, the four things Design could
->   not read the first time. All untracked until Dann adds them. Design reads
->   the connected repository, so Dann pushes before pasting.
-
-> **DESIGN'S REVISION 2 RETURNED AND RULED ON, 2026-09-02 evening.** A
-> working prototype: `docs/sessions/n108-drawer-prototype_r1_2026-09-02.html`,
-> memo `n108-design-return_r2_2026-09-02.md`. Ruled by Dann on the desk's
-> critique:
-> - **Bands take the language-chip tokens with white text** (Design's fix
->   inside A; the ruled hues fail contrast with cream, cobalt included at
->   4.23:1): Piece `#5C739E` 4.77:1, Text `#6C7A5F` 4.58:1, Score markup
->   `#806E8E` 4.63:1.
-> - **The slab takes the desk's surround and the groups carry the drawer
->   paper**, as built; the bookmark tab belongs to the slab.
-> - **The Transcribe station in Text is dissolved**: the Transcribe action
->   stays under the intake in Piece; the word count and Clear move onto the
->   receipt line. Text holds Notation and Analysis only.
-> - **Calibration stays a takeover**, entered from Calibrate in the Voice
->   station, restore-on-exit as today; Design restyles it in the new dress
->   (Score markup band, 20 px surface). In-place ritual is NOT built; it may
->   return as its own item.
-> - Owed to Design in revision 3: no self-scroll on opening a station (only
->   on ritual entry); the opening state measured at 1366 × 768 with Metadata
->   giving first; the labelled mobile pull (2026-08-18); the contrast readouts
->   out of the bands; the takeover restyled.
-
-> *(Earlier record, kept:)* Numbered by Dann 2026-09-02, briefed to Design. File (open at open state,
-> holding Repertoire, Metadata, one unified intake, import and export), Text
-> (Transcribe, Notation, Analysis), Score markup (Underlay, Corrections,
-> Voice). Principle ruled by him: "the opening state is the map of
-> everything, and it fits without scrolling." Departs on purpose from E.27
-> §3.3/§3.6 and from the 2026-08-18 "one takeover" and "one accent per
-> surface"; the brief names each. Group names and all French are his and
-> owed. Brief:
-> `docs/sessions/brief-to-design-n108-drawer-three-groups_r1_2026-09-02.md`,
-> untracked until he adds it. **GUI track: builds only after the beta line
-> closes or he names what it displaces (CONTRACT §6).**
->
-> **N.110, the [i] extractor. Numbered by Dann 2026-09-02, SET ASIDE by him
-> ("set it aside for now"), BRIEFED, not built.** His roster reads [i] fR1 =
-> 1063 Hz, captured in fry as the ritual asks; [i]'s fR1 is the lowest of
-> the ten. Established by the desk: `extract.ts:47-58` finds no peak near
-> 300 Hz that clears 3 dB and takes 1063 as nearest to the prior; [u] at
-> 274 came through the same code. Desk hypothesis, unproven: pre-emphasis
-> flattens a lone low peak. Increment 1 is N.49's instrumentation, a
-> dev-only WAV capture, an offline harness that imports `extract.ts` and
-> plots the envelope and peaks, and the attempt series; **no fix**. Brief:
-> `docs/sessions/brief-n110-i-extractor-harness_r1_2026-09-02.md`,
-> untracked. The stored 1063 is a pre-E.26 record with its verdict erased;
-> the guard-at-snapshot fix is an inbox candidate. No default value: sourced
-> or silent.
->
-> **N.111, the clitic seat. Numbered by Dann 2026-09-03, on the N.108-2 walk
-> of Without Sun no. 1.** The score seats the vowelless proclitic в alone under
-> a sung pitch before бьющемся; Ilya draws it as its own syllable with no
-> vowel, and a singer has no way to fix it. His words: "The clitic should
-> concatenate with the parent word that follows; we have discussed that
-> vowelless words cannot be applied alone to sung pitches," and "We need
-> controls to account for this if it happens in the real world. At the moment
-> there is no way for a user to resolve this." Already framed in
-> `claude/e24-the-unused-boolean_2026-08-04.md` §6 (snippet only, read it in
-> full before briefing): a vowelless clitic never holds a note-assignment of
-> its own; it is seated with its host in the direction `CliticEntry.type`
-> gives; the page shows the re-seating rather than doing it silently. Still
-> his to rule from that document: what the page shows when text is re-seated.
-> New in N.111: a control for the singer to re-seat by hand where Ilya cannot.
-> Placement: DESK DEFAULT, after N.108 increment 3 and before N.110; not
-> placed against the release order, which is his.
->
-> **Open and unplaced:** N.111 the clitic seat, N.102 increment 1c (turning-layer courtesies), N.94, N.84 the Guide redo, N.83's call, and
-> the release order N.85 through N.88.
->
-> **Also this session, ruled: CONTRACT.md tether 20**, put yourself in his
-> position first. Transcribed with his ratified words, `CONTRACT.md` §1.20.
-> Project knowledge:
-> `claude/ruling-tether-20-put-yourself-in-his-position_2026-09-02.md`.
->
-> **Waiting, all Dann's to order:** N.83's walkthrough call (his to
-> schedule), N.84 the Guide redo (deferred so it reflects the finished
-> build), N.94, N.102, N.103, and the release order N.85 through N.88.
+> **Waiting, all Dann's to order:** N.83's walkthrough call, N.84 the Guide
+> and Learn redo (after N.114), and the release order N.85 through N.88.
 
 ## THE TRACKER
 
@@ -757,8 +414,8 @@ Kabalevsky op. 52 no. 9, fourteen lines. **It fills exactly two letter sheets.**
   twelve sessions.**
 - **D3's Job A**, per-verse reprints, ruled in E.36 and still unnumbered.
 - **The per-format score arrival audit**, asked for in E.45 and never written.
-- **`stripBackingRect` matches `fill="#FFFFFF"` while `staff-renderer.ts` paints
-  `#F0EBE0`.**
+- ~~`stripBackingRect` matches `fill="#FFFFFF"` while `staff-renderer.ts` paints
+  `#F0EBE0`.~~ **SETTLED 2026-09-07 by Dann's print preview: the cream prints. Ruled: the page prints white. Paste written (INBOX), not yet run.**
 - **The marks on the printed page.** E.51's prints carry a dashed `VERIFY` box
   and a `USER OVERRIDE` badge on paper. CONTRACT §6 forbids a mark that says Ilya
   is unsure. **Whether these are the ruled exception was not checked.**

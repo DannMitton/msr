@@ -1,16 +1,23 @@
 /**
- * N.112 increment 2. THE SEATS FOLLOW THE DIFF.
+ * N.112 increment 2, AMENDED BY N.113a. THE SEATS FOLLOW THE DIFF.
  *
- * Finale's Lyrics window, which E.46 adopted as Ilya's model and which the desk
- * re-read in the current manual on 2026-09-04: *"Change a word in the Lyrics
- * window and it is also changed in the score; delete it, and all the syllables
- * in the score slide to the left to close up the gap."*
+ * **RULED BY DANN 2026-09-07, on his walk of `e1bcb67`, and it REVERSES the
+ * desk default this file shipped with:** *"I expected the mnogo to disappear
+ * without affecting the other text underlays."*
  *
- * WHAT THIS REPLACES. `reconcilePairings`' drift report. Before N.112 a changed
- * poem left every seat where it was and the drawer printed "Text changed 59",
- * because there was no way to tell a word that had MOVED from one that had been
- * REPLACED. `text-diff.ts` is that way, and once a seat can follow its word
- * there is nothing left for a drift count to describe.
+ * - **Deleting a word vacates its notes and moves NOTHING else.**
+ * - **An inserted word takes OPEN notes only, and never pushes the tail.**
+ * - **A replaced word takes the notes the old one vacated**, which is the two
+ *   rules above meeting at one spot rather than a third rule.
+ *
+ * WHAT THAT REPLACES, and why the first answer was wrong. The build read
+ * Finale's Lyrics window as authority for a slide: *"delete it, and all the
+ * syllables in the score slide to the left to close up the gap."* That is
+ * Finale's behaviour and it was never put to Dann, so it was a DESK DEFAULT
+ * wearing a citation (CONTRACT tether 19). Ilya's singer is editing a poem
+ * against an engraved line they have already placed; a deletion that slides
+ * ninety seats is a deletion that undoes an afternoon's work. The note the
+ * word left is the only note that changes.
  *
  * WHAT IT DOES NOT DO, and each of these is a ruled constraint rather than an
  * omission:
@@ -28,13 +35,12 @@
  * - **It does not touch `melisma` or `empty` pairings**, which are decisions
  *   about the music rather than about the text, and no text edit can speak to
  *   them.
+ * - **It displaces nothing.** Since N.113a there is no shift in this file at
+ *   all, so no seat can be pushed off the end of the line by a text edit. The
+ *   `displaced` count `ReseatResult` used to carry is gone rather than left
+ *   reading zero for ever.
  */
-import {
-	shiftToEndOfLyric,
-	type PairingMap,
-	type Slot,
-	type SlotOrigin,
-} from './pairings';
+import { type PairingMap, type Slot, type SlotOrigin } from './pairings';
 import { wordKey, type TextDiff } from '$lib/text-diff';
 
 /** `"lineIndex-wordIndex-slotIndex"`, the queue's own identity for one slot. */
@@ -50,8 +56,12 @@ export interface ReseatResult {
 	refreshed: number;
 	/** Slots of a NEW word that this pass gave a note. */
 	seated: number;
-	/** Seats pushed off the end of the line by an insert, and so lost. */
-	displaced: number;
+	/**
+	 * Slots of a NEW word that found no open note, and so were left to the
+	 * hand. N.113a: the alternative is pushing the tail forward, which Dann
+	 * ruled out on 2026-09-07.
+	 */
+	unseated: number;
 	/**
 	 * Seats this diff could not speak for, left exactly as they stood: made
 	 * from the score's own words, carried in from another score, or stored
@@ -86,11 +96,9 @@ export interface ReseatResult {
  * kept from another score ("4 placements have no note in this score, kept")
  * can never anchor an insert.
  *
- * RECOMPUTED RATHER THAN MAINTAINED, and deliberately: every insert shifts a
- * run of seats by one, and a stale index here would seat the next added word
- * on top of a syllable instead of after it. `eventIds` is the notes of one
- * song, so this is cheap and the alternative is a bookkeeping bug waiting to
- * happen.
+ * RECOMPUTED RATHER THAN MAINTAINED, and deliberately: `eventIds` is the notes
+ * of one song, so this is cheap and the alternative is a bookkeeping bug
+ * waiting to happen.
  */
 function seatIndex(
 	map: PairingMap,
@@ -110,65 +118,28 @@ function seatIndex(
 }
 
 /**
- * Close one hole by sliding the run above it down, stopping at the next
- * undecided note.
- *
- * THE SCOPE IS FINALE'S, not "everything to the end". A deliberate gap the
- * singer left further up is a decision, and a close-up that ran past it would
- * swallow it. `shiftToNextOpenNote`'s own scope is exactly this, and this uses
- * that function's machinery through the one call shape that produces it: the
- * range runs from the hole to the next undecided note ABOVE it, travelling
- * back.
- *
- * WHY NOT `shiftToNextOpenNote(map, ids, hole, 'back')` DIRECTLY. That call
- * searches DOWNWARD for the gap and slides the run into it from above, which
- * closes a hole that lies BELOW the anchor. Here the hole is the anchor, and
- * the run to move is the one above it, so the anchor this needs is the next
- * undecided note above the hole. Read once and measured against the function's
- * own doc comment rather than assumed from its name.
- */
-function closeHole(
-	map: PairingMap,
-	eventIds: readonly string[],
-	hole: number,
-): PairingMap {
-	let end = eventIds.length - 1;
-	for (let i = hole + 1; i < eventIds.length; i++) {
-		if (map[eventIds[i]] === undefined) {
-			end = i;
-			break;
-		}
-	}
-	if (end <= hole) return { ...map };
-	const next: PairingMap = { ...map };
-	for (let i = hole; i < end; i++) {
-		const v = next[eventIds[i + 1]];
-		if (v === undefined) delete next[eventIds[i]];
-		else next[eventIds[i]] = v;
-	}
-	delete next[eventIds[end]];
-	return next;
-}
-
-/**
  * Re-seat a score's pairings against a poem that has changed.
  *
- * THE THREE RULES, in the order they run, because the order is the behaviour:
+ * THE THREE RULES, in the order they run, because the order is the behaviour.
+ * All three are Dann's, ruled 2026-09-07.
  *
  * 1. **A matched word keeps its notes.** Its seat is re-originated to the
  *    word's new `(line, word)` and its text refreshed from the new queue. This
  *    is what makes an edit in line 1 leave line 4 alone: line 4's words all
  *    matched, so every one of their seats is rewritten to the same note it was
  *    already on.
- * 2. **A removed word's seats go, and the tail closes up.** One hole per lost
- *    slot. Closing a hole stops at the next undecided
- *    note, so the holes are closed HIGHEST FIRST and every removal spends
- *    exactly one place. Two removals slide the tail back two.
- * 3. **A new word's slots take the notes after the word before them.** An
- *    undecided note there is filled; otherwise the run from that note to the
- *    end moves forward to open one, which is Finale's insert and can push the
- *    last seat off the end. That loss is reported in `displaced` rather than
- *    hidden, because it is a decision of the singer's that this pass spent.
+ * 2. **A removed word's seats go, and NOTHING ELSE MOVES.** The notes it held
+ *    go back to undecided where they stand, and every other seat in the piece
+ *    is untouched. What those bare notes then DRAW is `vacatedNotes`' rule in
+ *    `pairings.ts`, not this pass's: nothing, on both lines.
+ * 3. **A new word's slots take the OPEN notes after the word before them.**
+ *    An undecided note there is filled; an occupied one is left alone and the
+ *    slot goes to the hand, counted in `unseated`. Nothing is ever pushed.
+ *
+ * A REPLACEMENT NEEDS NO RULE OF ITS OWN. It is rule 2 then rule 3 at the same
+ * spot: the removal vacates the old word's notes, and the new word's slots find
+ * exactly those notes open and take them, in order, however many or few of them
+ * there are.
  *
  * NOTHING IS MUTATED. A new map is returned, matching `reconcilePairings`'
  * habit and `clitic-seat.ts`'s.
@@ -181,7 +152,7 @@ export function reseatByDiff(
 	before: readonly (readonly string[])[],
 ): ReseatResult {
 	if (diff.unchanged) {
-		return { map: { ...map }, removed: 0, refreshed: 0, seated: 0, displaced: 0, kept: 0 };
+		return { map: { ...map }, removed: 0, refreshed: 0, seated: 0, unseated: 0, kept: 0 };
 	}
 
 	const bySlot = new Map<string, Slot>();
@@ -192,8 +163,7 @@ export function reseatByDiff(
 		o.word !== undefined && before[o.lineIndex]?.[o.wordIndex] === o.word;
 
 	/* ── 1 and 2: every existing seat is kept-and-refreshed, or lost. ── */
-	let next: PairingMap = {};
-	const holes: number[] = [];
+	const next: PairingMap = {};
 	let removed = 0;
 	let refreshed = 0;
 	let kept = 0;
@@ -233,8 +203,13 @@ export function reseatByDiff(
 			/* The word left the poem, or it survived with fewer slots than this
 			   seat's ordinal. Either way the thing this note was carrying no
 			   longer exists, and the note goes back to UNDECIDED rather than to
-			   `empty`, which would be a decision nobody made. */
-			holes.push(i);
+			   `empty`, which would be a decision nobody made.
+
+			   THE HOLE STAYS WHERE IT IS. Until N.113a this pushed the index
+			   onto a `holes` list and a `closeHole` pass slid the tail down into
+			   it, highest first. Dann ruled that out on 2026-09-07: the deletion
+			   vacates its own notes and moves nothing else, so there is nothing
+			   left to close and nothing left to order. */
 			removed++;
 			continue;
 		}
@@ -256,19 +231,7 @@ export function reseatByDiff(
 		if (next[id] === undefined && !eventIds.includes(id)) next[id] = p;
 	}
 
-	/* HIGHEST HOLE FIRST, and this is a measured correction rather than a
-	   preference. Closing ascending looks right and is wrong for ADJACENT
-	   holes: the close stops at the next undecided note, an adjacent hole IS
-	   that note, and the lower close then moves nothing at all. Deleting two
-	   words side by side slid the tail back one instead of two, and three slid
-	   it back one. Measured on `reseat.test.ts`'s two-word case, which failed
-	   as `раз · _ · сто` where Finale gives `раз · сто · _`.
-
-	   Descending, each close runs into decided notes or the end of the line,
-	   never into another hole, so every removal spends exactly one place. */
-	for (let i = holes.length - 1; i >= 0; i--) next = closeHole(next, eventIds, holes[i]);
-
-	/* ── 3: the new words take their places. ────────────────────────── */
+	/* ── 3: the new words take the open places. ─────────────────────── */
 	/* THE ANCHOR IS THE LAST SEAT OF THE PREVIOUS MATCHED WORD, found by that
 	   word's RE-KEYED origin and verified by its recorded word. It is never
 	   "the first pairing that happens to match by position", which is what it
@@ -278,12 +241,12 @@ export function reseatByDiff(
 	   different things and cannot. Before any seat has been seen there is no
 	   anchor at all; the note before the first note is a different fact.
 
-	   AHEAD OF EVERY SEAT, THE ANCHOR IS THE FIRST SEAT ITSELF, and the added
-	   word goes in front of it. That is the head-of-poem case, and replacing
-	   the poem's first word is the common way to meet it: the removal vacates
-	   the head of the run, the close-up slides the rest down, and the new word
-	   takes the place its predecessor held. Reading it as "no anchor" left the
-	   head bare and slid the whole poem forward by a word.
+	   AHEAD OF EVERY SEAT, THE TARGET IS THE FIRST OPEN NOTE BELOW THE FIRST
+	   POEM SEAT. That is the head-of-poem case, and replacing the poem's first
+	   word is the common way to meet it: the removal vacates the head of the
+	   run and the new word takes those notes back, in order, without the rest
+	   of the poem moving. Where the head is fully occupied there is no open
+	   note to take and the slot goes to the hand.
 
 	   WITH NO POEM SEAT AT ALL, NOTHING IS SEATED. DESK DEFAULT, 2026-09-07.
 	   Every seat on the line belongs to the score's own words or to another
@@ -291,7 +254,7 @@ export function reseatByDiff(
 	   at that is not a guess. The queue and the hand are how an unseated slot
 	   finds a note, and they are undisturbed. */
 	let seated = 0;
-	let displaced = 0;
+	let unseated = 0;
 	let at = seatIndex(next, eventIds, bySlot);
 	let anchor = -1;
 	let anchorFound = false;
@@ -317,14 +280,36 @@ export function reseatByDiff(
 			   in `at` and so cannot be the head of the run. */
 			let first = -1;
 			for (const i of at.values()) if (first === -1 || i < first) first = i;
-			if (first === -1) continue;
-			target = first;
+			if (first === -1) {
+				unseated++;
+				continue;
+			}
+			let open = -1;
+			for (let i = 0; i < first; i++) {
+				if (next[eventIds[i]] === undefined) {
+					open = i;
+					break;
+				}
+			}
+			if (open === -1) {
+				unseated++;
+				continue;
+			}
+			target = open;
 		}
-		if (target >= eventIds.length) break;
+		if (target >= eventIds.length) {
+			unseated++;
+			continue;
+		}
+		/* AN OCCUPIED NOTE IS LEFT ALONE. Ruled by Dann 2026-09-07: an inserted
+		   word takes open notes only and never pushes the tail. Until N.113a
+		   this called `shiftToEndOfLyric(..., 'forward')` here, which moved
+		   every seat from this note to the end of the line and could push the
+		   last one off it. The slot goes to the hand instead, which is where an
+		   unplaced slot has always gone. */
 		if (next[eventIds[target]] !== undefined) {
-			const pushed = shiftToEndOfLyric(next, eventIds, target, 'forward');
-			next = pushed.map;
-			displaced += pushed.displaced.length;
+			unseated++;
+			continue;
 		}
 		next[eventIds[target]] = {
 			kind: 'syllable',
@@ -336,12 +321,12 @@ export function reseatByDiff(
 		seated++;
 		/* A SLOT THIS PASS JUST SEATED IS AN ANCHOR LIKE ANY OTHER, and saying
 		   so is what keeps a multi-syllable insert in order. Without it every
-		   slot of a head insert re-derived the same head target and pushed its
-		   predecessor along, so `гор ни ца` came out `ца ни гор`. */
+		   slot of a head insert re-derived the same head target, so `гор ни ца`
+		   came out with its syllables in the wrong places. */
 		anchor = target;
 		anchorFound = true;
 		at = seatIndex(next, eventIds, bySlot);
 	}
 
-	return { map: next, removed, refreshed, seated, displaced, kept };
+	return { map: next, removed, refreshed, seated, unseated, kept };
 }

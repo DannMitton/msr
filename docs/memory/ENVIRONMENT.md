@@ -22,6 +22,8 @@ next session the same hour it cost the last one.
 | ship anything at all | `Gate baselines` |
 | move a gate number | `Moving a gate baseline` |
 | the ship script refuses to run | `refuses on untracked files` |
+| a `_to_delete/` folder inside the repo blocks the ship | `_to_delete INSIDE THE REPO` |
+| the desk moved a gate number for Dann | `THE DESK MOVES THE GATE LINE` |
 | the ship script staged more than you meant | `THE SHIP SCRIPT STAGES EVERYTHING` |
 | the ship script behaved oddly at line 52 | `The ship script has a bug` |
 | the gate literal is in two places | `the N.97/N.97b session` |
@@ -168,8 +170,10 @@ file.
 | phonology | 216 |
 | dictionary | 235 |
 | web-check | 0 errors, 7 warnings, 4 files |
-| web-test | **995 passed (995)** |
-| score-parser | **534 passed, 5 skipped (539)** |
+| web-test | **1056 passed (1056)** |
+| score-parser | **541 passed, 5 skipped (546)** |
+
+**MOVED 2026-09-07, late: 995 → 1030 (N.112) → 1038 (N.112b) → 1056 (N.113), and score-parser 534 → 541 (N.113). The script is the instrument; this table follows it.** N.113a is in Code and may move both again.
 
 **CORRECTED 2026-09-07 EVENING, BY READING THE SCRIPT AND RUNNING ALL FIVE.**
 This row said `984, and 990 after N.108-5`. `~/Downloads/ilya-ship.sh:79` reads
@@ -2453,3 +2457,22 @@ damage the edit did. They are not: they are dead rules that were always dead.
 **So: when gate 3 gains "unused selector" warnings after an edit that removed a
 dynamic class, check whether the selector ever had markup before you go looking
 for what you broke.**
+
+## `_to_delete` INSIDE THE REPO BLOCKS THE SHIP. Learned 2026-09-04
+
+The ship script refuses on any untracked file (`git ls-files --others
+--exclude-standard`), and `docs/sessions/_to_delete/` is inside the repo, so a
+file parked there blocks every ship until it is deleted. The bridge cannot
+delete without `device_request_delete_permission` (one prompt, granted for
+the session), and it cannot `mv` a file out of the repo either. Park
+superseded desk drafts in `~/Downloads/_to_delete/` instead, which is outside
+the repo, or delete them with the permission. An empty directory is
+invisible to the script.
+
+## THE DESK MOVES THE GATE LINE. Practice since 2026-09-03
+
+When Code reports a gate 4 or gate 5 count move, the desk edits
+`~/Downloads/ilya-ship.sh:79-80` over the bridge (python read-modify-write,
+assert the old literal matches exactly once) before the ship line goes to
+Dann, and says so. Code's `sed -i ''` and `chmod +x` lines are then skipped.
+Record the old and new literals in the reply so the move is auditable.
