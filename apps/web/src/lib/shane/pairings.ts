@@ -63,9 +63,14 @@ export const PAIRINGS_KEY = 'ilya:pairings';
 
 /**
  * Where a slot came from in the transcription. A BREADCRUMB, never a key:
- * the map is keyed by event id. This is read for exactly one purpose, to
- * compare the stored text against the current slot at the same position and
- * report drift (see `auditPairings`).
+ * the map is keyed by event id.
+ *
+ * IT HAS TWO READERS SINCE N.112, and the second one is why the item works.
+ * `refreshPairings` compares the stored text against the slot at the same
+ * position and brings a re-divided word's text forward. `reseat.ts` reads
+ * `lineIndex` and `wordIndex` as the seat's WORD IDENTITY, runs it through
+ * `text-diff.ts`'s map, and re-originates the seat onto wherever that word has
+ * moved to. Before N.112 the mismatch could only be reported, as drift.
  */
 export interface SlotOrigin {
 	lineIndex: number;
@@ -313,66 +318,55 @@ export function mergeOnUpload(
 	return { map: existing, proposed: false, orphaned };
 }
 
-/* ── The witness ────────────────────────────────────────────────── */
-
-/** One pairing whose stored text no longer matches the slot it came from. */
-export interface PairingDrift {
-	eventId: string;
-	stored: string;
-	current: string | undefined;
-}
+/* ── The refresh ────────────────────────────────────────────────── */
 
 /**
- * Compare every stored pairing against the current queue at its origin.
+ * Bring every stored pairing's TEXT forward from the queue at its origin.
  *
- * A mismatch NEITHER DELETES NOR SILENTLY USES. The page prints what the
- * singer decided, because that is what they decided; the drawer reports the
- * count. Drawer manipulates, page displays and prints.
- */
-/**
- * The result of reconciling a stored map against the current queue.
+ * **N.112 REDUCED THIS TO A REFRESH, and retired the drift half of it.** It was
+ * `reconcilePairings`, and it returned a `drift` list of every pairing whose
+ * stored text the current transcription no longer produced, which the Underlay
+ * station printed as "Text changed 59". `PairingDrift`, `Reconciliation` and
+ * `auditPairings` went with that list.
  *
- * `refreshed` counts pairings whose word was re-divided and whose text was
- * brought forward. `drift` is what genuinely no longer matches.
- */
-export interface Reconciliation {
-	map: PairingMap;
-	drift: PairingDrift[];
-	refreshed: number;
-}
-
-/**
- * Reconcile a stored map against the current queue.
+ * **WHY DRIFT EXISTED, AND WHY IT DOES NOT NOW.** Drift was the honest answer
+ * to a question this module could not answer: whether a word at a position had
+ * MOVED or been REPLACED. With only the queue to look at, a changed poem could
+ * not be told from a different one, so nothing was allowed to act and the
+ * count was reported instead. `text-diff.ts` answers that question, and
+ * `reseat.ts` acts on it at transcribe time, so by the time this runs every
+ * seat already points at a word that exists. Ruled by Dann 2026-09-06 in
+ * numbering N.112: *"drift retires."*
+ *
+ * **WHAT IS LEFT FOR IT TO DO, which is why it is not deleted outright.** The
+ * queue can change without the text changing, and `handleReset`
+ * (`+page.svelte`) is the case: a per-word reset drops that word's stress or ё
+ * marks and re-runs the pipeline alone, never `transcribeText`, so no diff is
+ * computed and no re-seat runs. The word's syllable division can move under
+ * that, and its seats have to read the new text.
  *
  * TWO EVENTS THAT ARE NOT THE SAME EVENT (Dann, 2026-08-13).
  *
  * A RE-DIVISION moves consonants between slots of the same word. The nuclei
- * are the syllables, so they never move, the slot count cannot change, and
- * the pairing the singer made still refers to the same nucleus. Its text is
- * simply out of date, so it is REFRESHED from the live slot and is not drift.
- *
- * A RE-TRANSCRIPTION rebuilds the word objects from scratch
- * (`+page.svelte:275`, `:321`, `:376`). A different word at the same position
- * is a different decision, so it stays DRIFT and R6 holds: the page prints
- * what the singer decided.
- *
- * `origin.word` is the discriminator; see its own doc comment for why the
- * syllable text and the vowel both fail as tests.
+ * are the syllables, so they never move, the slot count cannot change, and the
+ * singer's decision about WHICH NOTE holds WHICH NUCLEUS still stands. So the
+ * text is refreshed in place. A different word at the same position is a
+ * different decision and is left alone; `origin.word` is the discriminator,
+ * and its own doc comment says why the syllable text and the vowel both fail
+ * as tests.
  *
  * NOTHING IS MUTATED. A new map is returned.
  *
  * A pairing stored before `origin.word` existed carries `undefined`, which
- * matches no word and therefore falls through to the old text comparison.
- * That is the pre-existing behaviour and it is deliberate.
+ * matches no word and is therefore left exactly as it was stored. That is the
+ * pre-existing behaviour and it is deliberate.
  */
-export function reconcilePairings(map: PairingMap, queue: readonly Slot[]): Reconciliation {
+export function refreshPairings(map: PairingMap, queue: readonly Slot[]): PairingMap {
 	const byOrigin = new Map<string, Slot>();
 	for (const s of queue) {
 		byOrigin.set(`${s.origin.lineIndex}-${s.origin.wordIndex}-${s.origin.slotIndex}`, s);
 	}
 	const next: PairingMap = {};
-	const drift: PairingDrift[] = [];
-	let refreshed = 0;
 	for (const [eventId, p] of Object.entries(map)) {
 		if (p.kind !== 'syllable') {
 			next[eventId] = p;
@@ -392,29 +386,11 @@ export function reconcilePairings(map: PairingMap, queue: readonly Slot[]): Reco
 				vowel: current.vowel,
 				origin: current.origin,
 			};
-			refreshed++;
 			continue;
 		}
 		next[eventId] = p;
-		if (current?.cyrillic !== p.cyrillic) {
-			drift.push({ eventId, stored: p.cyrillic, current: current?.cyrillic });
-		}
 	}
-	return { map: next, drift, refreshed };
-}
-
-/**
- * Compare every stored pairing against the current queue at its origin.
- *
- * A mismatch NEITHER DELETES NOR SILENTLY USES. The page prints what the
- * singer decided, because that is what they decided; the drawer reports the
- * count. Drawer manipulates, page displays and prints.
- *
- * Defined in terms of `reconcilePairings` so there is exactly one rule for
- * what counts as drift. A re-divided word is not drift.
- */
-export function auditPairings(map: PairingMap, queue: readonly Slot[]): PairingDrift[] {
-	return reconcilePairings(map, queue).drift;
+	return next;
 }
 
 /* ── Storage (R5) ───────────────────────────────────────────────── */

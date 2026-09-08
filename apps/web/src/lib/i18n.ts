@@ -1083,7 +1083,13 @@ const strings: Record<string, Record<Language, string>> = {
 	// SHIFT LYRICS. Checked before deleting, the way ship A checked its six:
 	// `SyllableStation.svelte`'s `<h3>` was the only consumer in the tree,
 	// and no test and no end-to-end spec named it.
-	'station.textChanged': { en: 'Text changed', fr: 'Texte modifié' },
+	// N.112. `station.textChanged` IS DELETED, en 'Text changed' and fr
+	// 'Texte modifié', ratified by Dann 2026-08-14. It labelled the Underlay
+	// station's drift count, and drift retires with N.112: a seat follows its
+	// word now, so nothing is left to report. Its only consumer was
+	// `SyllableStation.svelte`, checked before deleting the way N.65 ship B
+	// checked its own six. The register it established survives in the two
+	// notes below, which cite it.
 	// N.55b Shift Lyrics. English ADOPTED verbatim from Finale's own manual
 	// (`e46-n55b-click-assignment-design_2026-08-13.md` §8; cross-verified,
 	// `ILYA-REGISTER_2026-08-11.md`). French COINED and ratified by Dann,

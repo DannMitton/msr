@@ -4,7 +4,7 @@
 	import { transcribeWord } from '@ilya/phonology';
 	import type { NotationPreferences } from '@ilya/phonology';
 	import { loadDictionary, type LoaderState } from '$lib/loader';
-	import { processText } from '$lib/pipeline';
+	import { processText, wordGrid } from '$lib/pipeline';
 	import { applyOpenSyllabificationToLines } from '$lib/syllable-utils';
 	import type { LineData, WordStackData, SongMetadata, UserStressOverride, YoToggle, SyllableOverride } from '$lib/types';
 	import { t, type Language } from '$lib/i18n';
@@ -13,7 +13,7 @@
 	import {
 		buildSlotQueue,
 		firstPass,
-		reconcilePairings,
+		refreshPairings,
 		shiftToEndOfLyric,
 		shiftToNextOpenNote,
 		mergeOnUpload,
@@ -115,6 +115,14 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import Loupe from '$lib/shane/Loupe.svelte';
 	import CorrectionSurface from '$lib/shane/CorrectionSurface.svelte';
 	import { QUIET_MS, transcribeVerdict, type TextArrival } from '$lib/one-action';
+	import {
+		diffWordGrid,
+		emptyDiff,
+		rekeyByWord,
+		rekeyByWordChar,
+		type TextDiff,
+	} from '$lib/text-diff';
+	import { reseatByDiff } from '$lib/shane/reseat';
 	import {
 		findCliticFolds,
 		isCliticSeated,
@@ -350,19 +358,22 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		const own = buildSlotQueue(lines);
 		return own.length > 0 ? own : scoreTextQueue;
 	});
-	// N.55b: the pairing layer, wired. `reconcilePairings` (pairings.ts:318)
-	// is the ONE rule for what counts as drift. A re-division moves consonants
-	// within a word, so the nucleus the singer paired is still the same nucleus
-	// and its text is refreshed. A re-transcription is a different decision and
-	// stays drift, and R6 holds: the page prints what the singer decided.
-	//
-	// PROJECTED, NOT WRITTEN BACK. The refreshed map is derived from the live
-	// queue on every render, so nothing derived is stored (CONTRACT s6) and
-	// `pairings` stays the singer's own record. R5's `ilya:pairings` will save
-	// the raw map, not this one.
-	const reconciliation = $derived(reconcilePairings(doc.pairings, slotQueue));
-	const shownPairings = $derived(reconciliation.map);
-	const driftCount = $derived(reconciliation.drift.length);
+	/* N.55b: the pairing layer, wired. `refreshPairings` brings a re-divided
+	   word's TEXT forward: the nucleus the singer paired is still the same
+	   nucleus, so its text is stale rather than wrong.
+
+	   N.112 TOOK THE DRIFT COUNT OUT OF THIS LINE. `reconcilePairings` returned
+	   a `drift` list beside the map and `driftCount` fed the Underlay station's
+	   "Text changed n". A seat can follow its word now (`reseat.ts`, run from
+	   `transcribeText`), so there is no population left for that count to
+	   describe.
+
+	   PROJECTED, NOT WRITTEN BACK. The refreshed map is derived from the live
+	   queue on every render, so nothing derived is stored (CONTRACT s6) and
+	   `pairings` stays the singer's own record. The re-seat is the opposite and
+	   deliberately so: it is a decision about the singer's score and is written
+	   into `doc.pairings` once, at the moment the text changes. */
+	const shownPairings = $derived(refreshPairings(doc.pairings, slotQueue));
 
 	/* ── N.111, THE CLITIC SEAT ──────────────────────────────────────────
 	   A vowelless clitic the FILE seated alone on a sung pitch. Read off the
@@ -1908,21 +1919,42 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		}
 	}
 	/**
-	 * The per-SESSION state, which is not the song and is never stored.
+	 * What a fresh transcription clears, which is nothing keyed to a word.
 	 *
-	 * Every one of these keys on word positions in the poem that is about to be
-	 * replaced, so all three callers drop them together: Transcribe, Clear, and
-	 * N.67 step 4b's song switch. They were three copies of one list until the
-	 * switch would have made it four.
+	 * N.112 SPLIT THIS OUT OF `resetSessionState`. Before it, a transcription
+	 * and a Clear dropped the same list, because a transcription could not
+	 * carry a word-keyed mark across an edit and a Clear does not want to. Now
+	 * they differ: the marks FOLLOW the word (`carryOverridesAcross`), and only
+	 * these three go, because none of them names a word. The error belongs to
+	 * the run that is starting, and the selection and the focus memory point at
+	 * a `WordStackData` that `runPipeline` is about to replace.
 	 */
-	function resetSessionState() {
+	function resetTranscriptionView() {
 		transcribeError = '';
 		selectedWord = null;
 		lastFocusedWord = null;
+	}
+	/**
+	 * The per-SESSION state, which is not the song and is never stored.
+	 *
+	 * Every one of these keys on word positions in the poem that is about to be
+	 * replaced. TWO CALLERS SINCE N.112, not three: Clear and N.67 step 4b's
+	 * song switch, which are the two moments where the poem those positions
+	 * described stops existing. Transcribe left this list when the diff gave it
+	 * a way to move a mark instead of dropping it.
+	 *
+	 * `transcribedGrid` GOES WITH THEM, and it must: an empty grid is how
+	 * `transcribeText` says "there is no previous text", and a grid left
+	 * standing across a song switch would diff the incoming poem against the
+	 * outgoing one and carry the wrong song's marks into it.
+	 */
+	function resetSessionState() {
+		resetTranscriptionView();
 		spotReconstitution = new Map();
 		userStressOverrides = new Map();
 		yoToggles = new Map();
 		syllableOverrides = new Map();
+		transcribedGrid = [];
 	}
 	/**
 	 * The poem in the field, transcribed, and nothing else.
@@ -1946,21 +1978,101 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		   what a singer sees in that case, and it already is. */
 		transcribedText = doc.inputText;
 		cancelQuietTimer();
-		/* THE SESSION OVERRIDES RESET ON AN IMPLICIT RUN TOO, and this is a
-		   DESK DEFAULT with a real cost, named rather than hidden. They key on
-		   `lineIndex-wordIndex` (`handleStressAssign`), so an edit that adds or
-		   removes a word slides every later position and a kept override lands
-		   on a word the singer never marked. A DROPPED override falls back to
-		   the dictionary, which is right by default; a STALE one prints a wrong
-		   stress on the page. Between losing a mark and printing a wrong one,
-		   this loses the mark. The cost is that a singer who sets a stress and
-		   then fixes a typo loses that stress, which under Dann's widening of
-		   2026-09-07 happens far more often than it did when only the button
-		   ran this. Keeping a mark across an edit needs stable word identity,
-		   which is exactly N.112. */
-		resetSessionState();
+		/* N.112. THE OVERRIDES FOLLOW THE WORD, and this REPLACES N.108-5's
+		   reset, which that memo named as a cost in the same breath it shipped
+		   it: the keys are positional, so an edit that adds or removes a word
+		   slid every later position, a kept override landed on a word the
+		   singer never marked, and between losing a mark and printing a wrong
+		   one N.108-5 chose to lose the mark. The diff gives the position a way
+		   to MOVE, so neither happens.
+
+		   THE DIFF IS COMPUTED BEFORE `runPipeline`, not after, and the order
+		   is the rule rather than a preference. `runPipeline` passes
+		   `userStressOverrides` and `yoToggles` straight into `processText`, so
+		   an override still holding its old key would be applied at the wrong
+		   word on this very run. Re-key first, then transcribe once.
+
+		   ONE GRID DIFFED, ONE PIPELINE RUN. The alternative was to transcribe
+		   with no overrides, diff the result, re-key, and transcribe again,
+		   which is two engine passes on every typing pause. `wordGrid` is the
+		   pipeline's step 1 alone, lifted so this can ask what the words are
+		   without asking what they sound like. */
+		resetTranscriptionView();
+		const nextGrid = wordGrid(doc.inputText);
+		const diff =
+			transcribedGrid.length === 0 ? emptyDiff() : diffWordGrid(transcribedGrid, nextGrid);
+		transcribedGrid = nextGrid;
+		carryOverridesAcross(diff);
 		runPipeline();
+		reseatAcross(diff);
+		/* N.57's anchor check STAYS, and it is now a second gate rather than
+		   the mechanism. The diff has already moved every gloss whose word
+		   survived; this drops any whose anchor no longer matches the word now
+		   standing at its key, which is the case a diff cannot see because it
+		   compares the poem to the poem and the anchor records what the gloss
+		   was WRITTEN for. Belt and brace, and the brace is cheap. */
 		keepSurvivingGlosses();
+	}
+
+	/**
+	 * Carry every word-keyed override across a text edit. N.112, increment 1.
+	 *
+	 * FIVE MAPS, ONE RULE, and the rule lives in `text-diff.ts` where a test
+	 * can reach it. Four are session state and the fifth pair is the song's
+	 * own glosses; all of them key on `"lineIndex-wordIndex"` except the ё
+	 * toggles, which append the character ordinal and take the other helper.
+	 *
+	 * WHAT STILL RESETS is what is not keyed on a word at all: the error, the
+	 * selection, and the focus memory, which are `resetTranscriptionView`'s.
+	 * `resetSessionState` keeps the four `new Map()` lines for the two
+	 * Clear-shaped callers that genuinely want everything gone.
+	 */
+	function carryOverridesAcross(diff: TextDiff): void {
+		if (diff.unchanged) return;
+		spotReconstitution = rekeyByWord(spotReconstitution, diff);
+		userStressOverrides = rekeyByWord(userStressOverrides, diff);
+		syllableOverrides = rekeyByWord(syllableOverrides, diff);
+		yoToggles = rekeyByWordChar(yoToggles, diff);
+		doc.glossOverrides = rekeyByWord(doc.glossOverrides, diff);
+		doc.glossAnchors = rekeyByWord(doc.glossAnchors, diff);
+	}
+
+	/**
+	 * Carry the SCORE's seats across a text edit. N.112, increment 2.
+	 *
+	 * IT RUNS AFTER `runPipeline`, and it must: `slotQueue` reads `lines`, so
+	 * the seats have to be re-originated against the queue the new text
+	 * produces rather than the one it replaced.
+	 *
+	 * IT IS WRITTEN INTO `doc.pairings`, which is the one place in this file
+	 * that writes the singer's own record from a derived value, and it is the
+	 * exception CONTRACT §6 leaves room for rather than a breach of it: a seat
+	 * is a DECISION about the score, the singer's edit has moved the word that
+	 * decision was about, and the moved seat is the decision restated, not a
+	 * cached derivation. `shownPairings` remains projected and unstored.
+	 *
+	 * NOTHING RUNS WITHOUT A SCORE. With no `ingestedScore` there are no notes
+	 * to seat onto, `eventIds` is empty, and the pass would be a no-op that
+	 * still wrote the map.
+	 *
+	 * THE CLITIC SEAT RE-RUNS AFTER IT (N.111, ruled by Dann 2026-09-04: a
+	 * vowelless clitic is seated with its host automatically, "no vowelless
+	 * word in Russian can carry its own duration"). A fold the new text
+	 * introduces is seated at once, and one it removes was released with its
+	 * word by the pass above. Where the arrangement is unchanged this is a
+	 * no-op, which is the property `handleStartPlacementOver` already relies
+	 * on.
+	 */
+	function reseatAcross(diff: TextDiff): void {
+		if (diff.unchanged || !ingestedScore) return;
+		const result = reseatByDiff(doc.pairings, eventIds, slotQueue, diff);
+		doc.pairings = seatCliticFolds(ingestedScore.result.score, result.map);
+		/* THE QUEUE'S CURSOR IS CLAMPED, not recomputed. A shorter poem can
+		   leave it past the end, which would arm nothing and make the next
+		   click on the loupe do nothing at all. Recomputing it from the placed
+		   count instead would jump the cursor across the poem on every
+		   keystroke pause, which is the singer's place to stand. */
+		pairingCursor = Math.min(pairingCursor, Math.max(0, slotQueue.length - 1));
 	}
 
 	/**
@@ -2371,6 +2483,27 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	 * whose freshness it describes.
 	 */
 	let transcribedText = $state<string | null>(null);
+
+	/**
+	 * The word grid the current `lines` were built from. N.112.
+	 *
+	 * HELD RATHER THAN RE-DERIVED, and the reason is cost rather than
+	 * cleanliness: `wordGrid` runs the pipeline's own tokenizer, which
+	 * modernises pre-1918 spellings against the dictionary, and this path runs
+	 * on every 600 ms typing pause. Deriving the old side from
+	 * `transcribedText` would tokenize the whole poem twice per keystroke
+	 * burst instead of once.
+	 *
+	 * IT IS NOT `lines`, AND CANNOT BE. `lines` is the grid AFTER
+	 * `processText`'s step 1.5 has applied the ё toggles, and a ё toggle
+	 * changes `cleanWord`. Diffing that would read the singer's own mark as a
+	 * word they had replaced. See `wordGrid`'s comment.
+	 *
+	 * EMPTY MEANS "NO PREVIOUS TEXT", which is a boot, a Clear, or a song
+	 * switch. There is nothing to carry across in any of those, and the
+	 * override maps are empty in all three.
+	 */
+	let transcribedGrid: string[][] = [];
 
 	/**
 	 * The text waiting on a dictionary that has not loaded yet.
@@ -3812,7 +3945,6 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 									<SyllableStation
 										slots={slotQueue}
 										pairings={shownPairings}
-										drift={driftCount}
 										cursor={pairingCursor}
 										{language}
 										oncursor={(i) => (pairingCursor = i)}

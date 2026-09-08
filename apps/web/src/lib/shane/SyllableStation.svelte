@@ -47,18 +47,13 @@
   it. `+page.svelte` derives both numbers because the header is no longer
   this component's to draw.
 
-  THE DRIFT LINE STAYS HERE, WITH THE TEXT, and that is a decision the
-  ruling did not make. It uses `.station-count` too, but it is not the
-  counter Dann named: it reports a re-transcription against the text it sits
-  under, so it belongs to the text rather than to the header.
-
-  THE DRIFT LINE is the one string here that does need translating, and its
-  wording was ratified by Dann on 2026-08-14: it agrees with `texte`, not
-  with the count, so one string covers every number in both languages. It is
-  drawn ONLY when the count is above zero, so it is not a mark that appears
-  on everything and therefore says nothing. It is set in the same muted grey
-  as the placed count and takes no alarm colour: a re-transcription is a
-  thing the singer did on purpose, not a fault.
+  THE DRIFT LINE IS GONE, N.112, and with it this component's only
+  translated string. It read "Text changed" and a count, ratified by Dann
+  2026-08-14, and it existed because a seat could not follow its word: a
+  changed poem left every seat where it was and the honest thing to do was
+  say so. `text-diff.ts` and `reseat.ts` move the seats now, so the count had
+  nothing left to count. `station.textChanged` is retired from `i18n.ts` in
+  both languages, and `.station-drift` with it.
 -->
 <script lang="ts">
 	import { t, type Language } from '$lib/i18n';
@@ -69,13 +64,10 @@
 		pairings: PairingMap;
 		/** Index into `slots` of the syllable the next note click will place. */
 		cursor: number;
-		/** Pairings whose stored text the current transcription no longer
-		    produces. Counted by `reconcilePairings` (pairings.ts:318). */
-		drift?: number;
 		language: Language;
 		oncursor: (index: number) => void;
 	}
-	let { slots, pairings, cursor, language, oncursor, drift = 0 }: Props = $props();
+	let { slots, pairings, cursor, language, oncursor }: Props = $props();
 
 	const keyOf = (s: Slot) => `${s.origin.lineIndex}-${s.origin.wordIndex}-${s.origin.slotIndex}`;
 
@@ -127,12 +119,6 @@
 
 {#if slots.length > 0}
 	<section class="syllable-station">
-		{#if drift > 0}
-			<p class="station-drift">
-				<span>{t('station.textChanged', language)}</span>
-				<span class="station-count">{drift}</span>
-			</p>
-		{/if}
 		<p class="station-text">
 			{#each items as it (keyOf(it.slot))}{#if it.lead === 'line'}<br />{:else if it.lead === 'space'}{' '}{/if}<button
 					type="button"
@@ -156,21 +142,10 @@
 	   Their recipe was this file's own, 0.6875rem at 0.08em in #6a655f,
 	   against the drawer's 0.7rem at 0.12em; nothing inherits it, because
 	   SHIFT LYRICS's header is `StationHeader` and always was. */
-	/* Kept the head's own arrangement, so the numeral still sits at the
-	   right of its line. */
-	.station-drift {
-		margin: 0;
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		font-size: 0.75rem;
-		color: #6a655f;
-	}
-	.station-count {
-		font-size: 0.75rem;
-		color: #6a655f;
-		font-variant-numeric: tabular-nums;
-	}
+	/* `.station-drift` AND `.station-count` ARE GONE, N.112, with the drift
+	   line they drew. They are deleted rather than left, because
+	   `svelte-check` counts an unused selector as a warning and gate 3's
+	   baseline is 7. */
 	/* The whole verse as one piece of readable text, hyphenated at slot
 	   boundaries. No height and no overflow here: the drawer's own scroll
 	   carries it (`Drawer.svelte`'s `.drawer-content`, overflow-y: auto).

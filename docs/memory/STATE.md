@@ -217,7 +217,42 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > FILE: the memo. `git add` it before the ship.** Open from it: an undo across a
 > re-ingest could restore old pairings, which is the shipped behaviour of Undo
 > and not new; and the dock readout omits the syllable at the first raise.
-> **THE ONE THING after the ship: N.112, the text is authoritative.**
+> **SHIPPED `a186f20` 2026-09-07 and WALKED BY DANN, two steps:** the loupe
+> stayed open on the placing click, Undo took it back, Redo put it back, POEM
+> on the receipt. **N.111 IS CLOSED.** Move its record to LOG.md at the close
+> of this session.
+> **N.112 BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
+> WALK.** Brief `docs/sessions/brief-n112-text-authoritative_r1_2026-09-07.md`,
+> memo `docs/sessions/memo-n112-text-authoritative_r1_2026-09-07.md`. Commit
+> message `N.112: the text is authoritative`. Floor `a186f20`. **BOTH
+> increments in ONE commit.** `text-diff.ts` is the one place the old and new
+> texts are compared: `wordGrid` is `processText`'s step 1 lifted (not copied)
+> so the diff and the pipeline cannot disagree about a word, then a flat
+> longest-common-subsequence over the word sequence, which makes a line split
+> or join invisible. Overrides re-key through it, so N.108-5's reset is over.
+> `reseat.ts` carries the seats: a matched word keeps its notes, a removed
+> word's seats go and the tail closes up, a new word takes the notes after the
+> word before it. Drift retires: `reconcilePairings` is reduced to
+> `refreshPairings` (kept for `handleReset`, which re-runs the pipeline without
+> a diff), and `PairingDrift`, `Reconciliation`, `auditPairings`, `driftCount`,
+> the Underlay drift line and `station.textChanged` are all deleted. **NO NEW
+> STRING, so no French is owed.** **GATE 4 MOVES 995 → 1030 AND NEEDS DANN'S
+> PERMISSION; the `sed` needs its `chmod +x`.** **SIX FILES TO `git add`,
+> including the brief.** Walked on a production build against
+> `sunless-01-engraved.musicxml` and the Mussorgsky poem: the punctuation round
+> trip is a no-op, an edit in line 2 leaves line 4 and the whole tail unmoved,
+> deleting a word closes the tail up by two to 94 seats, a reload holds, and
+> two presses of Transcribe give a byte-identical map.
+>
+> **HIS TO RULE, ONE LINE (memo §8): what a note the re-seat VACATES draws.**
+> Today it draws the engraved file's own word. N.111's desk default of
+> 2026-09-04 says an undecided note *inside a seated run* draws nothing, and a
+> vacated tail note is past the end of the run, so the rule does not reach it.
+> N.112 makes it common. Not built, because extending it would be Ilya
+> overruling the file's witness in a second case and his ruling of 2026-09-04
+> allows that only on a clitic fold.
+>
+> **THE ONE THING after the ship: N.113, the melisma.**
 > *(Earlier line, kept:)* Next step was the desk's: read
 > `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
 > After N.111: N.110 (set aside, briefed), the release order N.85 to N.88,

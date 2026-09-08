@@ -187,6 +187,70 @@ interface TranscribedWord {
  * @param options - Engine config and display language
  * @returns Array of LineData, one per non-empty input line
  */
+/**
+ * Step 1 of `processText`, lifted out whole so N.112's word diff can ask what
+ * the words ARE without transcribing them.
+ *
+ * IT IS LIFTED RATHER THAN COPIED, and that is the whole point. The diff has
+ * to agree with the pipeline about what counts as a word, down to the
+ * punctuation set, the hyphenated-particle split, the ё restoration and N.12's
+ * pre-1918 modernisation. A second tokenizer would agree on the day it was
+ * written and drift the first time any of those five moved.
+ *
+ * ONE CALLER PAIR, and no behaviour change: `processText` calls this exactly
+ * where the block used to sit, and `wordGrid` calls it to read `cleanWord`.
+ */
+function splitIntoPreLines(
+  allRawLines: readonly string[],
+): { rawIndex: number; words: PreTranscribeWord[] }[] {
+  return allRawLines
+    .map((line, rawIndex) => ({ line, rawIndex }))
+    .filter((entry) => entry.line.trim())
+    .map((entry) => {
+      const words = entry.line
+        .trim()
+        .split(/\s+/)
+        .filter((word) => {
+          const cleaned = word.replace(PUNCTUATION_REGEX, '');
+          return cleaned.length > 0;
+        });
+
+      // Expand hyphenated particles into separate tokens before lookup
+      const expanded = expandHyphenatedParticles(words);
+
+      return {
+        rawIndex: entry.rawIndex,
+        words: expanded.map((word) => buildPreTranscribeWord(word)),
+      };
+    })
+    .filter((entry) => entry.words.length > 0);
+}
+
+/**
+ * The poem's words, cleaned, line by line, in the pipeline's own reckoning.
+ *
+ * N.112. THIS IS THE IDENTITY THE WHOLE ITEM TURNS ON: `[lineIndex][wordIndex]`
+ * here is the same coordinate the override maps key on
+ * (`+page.svelte`'s `"lineIndex-wordIndex"`) and the same one `SlotOrigin`
+ * records, so a diff computed over this grid re-keys both without a second
+ * mapping in between.
+ *
+ * IT READS THE WORD BEFORE ANY OVERRIDE TOUCHES IT, which is why it takes the
+ * raw text rather than `LineData[]`. `processText`'s step 1.5 applies the ё
+ * toggles, and a ё toggle CHANGES `cleanWord` (е ↔ ё). Diffing the transcribed
+ * lines would therefore compare the singer's marks as though they were their
+ * text, and a toggle would read as a word replaced. The grid is the text and
+ * nothing else.
+ *
+ * An empty or whitespace-only poem is an empty grid, matching `processText`.
+ */
+export function wordGrid(text: string): string[][] {
+  if (!text.trim()) return [];
+  return splitIntoPreLines(text.split('\n')).map((entry) =>
+    entry.words.map((w) => w.cleanWord),
+  );
+}
+
 export function processText(
   text: string,
   options: ProcessTextOptions = {},
@@ -208,27 +272,7 @@ export function processText(
   // no other part of the tree remembers where a poem breaks.
   const allRawLines = text.split('\n');
 
-  const preEntries = allRawLines
-    .map((line, rawIndex) => ({ line, rawIndex }))
-    .filter((entry) => entry.line.trim())
-    .map((entry) => {
-      const words = entry.line
-        .trim()
-        .split(/\s+/)
-        .filter((word) => {
-          const cleaned = word.replace(PUNCTUATION_REGEX, '');
-          return cleaned.length > 0;
-        });
-
-      // Expand hyphenated particles into separate tokens before lookup
-      const expanded = expandHyphenatedParticles(words);
-
-      return {
-        rawIndex: entry.rawIndex,
-        words: expanded.map((word) => buildPreTranscribeWord(word)),
-      };
-    })
-    .filter((entry) => entry.words.length > 0);
+  const preEntries = splitIntoPreLines(allRawLines);
 
   const preLines: PreTranscribeWord[][] = preEntries.map((entry) => entry.words);
 
