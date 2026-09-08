@@ -14,6 +14,9 @@
 		buildSlotQueue,
 		firstPass,
 		refreshPairings,
+		melismaIds,
+		toggleMelisma,
+		vacatedTail,
 		shiftToEndOfLyric,
 		shiftToNextOpenNote,
 		mergeOnUpload,
@@ -374,6 +377,23 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	   into `doc.pairings` once, at the moment the text changes. */
 	const shownPairings = $derived(refreshPairings(doc.pairings, slotQueue));
 
+	/* MOVED ABOVE `blankUnderlay` BY N.113, and nothing else changed. Rider 0's
+	   gate asks whether the queue is exhausted, `blankUnderlay` asks rider 0,
+	   and a `$derived` declared below its reader is a TDZ error even where the
+	   closure would only run later. It reads `shownPairings` and `slotQueue`,
+	   both of which stand above this line. */
+	const placedSlotCount = $derived.by(() => {
+		const placed = new Set<string>();
+		for (const p of Object.values(shownPairings)) {
+			if (p.kind === 'syllable') {
+				placed.add(`${p.origin.lineIndex}-${p.origin.wordIndex}-${p.origin.slotIndex}`);
+			}
+		}
+		return slotQueue.filter(
+			(s) => placed.has(`${s.origin.lineIndex}-${s.origin.wordIndex}-${s.origin.slotIndex}`),
+		).length;
+	});
+
 	/* ── N.111, THE CLITIC SEAT ──────────────────────────────────────────
 	   A vowelless clitic the FILE seated alone on a sung pitch. Read off the
 	   score's own underlay, not off the singer's transcription, because this
@@ -422,8 +442,28 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		for (const fold of seatedCliticFolds) {
 			for (const id of fold.blanked) if (!doc.pairings[id]) out.add(id);
 		}
+		/* N.113. A NOTE THE SINGER MARKED AS A MELISMA DRAWS NOTHING, on both
+		   lines, through this one channel rather than through a second rule in
+		   the renderer. The sound is sustained, not re-articulated.
+
+		   IT IS STILL A DECISION, not a blank: `melismaPreview` carries that
+		   half to the renderer, which is what makes the syllable before it
+		   reach across while a vacated note does not. */
+		for (const id of melismaMarks) out.add(id);
+		/* RIDER 0, RULED BY DANN 2026-09-07: a note the singer's own edit
+		   vacates draws nothing. The rule and its DESK DEFAULT gate are
+		   `vacatedTail`'s, where a test can reach them. */
+		for (const id of vacatedTail(doc.pairings, eventIds, queueExhausted)) out.add(id);
 		return out.size > 0 ? out : undefined;
 	});
+
+	/** The notes the singer marked as a melisma continuation. N.113. */
+	const melismaMarks = $derived(melismaIds(doc.pairings));
+
+	/** True when every slot of the poem is placed, so nothing is waiting. */
+	const queueExhausted = $derived(
+		slotQueue.length > 0 && placedSlotCount === slotQueue.length,
+	);
 
 	/* THE INGEST SEAT PUSHES NO UNDO ENTRY, and after N.108-5 it offers no
 	   Undo of its own either. RULED BY DANN 2026-09-04 on his walk of
@@ -444,17 +484,6 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	   line are still two slots. `shownPairings` rather than `doc.pairings`,
 	   because the counter and the grey on a placed syllable have to agree and
 	   they only agree if they read the same map. */
-	const placedSlotCount = $derived.by(() => {
-		const placed = new Set<string>();
-		for (const p of Object.values(shownPairings)) {
-			if (p.kind === 'syllable') {
-				placed.add(`${p.origin.lineIndex}-${p.origin.wordIndex}-${p.origin.slotIndex}`);
-			}
-		}
-		return slotQueue.filter(
-			(s) => placed.has(`${s.origin.lineIndex}-${s.origin.wordIndex}-${s.origin.slotIndex}`),
-		).length;
-	});
 
 	// N.55b Shift Lyrics (§8). Notes, in document order, one slot per note
 	// until one side runs out — the SAME order `firstPass` consumes them in,
@@ -1416,6 +1445,47 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		selectedEventId && eventIds.includes(selectedEventId) ? selectedEventId : null,
 	);
 	const dockShiftDisabled = $derived(dockShiftAnchor === null);
+
+	/**
+	 * Press Melisma on the taken note. N.113.
+	 *
+	 * THE RULE IS `toggleMelisma`'s, in `pairings.ts` where a test can reach
+	 * it: mark an undecided note, shift-then-mark a seated one, clear a marked
+	 * one back to undecided. What is here is the press.
+	 *
+	 * ONE UNDO ENTRY PER PRESS, on the existing stack, with Redo as N.111-3b
+	 * built it. No second stack: the stack is a SNAPSHOT stack, so a verb it
+	 * has never heard of costs it nothing, which is the property that let one
+	 * stack cover nine verbs and now covers eleven.
+	 *
+	 * THE ENTRY IS PUSHED BEFORE THE WRITE, so the snapshot is the state the
+	 * press replaces, and it names the direction the press went rather than
+	 * the control, because the pill reads what it will take back.
+	 */
+	function handleMelisma(): void {
+		const id = selectedEventId;
+		if (!id) return;
+		const result = toggleMelisma(doc.pairings, eventIds, id);
+		pushUndo({
+			kind: 'text',
+			key: result.set ? 'loupe.undo.melisma' : 'loupe.undo.melismaOff',
+		});
+		doc.pairings = result.map;
+	}
+
+	/** Whether the taken note already carries the mark, for the toggle's state. */
+	const selectedMelisma = $derived(
+		selectedEventId ? doc.pairings[selectedEventId]?.kind === 'melisma' : false,
+	);
+
+	/**
+	 * Whether Melisma can act at all.
+	 *
+	 * IT NEEDS A TAKEN NOTE and nothing else. In a gap the bar stands between
+	 * two entries and there is no note to sustain, which is the same test every
+	 * other note verb on this surface makes.
+	 */
+	const melismaDisabled = $derived(selectedEventId === null || inGap);
 
 	function handleDockShift(scope: 'end' | 'nextOpen', direction: ShiftDirection): void {
 		const anchor = dockShiftAnchor;
@@ -4040,6 +4110,9 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 							onaccidental={handleAccidental}
 							ondelete={handleDeleteNote}
 							onshift={handleDockShift}
+							onmelisma={handleMelisma}
+							{selectedMelisma}
+							{melismaDisabled}
 							{inGap}
 							{armedBase}
 							armedDots={armedDots > 0}
@@ -4505,6 +4578,9 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		onaccidental={handleAccidental}
 		ondelete={handleDeleteNote}
 		onshift={handleDockShift}
+		onmelisma={handleMelisma}
+		{selectedMelisma}
+		{melismaDisabled}
 		onheight={(h) => (dockHeight = h)}
 		{inGap}
 		{armedBase}

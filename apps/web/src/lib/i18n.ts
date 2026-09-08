@@ -333,6 +333,10 @@ const strings: Record<string, Record<Language, string>> = {
 	// renders `[MISSING`, and Dann has not seen a translation for either.
 	'loupe.redo':                  { en: 'Redo: %s',                     fr: 'Redo: %s' },
 	'loupe.undo.placed':           { en: 'syllable placed',              fr: 'syllable placed' },
+	// N.113. The pill reads what the press will take back, so the pair names
+	// the two directions rather than the control. FRENCH OWED.
+	'loupe.undo.melisma':          { en: 'melisma set',                  fr: 'melisma set' },
+	'loupe.undo.melismaOff':       { en: 'melisma cleared',              fr: 'melisma cleared' },
 	// The four stations, in the ruled order. Durations lead.
 	'loupe.station.duration':      { en: 'Duration',                     fr: 'Durée' },
 	'loupe.station.pitch':         { en: 'Pitch',                        fr: 'Hauteur' },
@@ -354,6 +358,15 @@ const strings: Record<string, Record<Language, string>> = {
 	// The lyric verbs, named for what they touch rather than for Finale's
 	// scope. The clause after the comma is `shiftLyrics.toEndOfLyric` and
 	// `shiftLyrics.toNextOpenNote` verbatim.
+	// N.113, the melisma. THREE NEW ENGLISH STRINGS, and the row label is the
+	// fourth. FRENCH OWED on all four: the `fr` slot carries the English so
+	// nothing renders `[MISSING`, exactly as `loupe.redo` does since N.111-3b.
+	// `Melisma` is ADOPTED, not coined: it is the word Finale's own manual and
+	// Gould both use, and the tree has used it since N.55b (`pairings.ts:126`).
+	'loupe.melisma':               { en: 'Melisma',                      fr: 'Melisma' },
+	// The row label, in the shape its two neighbours already take: what the
+	// verb touches, then what it does to it.
+	'loupe.lyric.melisma':         { en: 'This note sustains the syllable', fr: 'This note sustains the syllable' },
 	'loupe.lyric.toEnd':           { en: 'Syllables, to the end of the lyric', fr: 'Les syllabes, jusqu\u2019à la fin du texte' },
 	'loupe.lyric.toNextOpen':      { en: 'Syllables, to the next open note',   fr: 'Les syllabes, jusqu\u2019à la prochaine note libre' },
 

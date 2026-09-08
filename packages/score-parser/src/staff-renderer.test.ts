@@ -268,6 +268,73 @@ describe('staff renderer: melisma (build 1: detection and alignment)', () => {
   });
 });
 
+/* ── N.113: the melisma the SINGER marks ────────────────────────────
+   The renderer's own detection reads the FILE (a note carrying a syllable
+   followed by notes carrying none). That is blind to the singer, because on
+   a lyric-bearing score every note carries a syllable. `melismaPreview` is
+   the singer's channel; `pairings.ts`'s `melismaRuns` is the canonical
+   statement of the rule these draw. */
+describe('staff renderer: melisma (N.113, the singer\'s mark)', () => {
+  it('draws an extender from a word-final syllable to the last marked note', () => {
+    // n6 is `сь`, syllable type `end`, and carries no extender in the
+    // fixture (asserted above). Marking n7 makes it open a run.
+    const svg = renderDemo({ melismaPreview: new Set(['n7']) });
+    expect(svg.includes('data-extender="n6"')).toBe(true);
+    expect((svg.match(/data-extender="/g) ?? []).length).toBe(2); // n18's, and n6's
+  });
+
+  it('reaches the LAST marked note of the run, not the first', () => {
+    const one = renderDemo({ melismaPreview: new Set(['n7']) });
+    const two = renderDemo({ melismaPreview: new Set(['n7', 'n8']) });
+    const endOf = (svg: string): number => {
+      const m = svg.match(/<line x1="([\d.]+)" y1="[\d.]+" x2="([\d.]+)"[^>]*data-extender="n6"/);
+      if (!m) throw new Error('no extender for n6');
+      return Number(m[2]);
+    };
+    expect(endOf(two) > endOf(one)).toBe(true);
+  });
+
+  it('draws NOTHING on a marked note, on either line', () => {
+    const bare = renderDemo();
+    const marked = renderDemo({ melismaPreview: new Set(['n7']) });
+    expect(bare.includes('>но<')).toBe(true);
+    expect(marked.includes('>но<')).toBe(false);
+    expect(bare.includes('>no<')).toBe(true);
+    expect(marked.includes('>no<')).toBe(false);
+  });
+
+  it('draws no extender after a MID-WORD syllable, and the hyphen spans the run', () => {
+    // n2 `по` is `start`, n3 `гру` is `middle`. Marking n3 opens a run at n2,
+    // which is not word-final, so no extender: the hyphen carries the word
+    // across instead, exactly as it already spans the rest at n4.
+    const svg = renderDemo({ melismaPreview: new Set(['n3']) });
+    expect(svg.includes('data-extender="n2"')).toBe(false);
+    expect(svg.includes('data-hyphen="n2"')).toBe(true);
+  });
+
+  it('widens the spanning hyphen gap rather than leaving a hole', () => {
+    // With n3 blanked the hyphen after n2 reaches the next drawn syllable,
+    // so its gap is wider and the placement loop fills it with at least as
+    // many hyphens as before.
+    const bare = (renderDemo().match(/data-hyphen="n2"/g) ?? []).length;
+    const spanned = (renderDemo({ melismaPreview: new Set(['n3']) }).match(/data-hyphen="n2"/g) ?? []).length;
+    expect(spanned >= bare).toBe(true);
+    expect(spanned > 0).toBe(true);
+  });
+
+  it('opens no run for a mark with no drawn syllable before it', () => {
+    // n1 is the first note of the piece. A state the hand can produce.
+    const svg = renderDemo({ melismaPreview: new Set(['n1']) });
+    expect(svg.includes('data-extender="n1"')).toBe(false);
+  });
+
+  it('leaves the file\'s own melisma exactly as it was when nothing is marked', () => {
+    expect(renderDemo({ melismaPreview: new Set() })).toBe(renderDemo());
+  });
+
+
+});
+
 describe('staff renderer: turning-layer accidentals and tuplets (increment 3)', () => {
   const svg = renderDemo();
 

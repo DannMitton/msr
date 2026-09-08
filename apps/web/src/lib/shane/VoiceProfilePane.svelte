@@ -73,6 +73,7 @@
 		withPairedVowel,
 		pairedCyrillic,
 		applyBlank,
+		melismaIds,
 		type PairingMap,
 	} from '$lib/shane/pairings';
 	import type { NotationPreferences } from '@ilya/phonology';
@@ -774,7 +775,13 @@
 			/* N.111: a blanked note draws nothing at all, so its IPA goes with its
 			   Cyrillic. The resolver is not consulted for it; `applyBlank` below
 			   then writes the empty string that makes the renderer draw nothing. */
-			if (!paired && blankUnderlay?.has(ev.id)) continue;
+			/* N.113: a MELISMA pairing blanks this line too. The guard used to
+			   ask only whether the note was unpaired, so a marked note fell
+			   through to the resolver and drew a vowel over a bare Cyrillic
+			   cell, which is the same shape as the `c574cf8` finding this
+			   channel exists to prevent. A sustained vowel is not
+			   re-articulated, so there is no onset to transcribe. */
+			if (paired?.kind !== 'syllable' && blankUnderlay?.has(ev.id)) continue;
 			const ipa = paired?.kind === 'syllable' ? paired.ipa : underlayResolvers.ipa(ev);
 			if (ipa) out[ev.id] = applyNotationPreferences(ipa, notationPrefs, true);
 		}
@@ -811,6 +818,20 @@
 	// N.55b R6: the Cyrillic channel. A score that arrived with no lyric
 	// underlay has no other source for the word under the note.
 	const cyrPreview = $derived(pairedCyrillic(pairings, blankUnderlay));
+
+	/* N.113. THE SINGER'S MELISMA, as its own channel to the renderer.
+	   Derived here rather than passed in, because this component already holds
+	   `pairings` and a second prop carrying a projection of it could go stale
+	   against the map it projects.
+
+	   IT IS NOT THE SAME AS `blankUnderlay`, and that is the point. Both make a
+	   note draw nothing; only this one makes the syllable before it reach
+	   across. Read off an empty cell the two are identical, and a vacated note
+	   would grow an extender it has no business having. */
+	const melismaPreview = $derived.by(() => {
+		const out = melismaIds(pairings ?? {});
+		return out.size > 0 ? out : undefined;
+	});
 
 	// The Fit legend (item 1.6). Declared here rather than beside its doc
 	// comment above, because N.10b's entry depends on `withheldIpa`.
@@ -953,6 +974,7 @@
 					...(ipaPreview ? { ipaPreview } : {}),
 					...(withheldIpa ? { withheldIpa } : {}),
 					...(cyrPreview ? { cyrPreview } : {}),
+					...(melismaPreview ? { melismaPreview } : {}),
 					...(notationFont ? { font: notationFont.prepared, fontFamily: notationFont.family } : {}),
 				}).pages.map(stripBackingRect)
 			: null,

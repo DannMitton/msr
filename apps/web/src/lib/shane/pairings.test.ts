@@ -24,8 +24,16 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { refreshPairings, mergeOnUpload, firstPass } from './pairings';
-import type { PairingMap, Slot } from './pairings';
+import {
+	refreshPairings,
+	mergeOnUpload,
+	firstPass,
+	toggleMelisma,
+	melismaIds,
+	melismaRuns,
+	vacatedTail,
+} from './pairings';
+import type { Pairing, PairingMap, Slot } from './pairings';
 
 const slot = (cyrillic: string, ipa: string, vowel: string | undefined, slotIndex: number, word: string): Slot => ({
 	cyrillic,
@@ -159,5 +167,158 @@ describe('mergeOnUpload', () => {
 
 	it('reports nothing on a fresh proposal', () => {
 		expect(mergeOnUpload({}, ['e1'], BEFORE, true).orphaned).toEqual([]);
+	});
+});
+
+/* ── N.113, the melisma ─────────────────────────────────────────────
+   Numbered by Dann 2026-09-06, step 3 of the text-to-score sequence. The
+   `melisma` kind has existed since N.55b and nothing wrote it until now.
+   Ilya still never creates one (E.46); only the singer's press does. */
+
+const IDS = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5'];
+
+const syl = (c: string, wi: number): Pairing => ({
+	kind: 'syllable',
+	cyrillic: c,
+	ipa: c,
+	vowel: undefined,
+	origin: { lineIndex: 0, wordIndex: wi, slotIndex: 0, word: c },
+});
+
+const shown = (m: PairingMap): string =>
+	IDS.map((id) => {
+		const p = m[id];
+		return p === undefined ? '_' : p.kind === 'melisma' ? '~' : p.kind === 'empty' ? 'e' : p.cyrillic;
+	}).join(' ');
+
+describe('toggleMelisma', () => {
+	it('marks an undecided note and moves nothing', () => {
+		const map: PairingMap = { n0: syl('ой', 0) };
+		const r = toggleMelisma(map, IDS, 'n1');
+		expect(r.set).toBe(true);
+		expect(shown(r.map)).toBe('ой ~ _ _ _ _');
+		expect(r.displaced).toEqual([]);
+	});
+
+	it('shifts a seated note forward, then marks it', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1), n2: syl('нет', 2) };
+		const r = toggleMelisma(map, IDS, 'n1');
+		expect(r.set).toBe(true);
+		// `да` and `нет` each move one note forward and n1 takes the mark.
+		expect(shown(r.map)).toBe('ой ~ да нет _ _');
+		expect(r.displaced).toEqual([]);
+	});
+
+	it('reports a seat the shift pushed off the end rather than losing it', () => {
+		const short = ['n0', 'n1'];
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
+		const r = toggleMelisma(map, short, 'n1');
+		expect(r.displaced).toEqual([syl('да', 1)]);
+	});
+
+	it('clears a marked note back to UNDECIDED, never to empty', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: { kind: 'melisma' } };
+		const r = toggleMelisma(map, IDS, 'n1');
+		expect(r.set).toBe(false);
+		expect(Object.hasOwn(r.map, 'n1')).toBe(false);
+		expect(shown(r.map)).toBe('ой _ _ _ _ _');
+	});
+
+	it('round-trips: mark an undecided note and clear it, and the map returns', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n2: syl('да', 1) };
+		const there = toggleMelisma(map, IDS, 'n1');
+		const back = toggleMelisma(there.map, IDS, 'n1');
+		expect(back.map).toEqual(map);
+	});
+
+	it('does not round-trip a SEATED note, and that is the shift being honest', () => {
+		// Marking a seated note moves its syllable forward; clearing the mark
+		// does not move it back, because a clear is not an undo. The Undo pill
+		// is what restores the whole map (N.111-3b's snapshot stack).
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
+		const back = toggleMelisma(toggleMelisma(map, IDS, 'n1').map, IDS, 'n1');
+		expect(shown(back.map)).toBe('ой _ да _ _ _');
+	});
+
+	it('does not mutate the map it was given', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
+		toggleMelisma(map, IDS, 'n1');
+		expect(shown(map)).toBe('ой да _ _ _ _');
+	});
+});
+
+describe('melismaIds', () => {
+	it('names the marked notes and nothing else', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: { kind: 'melisma' }, n2: { kind: 'empty' } };
+		expect([...melismaIds(map)]).toEqual(['n1']);
+	});
+});
+
+describe('melismaRuns', () => {
+	it('finds one run of consecutive marks after a seated note', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: { kind: 'melisma' }, n2: { kind: 'melisma' } };
+		expect(melismaRuns(map, IDS)).toEqual([{ startId: 'n0', continuationIds: ['n1', 'n2'] }]);
+	});
+
+	it('finds two runs when a seated note separates them', () => {
+		const map: PairingMap = {
+			n0: syl('ой', 0),
+			n1: { kind: 'melisma' },
+			n2: syl('да', 1),
+			n3: { kind: 'melisma' },
+		};
+		expect(melismaRuns(map, IDS)).toEqual([
+			{ startId: 'n0', continuationIds: ['n1'] },
+			{ startId: 'n2', continuationIds: ['n3'] },
+		]);
+	});
+
+	it('opens NO run for a mark with no seated note before it', () => {
+		// A state the hand can produce: press Melisma on the first note, or on
+		// one whose predecessor is undecided. It draws nothing and the mark
+		// stays in the map.
+		expect(melismaRuns({ n0: { kind: 'melisma' } }, IDS)).toEqual([]);
+		expect(melismaRuns({ n2: { kind: 'melisma' } }, IDS)).toEqual([]);
+	});
+
+	it('breaks a run at an undecided note, so the mark after it opens nothing', () => {
+		const map: PairingMap = {
+			n0: syl('ой', 0),
+			n1: { kind: 'melisma' },
+			// n2 undecided
+			n3: { kind: 'melisma' },
+		};
+		expect(melismaRuns(map, IDS)).toEqual([{ startId: 'n0', continuationIds: ['n1'] }]);
+	});
+
+	it('is empty when nothing is marked', () => {
+		expect(melismaRuns({ n0: syl('ой', 0) }, IDS)).toEqual([]);
+	});
+});
+
+describe('vacatedTail', () => {
+	it('names the bare notes after the last seat once the queue is exhausted', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
+		expect([...vacatedTail(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
+	});
+
+	it('names nothing while the queue still has slots to place', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: syl('да', 1) };
+		expect(vacatedTail(map, IDS, false).size).toBe(0);
+	});
+
+	it('names nothing when no note is seated at all', () => {
+		expect(vacatedTail({}, IDS, true).size).toBe(0);
+	});
+
+	it('leaves a marked note alone, because a melisma is a decision', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n1: { kind: 'melisma' } };
+		// n1 is decided, so it is not vacated; n2 onward are.
+		expect([...vacatedTail(map, IDS, true)]).toEqual(['n2', 'n3', 'n4', 'n5']);
+	});
+
+	it('measures the tail from the last SEATED note, not the last entry', () => {
+		const map: PairingMap = { n0: syl('ой', 0), n4: { kind: 'melisma' } };
+		expect([...vacatedTail(map, IDS, true)]).toEqual(['n1', 'n2', 'n3', 'n5']);
 	});
 });

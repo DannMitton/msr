@@ -393,6 +393,164 @@ export function refreshPairings(map: PairingMap, queue: readonly Slot[]): Pairin
 	return next;
 }
 
+/* ── N.113, the melisma ─────────────────────────────────────────── */
+
+/**
+ * The notes the singer has marked as a melisma continuation.
+ *
+ * `{ kind: 'melisma' }` has existed in this map since N.55b (the "third
+ * state" `e46-n55b-click-assignment-design_2026-08-13.md` needed) and until
+ * N.113 nothing wrote it and nothing drew it. **Ilya still never creates one**
+ * (E.46: *"No melisma is ever created"* by the first pass, and `clitic-seat.ts`
+ * and `reseat.ts` each say the same in their own comments). Only the singer's
+ * press does.
+ */
+export function melismaIds(map: PairingMap): Set<string> {
+	const out = new Set<string>();
+	for (const [id, p] of Object.entries(map)) if (p.kind === 'melisma') out.add(id);
+	return out;
+}
+
+/**
+ * Press Melisma on one note.
+ *
+ * THREE CASES, and the middle one is the only decision in it:
+ *
+ * - **Undecided** (no entry at all): mark it. Nothing moves.
+ * - **Holding a syllable**: the syllable and everything after it move one note
+ *   forward (`shiftToEndOfLyric(..., 'forward')`, which is Finale's insert),
+ *   then the note is marked. **DESK DEFAULT, 2026-09-07, and the brief names
+ *   it as Dann's to wave off**: the alternative is to refuse the press on a
+ *   seated note, which would make the control dead exactly where a singer
+ *   most wants it, on the note after the syllable they are sustaining. What it
+ *   costs is stated rather than hidden: the shift can push the last seat off
+ *   the end of the line, and `displaced` carries it.
+ * - **Already marked**: clear it back to UNDECIDED, never to `empty`. `empty`
+ *   is a decision Ilya may not claim (E.46) and the singer has not made it;
+ *   they have only taken the melisma back.
+ *
+ * NOTHING IS MUTATED. A new map is returned, matching this file's habit.
+ */
+export function toggleMelisma(
+	map: PairingMap,
+	eventIds: readonly string[],
+	eventId: string,
+): { map: PairingMap; set: boolean; displaced: Pairing[] } {
+	const current = map[eventId];
+	if (current?.kind === 'melisma') {
+		const next = { ...map };
+		delete next[eventId];
+		return { map: next, set: false, displaced: [] };
+	}
+	let base = map;
+	let displaced: Pairing[] = [];
+	if (current?.kind === 'syllable') {
+		const at = eventIds.indexOf(eventId);
+		if (at !== -1) {
+			const shifted = shiftToEndOfLyric(map, eventIds, at, 'forward');
+			base = shifted.map;
+			displaced = shifted.displaced;
+		}
+	}
+	return { map: { ...base, [eventId]: { kind: 'melisma' } }, set: true, displaced };
+}
+
+/** One melisma run: the note holding the syllable, and the notes sustaining it. */
+export interface MelismaRun {
+	/** The event holding the syllable the run sustains. */
+	startId: string;
+	/** The marked events, in order. Never empty. */
+	continuationIds: string[];
+}
+
+/**
+ * The melisma runs the map describes, in document order.
+ *
+ * **THE RULE, and it is the one the renderer draws:** a run is one or more
+ * CONSECUTIVE marked notes that follow a note holding a syllable. Consecutive
+ * is measured in `eventIds`, which is the page's own note order with rests
+ * already excluded, because a melisma cannot cross a rest
+ * (`vowel-resolver.ts:240`) and a rest is not in this list to cross.
+ *
+ * **A MARKED NOTE WITH NO SYLLABLE BEFORE IT OPENS NO RUN, and that is a state
+ * the hand can produce**: press Melisma on the first note of a piece, or on a
+ * note whose predecessor is undecided. It draws nothing, which is honest, and
+ * the mark stays in the map so a later placement gives it a run to belong to.
+ * Reported rather than prevented: refusing the press would need a rule nobody
+ * has ruled, and silently placing a syllable to anchor it would be Ilya
+ * creating a melisma, which E.46 forbids.
+ *
+ * THE RENDERER IMPLEMENTS THIS SAME RULE over its own geometry
+ * (`staff-renderer.ts`, the extender loop), because it needs notehead
+ * positions this function has no way to know. This is the canonical statement
+ * of it and the one under test.
+ */
+export function melismaRuns(map: PairingMap, eventIds: readonly string[]): MelismaRun[] {
+	const runs: MelismaRun[] = [];
+	let startId: string | null = null;
+	let continuationIds: string[] = [];
+	const flush = (): void => {
+		if (startId !== null && continuationIds.length > 0) {
+			runs.push({ startId, continuationIds });
+		}
+		continuationIds = [];
+	};
+	for (const id of eventIds) {
+		const p = map[id];
+		if (p?.kind === 'melisma') {
+			if (startId !== null) continuationIds.push(id);
+			continue;
+		}
+		flush();
+		startId = p?.kind === 'syllable' ? id : null;
+	}
+	flush();
+	return runs;
+}
+
+/**
+ * The notes at the end of the line that the singer's own edit emptied.
+ *
+ * **RIDER 0, RULED BY DANN 2026-09-07:** *"it draws nothing, because the singer
+ * removed the word."* Past the end of a seated run a vacated note drew the
+ * engraved file's old word (`memo-n112-text-authoritative_r1_2026-09-07.md`
+ * §8), because the renderer falls through to `ev.syllable?.text` for any event
+ * the preview does not name.
+ *
+ * **THE GATE IS `queueExhausted`, and it is a DESK DEFAULT, 2026-09-07.** The
+ * honest question is "did the singer empty this note", and no derived value can
+ * see an act. What it can see is whether anything is left to put here: with
+ * every slot of the poem placed, a bare note past the last seat has nothing
+ * coming to it and is vacated. With slots still unplaced, the same note is one
+ * the hand has not reached yet, and blanking it would take away the file's
+ * words while the singer is still working from them, which is the affordance
+ * N.111's hand relies on.
+ *
+ * The alternative considered and NOT taken: blank every bare note after the
+ * last seat unconditionally. It fixes the same walk and breaks the hand.
+ *
+ * IT IS THE TAIL ONLY, which is not a narrowing but a consequence: a deletion
+ * closes its holes up (`reseat.ts`), so a note the singer's edit empties is
+ * always at the end of the run.
+ */
+export function vacatedTail(
+	map: PairingMap,
+	eventIds: readonly string[],
+	queueExhausted: boolean,
+): Set<string> {
+	const out = new Set<string>();
+	if (!queueExhausted) return out;
+	let last = -1;
+	for (let i = 0; i < eventIds.length; i++) {
+		if (map[eventIds[i]]?.kind === 'syllable') last = i;
+	}
+	if (last === -1) return out;
+	for (let i = last + 1; i < eventIds.length; i++) {
+		if (map[eventIds[i]] === undefined) out.add(eventIds[i]);
+	}
+	return out;
+}
+
 /* ── Storage (R5) ───────────────────────────────────────────────── */
 
 export type SaveOutcome = { ok: true } | { ok: false; reason: string };

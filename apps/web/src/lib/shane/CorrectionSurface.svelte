@@ -78,6 +78,10 @@
 		selectedDotted: boolean;
 		/** True when the station cursor's syllable sits on no note. */
 		shiftDisabled: boolean;
+		/** N.113. True when the taken note already carries the melisma mark. */
+		selectedMelisma: boolean;
+		/** N.113. True when there is no taken note for Melisma to act on. */
+		melismaDisabled: boolean;
 
 		/* ── N.92 slice 3 ─────────────────────────────────────────────────── */
 		/** Whether the loupe is up, which is what the panel's chevron can act on. */
@@ -123,6 +127,8 @@
 		onaccidental: (kind: 'flat' | 'natural' | 'sharp') => void;
 		ondelete: () => void;
 		onshift: (scope: 'end' | 'nextOpen', direction: ShiftDirection) => void;
+		/** N.113. Press Melisma on the taken note. */
+		onmelisma: () => void;
 		/** The measured height, so the loupe can sit clear of the dock. */
 		onheight?: (height: number) => void;
 	}
@@ -138,6 +144,8 @@
 		selectedBase,
 		selectedDotted,
 		shiftDisabled,
+		selectedMelisma,
+		melismaDisabled,
 		onundo,
 		onredo,
 		ondismiss,
@@ -149,6 +157,7 @@
 		onaccidental,
 		ondelete,
 		onshift,
+		onmelisma,
 		onheight = undefined,
 		open = true,
 		inGap,
@@ -721,8 +730,17 @@
 
 	<!-- LYRIC. The shipped Shift Lyrics verbs, on the same surface as the note
 	     verbs rather than in a separate place, and named for what they touch
-	     rather than for Finale's scope. The melisma pair drawn in the
-	     schematic is NOT here: it was never ruled. -->
+	     rather than for Finale's scope.
+
+	     THE MELISMA IS HERE NOW, N.113. This comment read "the melisma pair
+	     drawn in the schematic is NOT here: it was never ruled" until Dann
+	     numbered it on 2026-09-06 and ruled it on 2026-09-07. It is ONE
+	     toggle rather than the schematic's pair, because a toggle is what a
+	     singer means by it: this note sustains the syllable, or it does not.
+
+	     IT SITS IN LYRIC RATHER THAN WITH THE NOTE VERBS because a melisma is
+	     a fact about the WORD, not about the pitch or the duration. The
+	     schematic put it here and the reason holds. -->
 	<section class="station">
 		<h3 class="station-label">
 			{inGap ? T('loupe.station.lyricTake') : T('loupe.station.lyric')}
@@ -741,6 +759,20 @@
 			     is the one this replaces, so the arrangement comes with it. -->
 			<div class="lyric-syllables">{@render syllables()}</div>
 		{/if}
+		<!-- THE MELISMA TOGGLE. `aria-pressed` carries the state, as the tie
+		     cell already does, so a screen reader hears the toggle rather than
+		     a button that does something different each press. -->
+		<div class="lyric-row">
+			<span class="lyric-label">{T('loupe.lyric.melisma')}</span>
+			<button
+				type="button"
+				class="cell"
+				class:engaged={selectedMelisma}
+				aria-pressed={selectedMelisma}
+				disabled={melismaDisabled}
+				onclick={onmelisma}>{T('loupe.melisma')}</button
+			>
+		</div>
 		<div class="lyric-row">
 			<span class="lyric-label">{T('loupe.lyric.toEnd')}</span>
 			<button

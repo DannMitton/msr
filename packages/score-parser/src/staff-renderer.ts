@@ -223,6 +223,29 @@ export interface StaffRenderOptions {
    */
   withheldIpa?: ReadonlySet<string>;
   /**
+   * N.113. The notes the SINGER marked as a melisma continuation.
+   *
+   * WHY THE RENDERER NEEDS TELLING AT ALL. Its own melisma detection reads the
+   * FILE: a note carrying `ev.syllable` followed by notes carrying none opens a
+   * run. That is right for the engraving and blind to the singer, because on a
+   * lyric-bearing score every note carries a syllable, so no run is ever found,
+   * and on a score with no underlay none is. `{ kind: 'melisma' }` has existed
+   * in the pairing map since N.55b and nothing has ever drawn it.
+   *
+   * IT IS NOT THE SAME AS A BLANK, and keeping the two apart is the whole
+   * reason this is a set of its own rather than an inference from empty text.
+   * A blanked note (N.111's seated run, and rider 0's vacated tail) draws
+   * nothing and extends nothing: the singer removed the word. A marked note
+   * draws nothing and DOES extend: the singer is sustaining the word. Read off
+   * an empty cell the two are identical, and one of them would grow an extender
+   * it has no business having.
+   *
+   * A marked note draws no Cyrillic, no IPA and no withheld siglum, and this
+   * file enforces that itself rather than trusting the caller to have blanked
+   * it, so the two facts cannot come apart.
+   */
+  melismaPreview?: ReadonlySet<string>;
+  /**
    * N.55b, R6 (Dann, E.47). Per event id, the Cyrillic the SINGER paired
    * to this note, overriding `ev.syllable?.text`. A score that arrived
    * with no lyric underlay carries no Cyrillic at all by the data model
@@ -293,7 +316,7 @@ export interface StaffRenderOptions {
 // `finalBarline` joins font/clef/ipaPreview in the Omit: it is read straight
 // off `options` rather than defaulted here, and leaving it out of the Omit
 // makes `Required` demand a default that would be meaningless.
-const DEFAULTS: Required<Omit<StaffRenderOptions, 'font' | 'clef' | 'ipaPreview' | 'withheldIpa' | 'cyrPreview' | 'finalBarline' | 'targetWidth' | 'incomingAccidentals'>> = {
+const DEFAULTS: Required<Omit<StaffRenderOptions, 'font' | 'clef' | 'ipaPreview' | 'withheldIpa' | 'cyrPreview' | 'melismaPreview' | 'finalBarline' | 'targetWidth' | 'incomingAccidentals'>> = {
   staffMidY: 96,
   lineGap: 12,
   leftMargin: 92,
@@ -1824,6 +1847,44 @@ export function renderAnalyzedStaff(
         if (needsSlur) for (let k = i; k <= j - 1; k++) slurredIdx.add(k);
       }
     }
+    // N.113: the runs the SINGER marked, found by the same rule over the same
+    // geometry. A run is one or more CONSECUTIVE marked notes following a note
+    // that DRAWS a syllable; `pairings.ts`'s `melismaRuns` is the canonical
+    // statement of that rule and the one under test on the map.
+    //
+    // IT RUNS SECOND AND OVERWRITES, on purpose: where a file melisma and a
+    // singer's mark describe the same opening note, the singer's is the later
+    // decision and the longer reach.
+    //
+    // A MARKED NOTE CANNOT OPEN A RUN, so pressing Melisma on the first note of
+    // a piece draws nothing. That is a state the hand can produce and it is
+    // reported rather than prevented: refusing the press needs a rule nobody
+    // has ruled, and seating a syllable to anchor it would be Ilya creating a
+    // melisma, which E.46 forbids.
+    //
+    // NO SLUR. `melismaSpans` is deliberately not extended: Gould r5 slurs a
+    // melisma, but a slur is engraving Ilya would be adding to the singer's
+    // score on their behalf, and the brief asks for the extender alone. DESK
+    // DEFAULT, 2026-09-07.
+    const marks = options.melismaPreview;
+    if (marks && marks.size > 0) {
+      for (let i = 0; i < placed.length; i++) {
+        const e = placed[i].ev;
+        if (e.type !== 'note' || marks.has(e.id)) continue;
+        const drawn = options.cyrPreview?.[e.id] ?? e.syllable?.text ?? '';
+        if (!drawn) continue;
+        let j = i + 1;
+        let lastX: number | null = null;
+        while (j < placed.length && placed[j].ev.type === 'note' && marks.has(placed[j].ev.id)) {
+          lastX = placed[j].x;
+          j++;
+        }
+        if (lastX !== null) {
+          melismaStart.add(e.id);
+          melismaEndX.set(e.id, lastX);
+        }
+      }
+    }
   }
   // Phonation breaks render as [#] ON THE IPA LINE (Dann's ruling,
   // 2026-07-12): the break is a diction event, so it lives with the
@@ -2459,8 +2520,13 @@ export function renderAnalyzedStaff(
     // syllable transcription, so it reads as sparser wherever it is taken.
     // N.55b R6: the pairing's Cyrillic outranks the score's. See
     // `cyrPreview` above for why a paired score may have no other source.
-    const cyr = options.cyrPreview?.[ev.id] ?? syl?.text ?? '';
-    const ipa = options.ipaPreview?.[ev.id] ?? a?.vowel ?? '';
+    // N.113: a note the singer marked as a melisma continuation draws
+    // NOTHING on either line, and this file says so itself rather than
+    // trusting the caller to have blanked it. The sound is sustained, not
+    // re-articulated, so there is no syllable and no onset to transcribe.
+    const marked = options.melismaPreview?.has(ev.id) === true;
+    const cyr = marked ? '' : (options.cyrPreview?.[ev.id] ?? syl?.text ?? '');
+    const ipa = marked ? '' : (options.ipaPreview?.[ev.id] ?? a?.vowel ?? '');
     // N.10b. Withheld ONLY where nothing supplied ink, so the mark can never
     // displace a transcription, not even the degraded single-vowel one. A
     // melisma continuation carries no Cyrillic and is not withheld: it is

@@ -280,7 +280,55 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > **STILL HIS TO RULE, unchanged: what a note the re-seat VACATES draws**
 > (memo §8).
 >
-> **THE ONE THING after the ship: N.113, the melisma.**
+> **SHIPPED `1b3054a` 2026-09-07 and WALKED BY DANN:** Start placement over
+> gave the last note its `я`; the line-2 replacement seated on system 2 with
+> system 1 untouched; the cursor on the poem's final `я`. **N.112 IS CLOSED.**
+> Move its record to LOG.md at the close of this session.
+> **N.113 BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
+> WALK.** Brief `docs/sessions/brief-n113-melisma_r1_2026-09-07.md`, memo
+> `docs/sessions/memo-n113-melisma_r1_2026-09-07.md`. Commit message
+> `N.113: the melisma`. Floor `1b3054a`. **Rider 0 rides with it.**
+>
+> **WHAT WAS ALREADY THERE, found before building (tether 16):** the extender,
+> melisma detection, Gould r5 left-alignment and the slur all exist in
+> `staff-renderer.ts` and all read the FILE, so nothing has ever drawn for the
+> singer. N.113 is one channel (`melismaPreview`) and one control, not a
+> drawing job. `toggleMelisma`, `melismaRuns` and `vacatedTail` live in
+> `pairings.ts` where tests reach them; the renderer implements `melismaRuns`'
+> rule over its own geometry.
+>
+> The control is ONE toggle in the dock's LYRIC station, which is where the
+> N.92 schematic drew it and whose comment said "it was never ruled" until now.
+> Undecided: mark. Seated: shift forward, then mark (DESK DEFAULT, his to wave
+> off). Marked: clear to undecided, never to `empty` (E.46). One undo entry per
+> press on the existing snapshot stack, Redo as N.111-3b built it.
+>
+> **RIDER 0 gates on `queueExhausted`, a DESK DEFAULT:** with every slot placed,
+> a bare note past the last seat is vacated and blanks on both lines; with slots
+> still unplaced it keeps the file's words, because that is the affordance the
+> hand works from.
+>
+> **BOTH GATES MOVE AND BOTH NEED HIS PERMISSION: gate 4 1038 → 1056, gate 5
+> 534/539 → 541/546.** One `sed` does both; the `chmod +x` is not optional.
+> **FOUR NEW ENGLISH STRINGS, FRENCH OWED ON ALL FOUR** (`loupe.melisma`
+> = `Melisma`, ADOPTED from Finale and Gould; `loupe.lyric.melisma`,
+> `loupe.undo.melisma`, `loupe.undo.melismaOff`, coined). **TWO UNTRACKED
+> FILES: the brief and the memo.**
+>
+> Walked on a production build on the engraved Sunless fixture, seven steps:
+> the extender after a word-final syllable, the spanning hyphen mid-word (one,
+> centred), Undo and Redo of each, the reload, the undecided last note, and
+> rider 0's deletion taking the drawn Cyrillic from 96 to 94 with no stray.
+>
+> **HIS TO RULE, memo §7.1: whether the extender should take the hyphen's
+> stroke weight and vertical offset.** The brief asked for both "a rule on the
+> lyric baseline" and "match the hyphen's", which conflict. The file's own
+> convention was kept (baseline, 0.5 px, against the hyphen's raised 1 px) with
+> its documented semantic reason. Changing it would also change how the file's
+> own melismas draw.
+>
+> **THE ONE THING after the ship: N.114, Type Into Score**, which is last in
+> the sequence because it depends on N.112 and N.113.
 > *(Earlier line, kept:)* Next step was the desk's: read
 > `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
 > After N.111: N.110 (set aside, briefed), the release order N.85 to N.88,
