@@ -11,8 +11,9 @@ name itself, which is why every previous attempt was stale within the hour and
 cost a minute at the next session's open, twice.
 
 What it names instead is a **FLOOR**: everything described below was true at or
-before **`e1bcb67`**, "N.113: the melisma", shipped and walked 2026-09-07
-(the previous floor, `e347311` of 2026-08-29, is in `../sessions/LOG.md`). A floor cannot go stale,
+before **`00149c3`**, "N.113a: the walk findings", shipped 2026-09-07 late,
+alias `ilya-1788838744333` confirmed serving it (the previous floors, `e1bcb67`
+of 2026-09-07 and earlier, are in `../sessions/LOG.md`). A floor cannot go stale,
 because further commits only move HEAD forward and never make the floor false.
 If the tree is ahead of it, that is expected and tells you only that work has
 landed since.
@@ -54,19 +55,47 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > NEXT. Then N.110 (set aside, briefed), N.115, N.116, the release order
 > N.85 to N.88, N.84 (Guide and Learn, deferred until N.114), N.83.
 >
-> **IN CODE NOW: N.113a**, pasted 2026-09-07 late evening. Five items from
-> the N.113 walk: (1) RULED, reversing the desk's N.112 default: deleting a
-> word vacates its notes and moves nothing; an insert takes open notes only;
-> (2) defect: after a melisma shift, a vacated tail note drew the file's word
-> (`ка ка`); (3) the dock's Melisma pill and the shift arrows need the dock's
-> gap; (4) RULED: Cmd-Z / Ctrl-Z undo, Shift-Cmd-Z / Ctrl-Y redo, not while a
-> field has focus; (5) the loupe marks the taken note with a box on the
-> notehead, not a caret after it. When it returns: read the memo against the
-> tree, move `ilya-ship.sh:79-80` to the new counts, `git add` the memo,
-> ship as `N.113a: the walk findings`, walk on the alias.
+> **N.113a SHIPPED `00149c3`, 2026-09-07 late, WALK NOT YET DONE BY DANN.**
+> Code built, gated (gate 4 moved 1056 to 1058), and walked all five items on a
+> local production build: memo `docs/sessions/memo-n113a-walk_r1_2026-09-07.md`.
+> `ilya-ship.sh:79` now reads `1058`. **Dann's walk on the alias is the one
+> open step**; the session that shipped it hit its five-hour limit at 97%
+> before he opened the alias. The five things to see: a deleted word leaves
+> its notes bare on both lines and moves nothing; after a melisma, a deleted
+> word's notes stay bare (no `ка ка`); the dock's Melisma row carries the
+> dock's 4 px gap; Cmd-Z undoes only with the field unfocused; the loupe boxes
+> the taken notehead, no bar. **Memo §9 carries two findings not Code's to
+> fix**: a clitic re-seat pulls a run back by one after a melisma shift
+> (`seatCliticFolds` in `reseatAcross`), and on the walk fixture 59 of 96
+> seats carry score coordinates, so a text edit reaches only poem lines 0, 1,
+> 2, and 7. The second wants a number. **Memo §10, NOT ESTABLISHED**: the
+> tail case of the vacated-note rule; a melisma displacement plus deleting the
+> first word leaves head notes on the file's words (a ruling, not a default);
+> Ctrl-Z on Windows and Linux.
 >
-> **THE ONE THING after N.113a: N.114, Type Into Score.** Frame agreed
-> 2026-09-07 (Dann's idea, desk-adjusted; INBOX): the syllabified line moves
+> **THE ONE THING after Dann's N.113a walk: N.114, Type Into Score.**
+> **Drawing r1 in the tree, `docs/sessions/drawing-n114-type-into-score_r1_2026-09-08.html`
+> (rode in `00149c3`), and Dann ruled on it 2026-09-07 late, all recorded
+> here, r2 NOT YET DRAWN:** (1) the collapsed line is reading B, a clipped
+> one-line preview with the placed count at its right and a chevron pointing
+> DOWN; readings A and C retired; (2) no syllable line at all without a score:
+> the transcription paper already shows the division, so the line appears
+> only when a score is present and is then always boxed (plate 2 struck);
+> (3) COLOUR INVERTED from the tree's default: unplaced syllables in tertiary
+> ink, placed in primary ink, "committed is black"; (4) his term for the
+> cursor is the **syllable-assignment bounding box, SABB**; use it; (5) RULED:
+> the line is click-to-place only; a click moves the SABB and does NOT park
+> the field's caret (navigation conflict); the field writes, the line places,
+> the dock's typed field rewrites one word, every other verb stays in the
+> dock; (6) plate 4's taken-note line ("note 5, F♯4, quarter") is desk
+> wording, liked, not in the tree. **Facts for the brief, read from the tree
+> 2026-09-07:** syllable overrides survive Transcribe since N.112
+> (`+page.svelte:2082`) but are cleared by Clear, song switch (`:2090-2096`)
+> and the global open-syllabification toggle (`:2391`); they are per-session,
+> never stored (`:2076`); Start placement over does not touch them (`:529`).
+> Whether the line syllabifies before Transcribe is pressed is Code's cost to
+> state. **"Transcribe owns every text operation" is E.46's desk comment, not
+> a ruling.** Frame agreed 2026-09-07 (Dann's idea, desk-adjusted; INBOX): the syllabified line moves
 > from Score markup to sit under the field inside the Input band, live on
 > text present, collapsed by default; without a score it is read-only
 > syllabification (hyphens, no box); with a score the box appears and a
