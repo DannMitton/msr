@@ -127,8 +127,14 @@ const strings: Record<string, Record<Language, string>> = {
 	// with `input.*` and the drop zone's with `upload.*`, rather than in a new
 	// `watermark.*` namespace that would split one field's strings across two
 	// places.
-	// « texte » is the coordinating desk's proposal and Dann has seen it.
-	'input.watermark':             { en: 'text',                         fr: 'texte' },
+	// RULED BY DANN 2026-09-07, N.111-3b: the receipt tag reads POEM, not TEXT,
+	// so the intake's receipt no longer shares a name with the drawer's TEXT
+	// band. SCORE is untouched. The tag is the only reader of this key since
+	// the watermark was retired 2026-09-03.
+	// FRENCH OWED. « texte » was ratified for the old word and cannot stand for
+	// the new one; « poème » is the likely answer and Dann has not ruled it, so
+	// the `fr` slot carries the English until he does.
+	'input.watermark':             { en: 'poem',                         fr: 'poem' },
 	'input.warning':               { en: 'characters. Large texts may be slow to process.', fr: 'caractères. Les textes longs peuvent être lents à traiter.' },
 	// RENAMED 2026-09-07 BY DANN, N.108-5: the button reads "Transcribe and
 	// fit", because after this ship one press does both halves. It read
@@ -322,6 +328,11 @@ const strings: Record<string, Record<Language, string>> = {
 	'loupe.undo.dotOff':           { en: 'dot removed',                  fr: 'point retiré' },
 	'loupe.undo.lyrics':           { en: 'syllables shifted',            fr: 'syllabes décalées' },
 	'loupe.undo.restored':         { en: 'corrections cleared',          fr: 'corrections effacées' },
+	// N.111-3b. The Redo pill's frame, and the one action name the two pills
+	// share. FRENCH OWED for both: the `fr` slot carries the English so nothing
+	// renders `[MISSING`, and Dann has not seen a translation for either.
+	'loupe.redo':                  { en: 'Redo: %s',                     fr: 'Redo: %s' },
+	'loupe.undo.placed':           { en: 'syllable placed',              fr: 'syllable placed' },
 	// The four stations, in the ruled order. Durations lead.
 	'loupe.station.duration':      { en: 'Duration',                     fr: 'Durée' },
 	'loupe.station.pitch':         { en: 'Pitch',                        fr: 'Hauteur' },

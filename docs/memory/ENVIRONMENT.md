@@ -168,16 +168,17 @@ file.
 | phonology | 216 |
 | dictionary | 235 |
 | web-check | 0 errors, 7 warnings, 4 files |
-| web-test | **984 passed (984)**, and **990 after N.108-5** |
+| web-test | **995 passed (995)** |
 | score-parser | **534 passed, 5 skipped (539)** |
 
-**READ OUT OF `~/Downloads/ilya-ship.sh` ON 2026-09-07, lines 75 to 79.** The
-script said 984 and 534 that morning. N.108-5 moves gate 4 to **990**: minus one
-for the `revertCliticSeat` test that went with the function, plus seven for
-`apps/web/src/lib/one-action.test.ts`. **That move needs Dann's permission and
-the `sed` needs its `chmod +x` after it.** The paragraphs below are the history
-of this table and are kept because the corrections read as a sequence; the row
-above is the current one.
+**CORRECTED 2026-09-07 EVENING, BY READING THE SCRIPT AND RUNNING ALL FIVE.**
+This row said `984, and 990 after N.108-5`. `~/Downloads/ilya-ship.sh:79` reads
+`gate 4 web-test "995 passed (995)"` and the tree runs 995, so the script and
+the tree agree with each other and the table was five behind. The morning's
+`990` was arithmetic done in advance of the run; the run came out at 995.
+**N.111-3b moves nothing.** The paragraphs below are the history of this table
+and are kept because the corrections read as a sequence; the row above is the
+current one.
 
 **CORRECTED 2026-09-01.** This table read `754` and `444` and had done since
 2026-08-24, which is 146 and 37 tests behind the tree. The current numbers are
@@ -432,6 +433,7 @@ any measurement:
 ```
 document.querySelector('link[rel=modulepreload]').href
 ```
+
 
 ## A WALK HARNESS BELONGS IN `build/index.html`, NEVER IN THE SOURCE TREE
 
@@ -2304,6 +2306,12 @@ failure. Twenty minutes.
   file copied into `build/` after the server started 404s; the server's own log
   shows the 404, which is the fastest way to tell this apart from a wrong path.
   Copy the fixture, THEN restart, then fetch it from the page.
+  **From inside the page the 404 does not look like a 404.** SvelteKit answers
+  it with the fallback document, so `fetch(...).text()` returns about 2 kB of
+  the app's own HTML and only `response.status` says it missed. Read the status,
+  not the body. Confirmed again 2026-09-07 on the N.111-3b walk, where the same
+  fixture was moved through `build/`, `.svelte-kit/output/client/` and
+  `static/reader/` before a restart fixed it in one go.
 - ~~**`vite preview` serves `build/` here** (adapter-static, `pages: 'build'`),
   NOT `.svelte-kit/output/client` and NOT `static/`.~~ **WRONG, CORRECTED
   2026-09-07 by measuring it: it serves `.svelte-kit/output/`, not `build/`.**

@@ -72,6 +72,8 @@
 		readout: string;
 		/** The Undo pill's sentence, or null when nothing can be undone. */
 		undoLabel: string | null;
+		/** The Redo pill's sentence, or null when nothing can be redone. */
+		redoLabel: string | null;
 		selectedBase: NoteBase | null;
 		selectedDotted: boolean;
 		/** True when the station cursor's syllable sits on no note. */
@@ -110,6 +112,7 @@
 		/** Press and hold repeats a stepper arrow or a pitch verb while held. */
 		onhold: (fire: () => void) => (e: PointerEvent) => void;
 		onundo: () => void;
+		onredo: () => void;
 		ondismiss: () => void;
 		/** The stepper: entry by entry, across barlines. */
 		onwalk: (direction: 1 | -1) => void;
@@ -131,10 +134,12 @@
 		syllables = undefined,
 		readout,
 		undoLabel,
+		redoLabel,
 		selectedBase,
 		selectedDotted,
 		shiftDisabled,
 		onundo,
+		onredo,
 		ondismiss,
 		onwalk,
 		onbase,
@@ -472,11 +477,29 @@
 	     border, no fill, no text, and no target; it is height and nothing else,
 	     so the pill is still absent in every sense the ruling meant and the
 	     geometry stops moving. -->
+	<!-- REDO JOINS UNDO ON THAT ROW, N.111-3b. RULED BY DANN 2026-09-07: "we do
+	     not include an Undo/Redo button on the Loupe. We need one."
+
+	     IT KEEPS THE UNDO PILL'S RULES, all of them: absent rather than
+	     disabled, named after the action it will perform, composed at render so
+	     a language change is heard, and sitting on the row that stands whether
+	     either pill does. The row is reserved once for both, so a redo pill
+	     appearing beside an undo pill moves nothing.
+
+	     ONE ROW, NOT TWO. The pair reads left to right in the order the two
+	     directions run, and each pill shrinks (`flex: 0 1 auto`) so a long
+	     sentence wraps inside the pill rather than pushing its neighbour off. -->
 	<div class="dock-row dock-row-undo">
 		{#if undoLabel}
 			<button type="button" class="undo-pill" onclick={onundo}>
 				<span aria-hidden="true">&#x21B0;</span>
 				{T('loupe.undo').replace('%s', undoLabel)}
+			</button>
+		{/if}
+		{#if redoLabel}
+			<button type="button" class="undo-pill" onclick={onredo}>
+				<span aria-hidden="true">&#x21B1;</span>
+				{T('loupe.redo').replace('%s', redoLabel)}
 			</button>
 		{/if}
 	</div>

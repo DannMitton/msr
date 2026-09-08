@@ -191,7 +191,33 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > Not adopted from Finale, ruled 2026-09-06: Adjust Baselines and the other
 > engraving controls (Ilya does them), Type Into Score on the paper, verses
 > (D3's), Clone.
-> **THE ONE THING: N.108-5, the cleanup.** Desk writes the paste.
+> **N.108-5 SHIPPED `5f6a2f3` 2026-09-07 and WALKED BY DANN 2026-09-07,
+> three steps:** four bands (Piece, INPUT in sage, Text, Score markup), the
+> button "Transcribe and fit", the seat sentence gone, and the transcription
+> that is always there (boot, paste, 600 ms typing pause; walked: the page
+> drew at boot with no press, and a typed letter appeared after the pause as
+> a VERIFY stack). Memo `memo-n108-5-cleanup_r1_2026-09-07.md`. Open from it:
+> implicit runs reset stress overrides (N.112's), and the "Text changed 59"
+> drift line (N.112 retires it).
+> **N.111-3b BUILT AND WALKED BY CODE 2026-09-07, AWAITING DANN'S SHIP AND HIS
+> WALK.** Memo `docs/sessions/memo-n111-3b-loupe_r1_2026-09-07.md`. Commit
+> message `N.111-3b: the loupe stays open, and the hand can go back`. Floor
+> `5f6a2f3` plus the uncommitted `*/` in `IntakePanel.svelte`, which rides with
+> it. Five gates at baseline before and after; **gate 4 stays 995 and no line of
+> `~/Downloads/ilya-ship.sh` changes.** All four rulings of 2026-09-07 land: the
+> loupe stays open after a placing click (the cause was N.111-3a's own redraw
+> detaching the click target, so `closest('.loupe')` answered null and the
+> geometry test dismissed; the guard is `gestureBeganOnSurface`, read at
+> `pointerdown`); Undo and Redo on the dock, ONE stack extended, not a second
+> added, with `pairingCursor` in the snapshot and placement pushing
+> `loupe.undo.placed`; the receipt tag reads POEM; the CSS comment verified on a
+> production build with a positive control. **Two new English strings, French
+> owed on both** (`loupe.redo` = `Redo: %s`, `loupe.undo.placed` = `syllable
+> placed`), plus the POEM tag, whose `« texte »` is retired. **ONE UNTRACKED
+> FILE: the memo. `git add` it before the ship.** Open from it: an undo across a
+> re-ingest could restore old pairings, which is the shipped behaviour of Undo
+> and not new; and the dock readout omits the syllable at the first raise.
+> **THE ONE THING after the ship: N.112, the text is authoritative.**
 > *(Earlier line, kept:)* Next step was the desk's: read
 > `claude/e24-the-unused-boolean_2026-08-04.md` in full and write the brief.
 > After N.111: N.110 (set aside, briefed), the release order N.85 to N.88,

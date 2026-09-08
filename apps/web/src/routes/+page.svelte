@@ -510,6 +510,14 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	function placeArmedSyllable(eventId: string): void {
 		const slot = slotQueue[pairingCursor];
 		if (!slot) return;
+		/* N.111-3b. A PLACEMENT IS A CORRECTION VERB LIKE THE OTHERS and pushes
+		   like the others. RULED BY DANN 2026-09-07 on his walk of `d5a49ff`,
+		   which found a second click on the same note seating the cursor's next
+		   syllable over the first with no way back.
+
+		   IT PUSHES AFTER THE EARLY RETURN, so a click with an empty queue
+		   leaves an Undo pill that would undo nothing. */
+		pushUndo({ kind: 'text', key: 'loupe.undo.placed' });
 		doc.pairings = {
 			...doc.pairings,
 			[eventId]: {
@@ -711,31 +719,67 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		   every entry is pushed from a gap and every gap pushes a null
 		   selection. */
 		selected: string | null;
+		/* THE QUEUE'S PLACE, N.111-3b. A placement is undoable now, and a
+		   placement advances `pairingCursor`; without this the pairing would
+		   come back and the queue would stay one syllable ahead, so the next
+		   click would place the wrong word. Every other verb leaves the cursor
+		   alone, so carrying it costs those entries nothing. */
+		pairingCursor: number;
 		gapAfter: string | null | undefined;
 	}
 	let undoStack = $state<UndoEntry[]>([]);
+	/* THE OTHER HALF, N.111-3b. RULED BY DANN 2026-09-07: "we do not include an
+	   Undo/Redo button on the Loupe. We need one."
+
+	   ONE STACK EXTENDED, NOT A SECOND ONE ADDED. Redo is the same snapshot in
+	   the other direction: undo restores the entry's state and hands the state
+	   it replaced to this stack, redo does the mirror. Nothing here knows what
+	   a verb DOES, which is the property that let one stack cover nine verbs
+	   and now covers placement too.
+
+	   A NEW ACTION DROPS THE FUTURE. `pushUndo` clears this, so the redo pill
+	   can never offer to restore a state that branched away. */
+	let redoStack = $state<UndoEntry[]>([]);
+
+	/** The state as it stands right now, which is what both directions save. */
+	function snapshot(note: UndoNote): UndoEntry {
+		return {
+			note,
+			corrections: doc.corrections,
+			pairings: doc.pairings,
+			selected: selectedEventId,
+			pairingCursor,
+			gapAfter,
+		};
+	}
+
+	function restore(entry: UndoEntry): void {
+		doc.corrections = entry.corrections;
+		doc.pairings = entry.pairings;
+		selectedEventId = entry.selected;
+		pairingCursor = entry.pairingCursor;
+		gapAfter = entry.gapAfter;
+	}
 
 	function pushUndo(note: UndoNote): void {
-		undoStack = [
-			...undoStack,
-			{
-				note,
-				corrections: doc.corrections,
-				pairings: doc.pairings,
-				selected: selectedEventId,
-				gapAfter,
-			},
-		];
+		undoStack = [...undoStack, snapshot(note)];
+		redoStack = [];
 	}
 
 	function handleUndo(): void {
 		const top = undoStack[undoStack.length - 1];
 		if (!top) return;
-		doc.corrections = top.corrections;
-		doc.pairings = top.pairings;
-		selectedEventId = top.selected;
-		gapAfter = top.gapAfter;
+		redoStack = [...redoStack, snapshot(top.note)];
+		restore(top);
 		undoStack = undoStack.slice(0, -1);
+	}
+
+	function handleRedo(): void {
+		const top = redoStack[redoStack.length - 1];
+		if (!top) return;
+		undoStack = [...undoStack, snapshot(top.note)];
+		restore(top);
+		redoStack = redoStack.slice(0, -1);
 	}
 
 	/** The five duration words the surface already ships, by base. */
@@ -1349,13 +1393,19 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		doc.pairings = result.map;
 	}
 
-	const undoLabel = $derived.by(() => {
-		const top = undoStack[undoStack.length - 1];
+	/* THE PILL'S SENTENCE IS COMPOSED AT RENDER, and both pills name the SAME
+	   action: the thing undo would take back, and the thing redo would put
+	   back. One reader, two stacks. */
+	function stackLabel(stack: UndoEntry[]): string | null {
+		const top = stack[stack.length - 1];
 		if (!top) return null;
 		return top.note.kind === 'text'
 			? t(top.note.key, language)
 			: `${top.note.from} \u2192 ${top.note.to}`;
-	});
+	}
+
+	const undoLabel = $derived(stackLabel(undoStack));
+	const redoLabel = $derived(stackLabel(redoStack));
 
 	/* THE PAGE'S FIRST STATE: every measure takes a tap, and a tap resolves to
 	   the nearest entry rather than needing to land on a 7 px notehead. That
@@ -1382,6 +1432,29 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		if (loupeOpen) {
 			if (isPhone) return;
 			if ((e.target as Element | null)?.closest?.('.loupe, .surface')) return;
+			/* THE PLACING CLICK'S OWN TARGET IS GONE BY THE TIME IT GETS HERE,
+			   and that is why the loupe closed on every placement Dann walked on
+			   `d5a49ff`. RULED BY DANN 2026-09-07: "I expected to see the change
+			   reflected in the Loupe first." The loupe stays.
+
+			   THE CAUSE, and it is N.111-3a's redraw fix casting a shadow. A
+			   click inside the loupe places the syllable, `doc.pairings` changes,
+			   the pane redraws, `pageRevision` bumps, and the loupe rebuilds its
+			   own `{@html frame.inner}`. The clicked element is detached from
+			   the loupe in that flush, and a detached subtree keeps only the
+			   ancestors it was removed WITH: the `{@html}` content's chain now
+			   stops short of `.loupe`, so the target test above answers null.
+			   The geometry test then finds a sheet under the pointer, because on
+			   a desk the loupe stands over the page, and dismisses. A click that
+			   places nothing (no armed syllable) mutates nothing, rebuilds
+			   nothing, and never closed, which is why this reads as a rule about
+			   placement rather than about clicks.
+
+			   THE FLAG IS READ AT `pointerdown`, when the DOM is still whole, and
+			   it is the same flag the branch below already trusts for the same
+			   reason. It is cleared on the frame AFTER `pointerup`, so it is
+			   still standing when the click arrives. */
+			if (gestureBeganOnSurface) return;
 			/* A POINT-IN-BOX TEST, and `elementFromPoint` cannot serve here for a
 			   reason that is the ruling working: while the loupe is up the page
 			   is DEAF, `pointer-events: none`, so the topmost element at a page
@@ -3788,10 +3861,12 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 							{language}
 							readout={readoutLine}
 							{undoLabel}
+							{redoLabel}
 							{selectedBase}
 							{selectedDotted}
 							shiftDisabled={dockShiftDisabled}
 							onundo={handleUndo}
+							onredo={handleRedo}
 							ondismiss={dismissLoupe}
 							onwalk={handleMove}
 							onbase={handleDurationCell}
@@ -4251,10 +4326,12 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 		portrait={phonePortrait}
 		readout={readoutLine}
 		{undoLabel}
+		{redoLabel}
 		{selectedBase}
 		{selectedDotted}
 		shiftDisabled={dockShiftDisabled}
 		onundo={handleUndo}
+		onredo={handleRedo}
 		ondismiss={dismissLoupe}
 		onwalk={handleMove}
 		onbase={handleDurationCell}

@@ -308,9 +308,11 @@
 		     is gone from the tree.
 
 		     `input.watermark` AND `upload.watermark` STAY IN `i18n.ts`. They
-		     are the receipt tags now, `text` and `score`, so the two words the
-		     mark was drawn from are still on screen and still ratified in both
-		     languages. -->
+		     are the receipt tags now, and `input.watermark` reads `poem` since
+		     Dann's ruling of 2026-09-07 (N.111-3b), because TEXT was also the
+		     name of the band this field sits in. `upload.watermark` is still
+		     `score` and still ratified in both languages; the poem's French is
+		     owed. -->
 		<textarea
 			class="text-input"
 			bind:this={textareaEl}
