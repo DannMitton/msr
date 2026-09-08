@@ -55,7 +55,7 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > NEXT. Then N.110 (set aside, briefed), N.115, N.116, the release order
 > N.85 to N.88, N.84 (Guide and Learn, deferred until N.114), N.83.
 >
-> **N.113a SHIPPED `00149c3`, 2026-09-07 late, WALK NOT YET DONE BY DANN.**
+> **N.113a SHIPPED `00149c3`, 2026-09-07 late, WALKED BY DANN 2026-09-08 00:05, see the walk block below.**
 > Code built, gated (gate 4 moved 1056 to 1058), and walked all five items on a
 > local production build: memo `docs/sessions/memo-n113a-walk_r1_2026-09-07.md`.
 > `ilya-ship.sh:79` now reads `1058`. **Dann's walk on the alias is the one
@@ -72,6 +72,36 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > tail case of the vacated-note rule; a melisma displacement plus deleting the
 > first word leaves head notes on the file's words (a ruling, not a default);
 > Ctrl-Z on Windows and Linux.
+>
+> **N.113a WALKED BY DANN 2026-09-08 00:05, on the alias, ALL FIVE SEEN.**
+> Items 1 and 2 together: with the melisma set, deleting «песня» left its two
+> notes and the sustained B♭ bare on both lines, nothing else moved, no file
+> words appeared, POEM 37 to 36 words. Redo by Shift-Cmd-Z also seen. N.113a
+> is CLOSED except for the three findings below, which are N.113b's. Item 5 SEEN:
+> the taken note wears the box, no bar. **Two findings, both Dann's, for a
+> N.113b:** (1) the loupe's box on the taken note goes LAVENDER (it drew
+> sage); (2) the loupe's locator, "m. 7 · system 3 of 8", gains a SECOND LINE
+> naming the note, its beat in the measure, and its duration, in the shape of
+> the drawing's "note 5, F♯4, quarter" line he liked. The tree already knows the beat:
+> `RhythmicPosition` (`packages/score-parser/src/types.ts:510-518`) holds each
+> note's position from the barline as a whole-note fraction, so the second
+> line is formatting against the time signature, not a new measurement. **RULED BY DANN on the same walk: the beat count
+> is COMPOUND-METRE AWARE.** 6/8 is two beats of a dotted quarter, not six;
+> when the numerator is a multiple of 3 and the denominator 8 or 16, the beat
+> is the dotted unit and the count is numerator ÷ 3; otherwise the beat is the
+> denominator's unit; 3/8 is one beat. A position inside a beat reads as beat
+> plus pulse, wording to be shown to Dann before it ships. Item 3 SEEN: the
+> Melisma row's gap reads even. **(3) DEFECT, Dann's eye on the page 2026-09-07
+> late:** Melisma on the taken B♭3 (m. 7, «песня», word-final «ня») drew a
+> HYPHEN level with the other hyphens, not the baseline extender. The file's
+> convention is hyphen `y=147` stroke 1, extender `y=151` stroke 0.5
+> (memo-n113 §7.1); the harness walk saw an extender on «ка» (memo-n113
+> §8 step 1), so this is likely the mid-run or shifted case. Rule, Dann's:
+> word-final sustain draws an extender on the baseline; mid-word sustain
+> keeps hyphens. Item 4 SEEN, both halves: Cmd-Z with the field focused does
+> nothing; blurred, it undid the melisma and the pill read "Redo: melisma
+> set". Items 1 to 4 not yet
+> walked when this line was written.
 >
 > **THE ONE THING after Dann's N.113a walk: N.114, Type Into Score.**
 > **Drawing r1 in the tree, `docs/sessions/drawing-n114-type-into-score_r1_2026-09-08.html`
@@ -114,6 +144,13 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > proposed sequence for a singer, needs the inventory read in full and
 > Grayson chapters 1, 8, 9. Rule: every chapter from Grayson cited as his;
 > Dann's additions marked as his.
+>
+> **N.117, a progress bar on load** (numbered by Dann 2026-09-07 late,
+> UNPLACED, ruled in from INBOX on the N.113a alias walk). The page takes a
+> few seconds to load on reload with nothing to say so; Dann wants a progress
+> bar, not a message. What the bar measures is NOT ESTABLISHED (dictionary
+> load is the likeliest candidate: `input.transcribeLoading` already exists).
+> Displaces nothing until he places it.
 >
 > **N.110, the [i] extractor harness**: set aside by Dann, briefed
 > (`brief-n110-i-extractor-harness_r1_2026-09-02.md`), not built.
