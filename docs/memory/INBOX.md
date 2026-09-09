@@ -111,3 +111,4 @@ Format: `I.nn | YYYY-MM-DD | one line, in Dann's words where possible`
 - [2026-09-09] Loupe's taken-note box reads weird (tall) on the dotted B♭3, Without Sun no. 1 m. 2; Dann: adjust it. See VoiceProfilePane.svelte:459 height rule.
 - [2026-09-09] Loupe locator line 2: Dann wants "dotted quarter" (and the double-dot form) instead of "Quarter · Dot". French to be shown to him.
 - [2026-09-09] Dann: the Open syllables toggle (Text > Notation) should alter Score markup live, as it does the Transcription. Tree fact from STATE: the toggle clears syllable overrides (+page.svelte:2391).
+- [2026-09-09] Phone-only idea, unbuilt: a Lyric-station verb that jumps to the poem box with the SABB's word selected (the hunt from note to word). Only if a phone walk shows the hunt costs something.

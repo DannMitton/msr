@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N.114 drawing r2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Source+Serif+4:ital@0;1&display=swap">
+<style>
+  :root {
+    --ink-primary: #1a1612; --ink-secondary: #4a4540; --ink-tertiary: #6A655F;
+    --sage: #8B9A7D; --lavender: #8E7E9B; --paper-cream: #F0EBE0; --drawer-bg: #FAF8F5;
+    --rule: #DAD5CC;
+  }
+  body { margin: 0; background: #E9E5DD; color: var(--ink-primary); font: 15px/1.45 "Source Sans 3", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  h2 { font-size: 17px; font-weight: 600; margin: 40px 0 8px; }
+  p.lede { color: var(--ink-secondary); margin: 0 0 12px; max-width: 70ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { font-size: 13px; color: var(--ink-secondary); margin: 8px 0 0; max-width: 360px; }
+  figcaption b { color: var(--ink-primary); }
+  .desk { font-size: 12px; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+
+  /* the drawer */
+  .drawer { width: 360px; background: var(--drawer-bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0 0 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .band { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+  .band.sage { background: var(--sage); }
+  .band.lav { background: var(--lavender); }
+  .band .chev { font-weight: 400; opacity: .9; }
+  .inner { padding: 12px; }
+  .intake { border: 1px dashed #C9C3B8; border-radius: 4px; padding: 10px; background: #fff; }
+  .field { font-family: "Source Serif 4", Georgia, serif; font-size: 15px; line-height: 1.4; color: var(--ink-primary); min-height: 96px; white-space: pre-line; }
+  .field.empty { color: var(--ink-tertiary); }
+  .receipt { display: flex; gap: 10px; align-items: baseline; margin-top: 10px; font-size: 13px; color: var(--ink-secondary); }
+  .receipt .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--sage); font-weight: 600; }
+  .receipt .btn { margin-left: auto; color: var(--ink-tertiary); }
+  .receipt .btn + .btn { margin-left: 0; }
+  .actions { margin-top: 10px; }
+  .ghost { display: inline-block; border: 1px solid #C9C3B8; border-radius: 999px; padding: 4px 10px; font-size: 13px; color: var(--ink-secondary); }
+  .hint { font-size: 12px; color: var(--ink-tertiary); margin: 8px 0 0; }
+  .primary { display: block; margin: 12px 0 0; text-align: center; background: var(--ink-primary); color: #fff; border-radius: 999px; padding: 8px; font-weight: 600; }
+
+  /* the syllable line under the field */
+  .syl-head { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+  .syl-head .chev { color: var(--ink-tertiary); }
+  .syl-head .count { color: var(--ink-tertiary); font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: 8px; }
+  .syl { font-family: "Source Serif 4", Georgia, serif; font-size: 15px; line-height: 1.7; margin: 6px 0 0; }
+  .syl.boxed { background: #fff; border: 1px solid var(--lavender); border-radius: 3px; padding: 6px 8px; }
+  .syl.preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; color: var(--ink-secondary); font-size: 14px; }
+  .s { display: inline; padding: 0 1px; border-radius: 2px; }
+  .s { color: var(--ink-tertiary); }
+.s.placed { color: var(--ink-primary); }
+  .s.cur { background: #fff; outline: 1px solid var(--lavender); padding: 2px 3px; }
+  .s.mark { text-decoration: underline; text-decoration-color: var(--sage); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .plain .s { cursor: default; }
+
+  /* stations */
+  .station { padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+  .station:last-child { border-bottom: 0; }
+  .st-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-secondary); }
+  .st-head .count { font-weight: 400; text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink-tertiary); }
+  .st-head .chev { font-weight: 400; color: var(--ink-tertiary); }
+  .q { background:#fff; border-left:3px solid var(--lavender); padding:8px 12px; margin:10px 0; max-width:70ch; font-size:14px; }
+.gone { opacity: .35; text-decoration: line-through; }
+  .note { font-size: 12px; color: var(--ink-tertiary); margin: 6px 0 0; }
+
+  /* the dock */
+  .dock { width: 360px; background: #fff; border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+  .dock .top { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+  .dock .top b { color: var(--ink-primary); font-family: "Source Serif 4", Georgia, serif; font-weight: 400; }
+  .lyric-row { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; padding: 6px 0; font-size: 13px; color: var(--ink-secondary); }
+  .cell { border: 1px solid #C9C3B8; border-radius: 999px; padding: 3px 9px; font-size: 13px; color: var(--ink-primary); background: #fff; text-align: center; min-width: 26px; }
+  .cell.on { background: var(--lavender); color: #fff; border-color: var(--lavender); }
+  .typed { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .input { border: 1px solid var(--lavender); border-radius: 3px; padding: 4px 8px; font-family: "Source Serif 4", Georgia, serif; font-size: 15px; background: #fff; color: var(--ink-primary); }
+  .input .caret { display: inline-block; width: 1px; height: 1em; background: var(--ink-primary); vertical-align: -2px; margin-left: 1px; }
+  .undo { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-secondary); }
+</style>
+</head>
+<body>
+<main>
+<h1>N.114, Type Into Score. Drawing r2, 2026-09-09</h1>
+<p class="lede">r1 (<code>drawing-n114-type-into-score_r1_2026-09-08.html</code>) with Dann's six rulings of 2026-09-07 applied, as <code>STATE.md</code> §THE ONE THING records them: reading B for the collapsed line, A and C retired; no line at all without a score, and always boxed with one; colour inverted, unplaced tertiary and placed primary, "committed is black"; the cursor is the <b>syllable-assignment bounding box, SABB</b>, his term; the line is click-to-place only, a click moves the SABB and never parks the field's caret; the taken-note line is now shipped (N.113b). Tree facts are from the files r1 cites, read 2026-09-08, and from today's walk. Buttons wear the pill ends ruled 2026-09-03 (<code>IntakePanel.svelte:753-768</code>); r1 drew them square and Dann caught it 2026-09-09. Anything else is <span class="desk">desk inference</span>. Same poem, four of twelve syllables placed.</p>
+
+<h2>Plate 1. The Input band. Left: no score, no line. Right: a score, the line collapsed (reading B)</h2>
+<div class="row">
+<figure>
+<div class="drawer">
+<div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+<div class="inner">
+<div class="intake">
+<div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+<div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="actions"><span class="ghost">Choose a file</span></div>
+<p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+</div>
+<div class="primary">Transcribe and fit</div>
+</div>
+</div>
+<figcaption><b>No score.</b> Nothing is added. Ruling 2: the transcription paper already shows the division, so the line exists only when a score is present. This is the band exactly as it ships.</figcaption>
+</figure>
+<figure>
+<div class="drawer">
+<div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+<div class="inner">
+<div class="intake">
+<div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+<div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="receipt"><span class="tag">score</span><span>pushkin-cui.musicxml</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="syl boxed" style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="syl preview" style="flex:1;min-width:0"><span class="s placed">Я</span> <span class="s placed">вас</span> <span class="s placed">лю-</span><span class="s placed">бил:</span> <span class="s">лю-бовь е-щё, быть мо-жет, В ду-ше мо-ей у-гас-ла не сов-сем;</span></span><span class="count" style="color:var(--ink-tertiary);font-size:13px;white-space:nowrap">4&thinsp;/&thinsp;24</span><span class="chev" style="color:var(--ink-tertiary)">⌄</span></div>
+<div class="actions"><span class="ghost">Choose a file</span></div>
+<p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+</div>
+<div class="primary">Transcribe and fit</div>
+</div>
+</div>
+<figcaption><b>Collapsed, reading B as ruled, inside the box. Dann, 2026-09-09.</b> The same hairline box the opened line wears, holding one clipped line, the placed count, and the chevron pointing down: the same object at a smaller size, and the box is the sign that clicking here does something. The SABB is drawn only where the clip reaches it. The clip already shows the colour rule: the four placed syllables are black, the rest tertiary. <span class="desk">desk inference:</span> the row sits under the score receipt rather than under the poem receipt, because it exists only when the score does. Wave off if it reads better under the poem.</figcaption>
+</figure>
+</div>
+
+<h2>Plate 2. Opened, with a score: boxed, unplaced tertiary, placed black, one SABB</h2>
+<div class="row">
+<figure>
+<div class="drawer">
+<div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+<div class="inner">
+<div class="intake">
+<div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+<div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="receipt"><span class="tag">score</span><span>pushkin-cui.musicxml</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="syl-head"><span></span><span class="count">4&thinsp;/&thinsp;24</span><span class="chev">⌃</span></div>
+<p class="syl boxed"><span class="s placed">Я</span> <span class="s placed">вас</span> <span class="s placed">лю-</span><span class="s placed">бил:</span> <span class="s cur">лю-</span><span class="s">бовь</span> <span class="s">е-</span><span class="s">щё,</span> <span class="s">быть</span> <span class="s">мо-</span><span class="s">жет,</span><br><span class="s">В</span> <span class="s">ду-</span><span class="s">ше</span> <span class="s">мо-</span><span class="s">ей</span> <span class="s">у-</span><span class="s">гас-</span><span class="s">ла</span> <span class="s">не</span> <span class="s">сов-</span><span class="s">сем;</span></p>
+<div class="actions"><span class="ghost">Choose a file</span></div>
+<p class="hint">Drop a score or a photograph anywhere in this frame.</p>
+</div>
+<div class="primary">Transcribe and fit</div>
+</div>
+</div>
+<figcaption><b>Ruling 3 applied.</b> Placed is black, unplaced is tertiary, the SABB is the white cell with the lavender outline (<code>SyllableStation.svelte:188-189</code> today, colours swapped). A click on any syllable moves the SABB and nothing else (ruling 5). The line is the same <code>SyllableStation</code> moved, not a new component. <b>Ruled by Dann 2026-09-09: no label.</b> The count and the chevron carry the open row; "Syllables" is struck as self-evident, and no new string enters the tree for this row.</figcaption>
+</figure>
+<figure>
+<div class="drawer">
+<div class="band lav"><span>Score markup</span><span class="chev">⌃</span></div>
+<div class="station"><div class="st-head gone"><span>Underlay</span><span class="chev">⌄</span></div><p class="note">Leaves. The queue and the SABB live under the field now. Today's walk used this station for every placement; nothing about the gesture changes, only where the line sits.</p></div>
+<div class="station"><div class="st-head"><span>Corrections <span class="count">4&thinsp;/&thinsp;24</span></span><span class="chev">⌄</span></div></div>
+<div class="station"><div class="st-head"><span>Voice</span><span class="chev">⌄</span></div></div>
+</div>
+<figcaption>Score markup after N.114, unchanged from r1: Corrections and Voice, the placed count on the Lyric label inside Corrections where N.65 ship B put it.</figcaption>
+</figure>
+</div>
+
+<h2 class="gone">Plate 3. The loupe dock's Lyric station, with N.114's typed field</h2>
+<div class="q"><b>STRUCK BY DANN 2026-09-09.</b> "Lyrics are linear; the user will alter them in the input field." The typed field duplicated N.112: the same one-word edit, through the same path, into the same poem box, minus a scroll. No second text site. The two figures below stay for the record and are not to be built. The dock's Lyric station ships as it is today.</div>
+<div class="row">
+<figure>
+<div class="dock">
+<div class="top"><span>m. 2 · system 1 of 8<br><b>F♯4 · beat 1 · Quarter</b></span><span>‹ ›</span></div>
+<div class="station">
+<div class="st-head"><span>Lyric <span class="count">4&thinsp;/&thinsp;24</span></span></div>
+<p class="syl" style="margin-top:6px"><span class="s placed">бил:</span> <span class="s cur">лю-</span><span class="s">бовь</span> <span class="s">е-</span><span class="s">щё,</span></p>
+<div class="lyric-row typed"><span class="input">любовь<span class="caret"></span></span><span class="cell">Place</span></div>
+<div class="lyric-row"><span>This note sustains the syllable</span><span class="cell">Melisma</span><span></span></div>
+<div class="lyric-row"><span>Syllables, to the end of the lyric</span><span class="cell">←</span><span class="cell">→</span></div>
+<div class="lyric-row"><span>Syllables, to the next open note</span><span class="cell">←</span><span class="cell">→</span></div>
+</div>
+<div class="undo"><span>Undo: syllable placed</span><span>·</span><span>Redo</span></div>
+</div>
+<figcaption>The locator is now the shipped two-line form (N.113b, walked 2026-09-09), drawn as it reads on the alias; "dotted quarter" for a dotted value is in the inbox. The typed field is r1's, unchanged: it opens on the word the SABB is in, the singer retypes it, Place rewrites that word in the poem, N.112 re-seats. Ruling 5 fixes the division of labour: <b>the field writes, the line places, the dock's typed field rewrites one word</b>; every other verb stays here in the dock. <span class="desk">desk inference</span> still: the row's position, the word "Place", the pre-fill.</figcaption>
+</figure>
+<figure>
+<div class="drawer">
+<div class="band sage"><span>Input</span><span class="chev">⌃</span></div>
+<div class="inner">
+<div class="intake">
+<div class="field">Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;</div>
+<div class="receipt"><span class="tag">poem</span><span>2 lines</span><span>12 words</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="receipt"><span class="tag">score</span><span>pushkin-cui.musicxml</span><span class="btn">Clear</span><span class="btn">Replace</span></div>
+<div class="syl-head"><span></span><span class="count">5&thinsp;/&thinsp;24</span><span class="chev">⌃</span></div>
+<p class="syl boxed"><span class="s placed">Я</span> <span class="s placed">вас</span> <span class="s placed">лю-</span><span class="s placed">бил:</span> <span class="s placed mark">лю-</span><span class="s cur mark">бовь</span> <span class="s">е-</span><span class="s">щё,</span> <span class="s">быть</span> <span class="s">мо-</span><span class="s">жет,</span><br><span class="s">В</span> <span class="s">ду-</span><span class="s">ше</span> <span class="s">мо-</span><span class="s">ей</span> <span class="s">у-</span><span class="s">гас-</span><span class="s">ла</span> <span class="s">не</span> <span class="s">сов-</span><span class="s">сем;</span></p>
+</div>
+</div>
+</div>
+<figcaption><b>After Place, DESK DEFAULT: the mark lives in the boxed line only.</b> The frame says the typed word is "marked in the field". The field is a <code>&lt;textarea&gt;</code> (<code>IntakePanel.svelte:316</code>) and cannot carry a mark on one word without an overlay or a rebuild, both Code's cost. The boxed line carries it for free, sits directly under the field, and ruling 5 already keeps the caret out of the field on a line click. So r2 draws the mark there and nowhere else, as a sage underline. Wave off if the field must show it.</figcaption>
+</figure>
+</div>
+
+<h2>Plate 4. What N.118 changes in this line, and nothing else</h2>
+<div class="q"><b>r1 drew punctuation the tree does not produce.</b> The slot line in r1 read «бил:», «щё,», «жет,». Today's walk showed the shipped station without any punctuation, and the cause is read: <code>cyrOfSyllable</code> takes its Cyrillic from <code>cleanWord</code> (<code>pairings.ts:152-159</code>). N.118, numbered 2026-09-09, puts the word's trailing punctuation on its last syllable at slot-build time. r2 keeps the punctuation in every plate above on that basis. <b>If N.114 ships before N.118, the line ships without it</b>, and the page's placed syllables stay bare of punctuation until N.118 lands. No drawing decision hangs on this.</div>
+
+<h2>What r2 asks, and what it does not settle</h2>
+<div class="q"><b>All three answered by Dann 2026-09-09.</b> (1) Under the score receipt, boxed in the same hairline as the open line, his idea. (2) No label; the count and chevron carry the open row. (3) Moot: the typed field is struck. <b>N.114 is now the syllable line under the poem field, Plates 1 and 2, and nothing else.</b></div>
+<p class="lede">Not settled here, carried from r1: whether the line stays open once opened (per song, per session, or never remembered); what the line shows while the dictionary loads; no French owed: no new string survives. Whether the line syllabifies before Transcribe is pressed is Code's cost to state (<code>STATE.md</code>).</p>
+</main>
+</body>
+</html>

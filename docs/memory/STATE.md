@@ -184,6 +184,25 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > the author's punctuation. Dann said N.115; N.115 was taken, N.118 is the
 > DESK DEFAULT. After N.114 unless he places it.
 >
+> **N.114 NARROWED BY DANN 2026-09-09, r2 DRAWN AND RULED, BRIEFED:**
+> `docs/sessions/brief-n114-syllable-line_r1_2026-09-09.md`, six walk items,
+> no French, no new string. Code has not run it. Next: Dann pastes it into
+> Code; then his walk on the alias.
+> r2 is `docs/sessions/drawing-n114-type-into-score_r2_2026-09-09.html`,
+> rendered and checked. Rulings on it, all Dann's: the collapsed row sits
+> under the score receipt, inside the same hairline box the open line wears
+> (his idea, "port the squircle up"), one clipped line, placed count, chevron
+> down; the open row has NO label, count and chevron carry it; **the loupe's
+> typed field is STRUCK**: "lyrics are linear, the user will alter them in
+> the input field", and the desk agreed that it duplicated N.112 minus a
+> scroll. **N.114 is now the syllable line under the poem field, Plates 1
+> and 2, nothing else.** DESK DEFAULT for its name: **N.114, the syllable
+> line under the poem**; "Type Into Score" promised Finale's gesture, which
+> this never was. No French owed by N.114. Buttons in every drawing wear
+> the pill ends ruled 2026-09-03 (`IntakePanel.svelte:753-768`); r1 drew
+> them square. Still DESK DEFAULT, unruled and reversible: the line stays
+> open per session once opened; while the dictionary loads the row is absent.
+>
 > **THE ONE THING after Dann's N.113a walk: N.114, Type Into Score.**
 > **Drawing r1 in the tree, `docs/sessions/drawing-n114-type-into-score_r1_2026-09-08.html`
 > (rode in `00149c3`), and Dann ruled on it 2026-09-07 late, all recorded
