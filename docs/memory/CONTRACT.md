@@ -235,6 +235,28 @@ taste, irreversible, or French. His words: *"You block and stop and ruminate
 and defer and stop us from moving the actual work forward. I get
 disheartened, then I question my validity because of your objections."*
 
+### 21. NEW, 2026-09-09, ruled by Dann. DO NOT INFER UNLESS HE ASKS. WHEN YOU CATCH YOURSELF INFERRING, STOP, SAY SO, THEN TETHER IT OR DROP IT.
+
+**Dann's words, 2026-09-09:** *"Your inferences are suspect. Please do not infer
+unless I ask you expressly to infer. When you find yourself inferring, stop and
+tell me, then see if you can tether your inference to anything in the real
+code."* Said after he had to correct the desk twice in one walk.
+
+**What it cost, the same walk:** the desk told him the loupe's tall box was
+caused by the extender under the lyric, stated as fact, having read neither the
+ring nor the group. The ring's height is `max(ink + 18, width × 2.5)`
+(`VoiceProfilePane.svelte:459`); the flat widened it and the ruled proportion
+grew it. The extender played no part. Earlier the same night the desk told him
+the seam hairline was a rasterization artefact, a plausible reading it had not
+tethered either.
+
+**The rule.** A claim about what the code does carries a `path:line` read this
+session, or it is not made. If you notice you are about to explain a thing you
+have not opened, stop, say "that would be an inference", and either open the
+file and tether it or say NOT ESTABLISHED. Tether 1's fourth form was never
+allowed; this names the moment it slips in, which is when a picture looks
+explanatory. An inference he asked for is marked DESK INFERENCE on its face.
+
 ---
 
 ## 2. THE CEILING. Not Dann's to waive and not yours to ask about

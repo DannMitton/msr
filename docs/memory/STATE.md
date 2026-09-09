@@ -103,6 +103,42 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > set". Items 1 to 4 not yet
 > walked when this line was written.
 >
+> **N.113b SHIPPED `6ec4378`, 2026-09-08, WALK STOPPED AT ITEM 3, 2026-09-09.**
+> Items 1 and 2 SEEN by Dann (lavender box; second locator line read `G3 ·
+> beat 1 · Quarter`). Item 3 NOT WALKED. **Open, and the thread ended on it:**
+> on Without Sun no. 1, system 1, an extender runs from «ка» of «Комнатка»
+> onto the B♭3 (m. 2, beat 3, dotted quarter) and every syllable after it
+> sits one note late; Dann calls it an improper melisma. The Melisma pill on
+> that note is PLAIN (Dann's eye, 2026-09-09), so it is not a singer mark in
+> the store. Where the extender and the shift come from is NOT ESTABLISHED;
+> the desk did not open the file's own melisma path. Next session opens
+> `pairings.ts` (`melismaIds`, `:408`) and the renderer's `melismaEndX` /
+> `melismaPreview` (`staff-renderer.ts:2751-2759`, option at `:337`) and reads
+> the score file's own underlay for that note before saying anything. Also
+> ask Dann whether the setting holds «ка» across the B♭ or brings «тес»
+> onto it; he knows the score. **The thread ended with Dann upset at the
+> desk's untethered claims; tether 21 in `CONTRACT.md` is the ruling.**
+> Memo `docs/sessions/memo-n113b-walk-findings_r1_2026-09-08.md`. Gates 4 and 5
+> moved to 1074 and 547 | 5 (552), `ilya-ship.sh:79-80` updated. Item 1 SEEN
+> by Dann: the loupe's box is lavender, the page ring with it (Code's
+> default). **Walk finding, cosmetic:** a vertical hairline above the stave
+> between the key signature and the taken note, visible at 90% browser zoom
+> only, gone at other zooms. DESK INFERENCE: a rasterization seam where the
+> loupe's head crop meets its music crop (`Loupe.svelte:509-517`, one clone,
+> two viewports) lands on a fractional device pixel. Fix is Code's: overlap
+> the crops by a fraction or snap the seam. Not a DOM element; not chased.
+> **Walk observation, not a defect:** the box on a B♭3 with a flat read tall
+> to Dann. Cause established: `VoiceProfilePane.svelte:459` sets height to
+> `max(ink + 18, width × 2.5)`; the flat widens the box and the ruled 2.5
+> portrait floor grows the height. The ring never reads the underlay. The
+> desk first blamed the extender off a picture and was wrong; Dann corrected
+> it. Whether 2.5 holds on accidental-bearing notes is his, unasked.
+> **Memo §7.1, Code's finding, wants a number:** on the Sunless fixture with
+> no poem and no melisma, the system holding measure indices 6 and 7 draws
+> nine underlay cells where the file has twelve, wrong words; every other
+> system right; the pairing layer's seats, third walk to touch it (see also
+> memo-n113a §9). Dann to rule whether it is numbered.
+>
 > **THE ONE THING after Dann's N.113a walk: N.114, Type Into Score.**
 > **Drawing r1 in the tree, `docs/sessions/drawing-n114-type-into-score_r1_2026-09-08.html`
 > (rode in `00149c3`), and Dann ruled on it 2026-09-07 late, all recorded

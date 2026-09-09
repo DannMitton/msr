@@ -38,6 +38,7 @@ next session the same hour it cost the last one.
 | a singer is not receiving a new build | `THE BRANCH ALIAS IS THE N.72` |
 | the alias is serving something stale | `The branch alias, observed` |
 | sending Dann to walk a ship | `WALK ON THE ALIAS, NEVER ON A SHA URL` |
+| `sed -i ''` fails in device_bash | `THE DEVICE SHELL IS LINUX` |
 | briefing Design | `WHAT DESIGN CAN READ` |
 | Design's return is not in Downloads | `DESIGN WRITES INTO THE TREE` |
 | the Vercel toolbar covers the drawer on a phone | `THE VERCEL TOOLBAR` |
@@ -2476,3 +2477,10 @@ When Code reports a gate 4 or gate 5 count move, the desk edits
 assert the old literal matches exactly once) before the ship line goes to
 Dann, and says so. Code's `sed -i ''` and `chmod +x` lines are then skipped.
 Record the old and new literals in the reply so the move is auditable.
+
+## THE DEVICE SHELL IS LINUX. 2026-09-09
+
+`device_bash` runs in a Linux VM on Dann's machine, not in macOS. BSD `sed -i ''`
+fails there with "can't read s/...": use GNU `sed -i` with no empty argument.
+The fenced blocks Dann pastes into his own Terminal are macOS and keep `-i ''`.
+Cost: one failed edit and a second call, 2026-09-07.
