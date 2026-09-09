@@ -4049,6 +4049,8 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 					score={ingestedScore ? { fileName: ingestedScore.fileName } : null}
 					onfile={(file) => void uploaderEl?.take(file)}
 					onclearscore={handleClearScore}
+					syllablesPlaced={placedSlotCount}
+					syllablesTotal={slotQueue.length}
 				>
 					{#snippet sourceScore()}
 						{#if INCLUDE_SHANE}
@@ -4099,60 +4101,61 @@ import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 							{/if}
 						{/if}
 					{/snippet}
+					<!-- N.114. THE SYLLABLE LINE, RULED BY DANN 2026-09-07 and
+					     2026-09-09 out of Score markup and under the poem
+					     field. A snippet for the same reason `sourceScore` is
+					     one: the four inputs are all here, beside
+					     `placeArmedSyllable`, which is the other half of the
+					     same gesture, and `IntakePanel` owns none of them.
+
+					     `clipped` IS THE PANEL'S TO SAY. It owns the
+					     disclosure, so it asks for the collapsed size or the
+					     open one and the station draws it; the queue, the
+					     pairings and the cursor are the same in both.
+
+					     NOTHING ABOUT THE GESTURE CHANGED. `oncursor` is the
+					     assignment it always was, placement is still
+					     `handleLoupePick`'s, and this component still never
+					     edits a syllable. -->
+					{#snippet syllableLine(clipped: boolean)}
+						<SyllableStation
+							slots={slotQueue}
+							pairings={shownPairings}
+							cursor={pairingCursor}
+							{language}
+							oncursor={(i) => (pairingCursor = i)}
+							{clipped}
+						/>
+					{/snippet}
 				</IntakePanel>
 			{/snippet}
-			<!-- ═══ THE SCORE MARKUP GROUP (N.108 increment 1). Underlay,
-			     Corrections, Voice, in that order, which is the map Dann ruled
-			     2026-09-02. It was `shanePanel`, a column of score work with
-			     the voice pinned below it in its own anchor.
+			<!-- ═══ THE SCORE MARKUP GROUP (N.108 increment 1). Corrections and
+			     Voice, in that order. It was `shanePanel`, a column of score
+			     work with the voice pinned below it in its own anchor.
 
-			     UNDERLAY IS A STATION AGAIN, AND THAT REVERSES SOMETHING. N.92
-			     slice 4 dissolved the Shift Lyrics station and put the
-			     syllabified text inside `CorrectionSurface`'s LYRIC row, on
-			     Dann's walk of `2238e8b`; the three-group map names Underlay
-			     as its own station in Score markup, and that is the later
-			     ruling. WHAT MOVED IS ONLY THE QUEUE AND THE CURSOR, which is
-			     what the prototype draws under Underlay. The lyric VERBS stay
-			     in Corrections with the note they act on, because they render
-			     only when a paired note is selected, and their label and their
-			     placed-syllable counter stay with them; nothing is drawn twice.
+			     UNDERLAY IS GONE FROM THIS GROUP, N.114, RULED BY DANN
+			     2026-09-07: the queue and the SABB live under the poem field,
+			     inside the Input band, where the text they belong to is. The
+			     station is deleted rather than emptied, and `underlay` is out
+			     of `STATION_IDS` with it, so nothing here can be stored open.
+			     `IntakePanel`'s `syllableLine` snippet, above, is where the
+			     same component renders now.
+
+			     The lyric VERBS never moved: they are in Corrections with the
+			     note they act on, because they render only when a paired note
+			     is selected, and their label and their placed-syllable counter
+			     stay with them. That is where N.65 ship B put the count and
+			     N.114 leaves it there.
 
 			     THE NOTICES SIT WHERE THEY SAT, between Corrections and the
 			     voice, in the order they had. Where a notice belongs in a
 			     three-group map is not ruled, and this ship does not decide it.
 
-			     THE STATION ROWS KEEP TODAY'S GATE: Underlay and Corrections
-			     are drawn only when a score has been read, which is what the
-			     score capability's own wall already did. That means the
-			     opening state is not the whole map until a score arrives, and
-			     that is reported rather than fixed here, because fixing it is
-			     new behaviour and increment 1 adds none. -->
+			     CORRECTIONS KEEPS TODAY'S GATE: it is drawn only when a score
+			     has been read, which is what the score capability's own wall
+			     already did. -->
 			{#snippet scoreGroup()}
 				{#if INCLUDE_SHANE}
-					<!-- ── UNDERLAY. The queue and the cursor. It draws nothing
-					     at all when there are no slots, which is
-					     `SyllableStation`'s own guard and is unchanged. -->
-					{#if ingestedScore}
-						<div class="station">
-							<StationHeader
-								label={t('underlay.heading', language)}
-								expanded={sections.has(STATION_IDS.underlay)}
-								ontoggle={() => sections.toggle(STATION_IDS.underlay)}
-								controls="station-underlay"
-							/>
-							{#if sections.has(STATION_IDS.underlay)}
-								<div class="station-body" id="station-underlay">
-									<SyllableStation
-										slots={slotQueue}
-										pairings={shownPairings}
-										cursor={pairingCursor}
-										{language}
-										oncursor={(i) => (pairingCursor = i)}
-									/>
-								</div>
-							{/if}
-						</div>
-					{/if}
 					<!-- N.92 CORRECTIONS. It rides inside the score capability's
 					     own wall and shows nothing at all until there is a read
 					     to correct, so a wall-closed build and a text-only

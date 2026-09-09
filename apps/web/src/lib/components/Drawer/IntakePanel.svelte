@@ -69,6 +69,23 @@
 		onfile: (file: File) => void;
 		/** Clear on the SCORE receipt. Leaves the poem alone. */
 		onclearscore: () => void;
+		/**
+		 * N.114, RULED BY DANN 2026-09-07 and 2026-09-09: the syllable line
+		 * lives under the poem field, not in Score markup.
+		 *
+		 * A SNIPPET RATHER THAN PROPS, for the reason `sourceScore` above
+		 * gives: `SyllableStation`'s four inputs (`slotQueue`,
+		 * `shownPairings`, `pairingCursor` and the cursor setter) all live in
+		 * `+page.svelte` beside the placement that moves them, and drilling
+		 * four of them through here would put half of one gesture in a
+		 * component that owns none of it. The argument is `clipped`: this
+		 * component owns the disclosure, so it says which of the two sizes it
+		 * wants and the station draws it.
+		 */
+		syllableLine?: Snippet<[boolean]>;
+		/** The pair on the row, the two numbers the Lyric label already has. */
+		syllablesPlaced?: number;
+		syllablesTotal?: number;
 	}
 
 	let {
@@ -87,7 +104,32 @@
 		score,
 		onfile,
 		onclearscore,
+		syllableLine,
+		syllablesPlaced = 0,
+		syllablesTotal = 0,
 	}: Props = $props();
+
+	/* N.114. THE LINE IS COLLAPSED UNTIL IT IS OPENED, and once opened it stays
+	   open for the session: this is `$state` and nothing else, with no id in
+	   the drawer's open set and no `localStorage` write. DESK DEFAULT, named as
+	   one in the brief, and reversible in one line.
+
+	   It is deliberately NOT a station id. The intake has none by the
+	   2026-09-02 ruling this file's header carries, and giving one row inside
+	   it a stored open state would be the first. */
+	let syllablesOpen = $state(false);
+
+	/* RULING 1: no score, no line at all. RULING 2 and the desk default: the
+	   row is absent while Transcribe is running, because the queue it previews
+	   is being rebuilt underneath it. `syllablesTotal` guards the empty queue:
+	   a score can be present before there is a poem to syllabify, and an empty
+	   box says less than no box. */
+	const showSyllables = $derived(
+		score !== null &&
+			syllableLine !== undefined &&
+			syllablesTotal > 0 &&
+			!loaderState.isLoading
+	);
 
 	/* ONE OWNER FOR "THE SOURCE FIELD IS EMPTY". It bound the watermark and
 	   the sage hover together by Dann's ruling of 2026-08-20; the watermark
@@ -373,6 +415,61 @@
 			</div>
 		{/if}
 
+		<!-- ── THE SYLLABLE LINE, N.114. RULED BY DANN 2026-09-07 and
+		     2026-09-09. It sat in Score markup under an UNDERLAY header; it
+		     sits here now, under the score receipt, live whenever a score is
+		     present. Nothing about the gesture changed: a click on a syllable
+		     moves the SABB and placement stays in the loupe.
+
+		     UNDER THE SCORE RECEIPT RATHER THAN THE POEM'S, because the line
+		     exists only when the score does. Drawing r2, plate 1, marks that
+		     a desk inference; it is a desk default here and moves in one
+		     line.
+
+		     NO LABEL AND NO NEW STRING, ruled 2026-09-09: "Syllables" is
+		     self-evident over the syllables. The count and the chevron carry
+		     the row, and the count is the same numeral pair the Lyric label
+		     draws, so it needs no translation and no plural agreement.
+
+		     COLLAPSED, THE WHOLE ROW IS THE BUTTON, which is why the station
+		     draws spans and not buttons inside it (`clipped`). Open, the row
+		     above the line carries the count and the chevron and the line
+		     below it is the station exactly as it has always rendered. Both
+		     states wear the box: `SyllableStation`'s own white ground and its
+		     1 px #8E7E9B rule, the recipe its SABB cell already used.
+
+		     NOT A PILL. The 999px ends of `.action-btn` are the drawer's six
+		     ACTIONS; this is a disclosure over a box of text, and drawing r2
+		     draws it at the 3px the box wears. -->
+		{#if showSyllables}
+			{#if syllablesOpen}
+				<div class="syl-head">
+					<button
+						type="button"
+						class="syl-toggle"
+						aria-expanded="true"
+						aria-controls="intake-syllables"
+						onclick={() => (syllablesOpen = false)}
+					>
+						<span class="syl-count">{syllablesPlaced}&thinsp;/&thinsp;{syllablesTotal}</span>
+						<svg class="syl-chevron" class:expanded={syllablesOpen} width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,1.5 7,5 3,8.5" /></svg>
+					</button>
+				</div>
+				<div class="syl-box" id="intake-syllables">{@render syllableLine?.(false)}</div>
+			{:else}
+				<button
+					type="button"
+					class="syl-box syl-row"
+					aria-expanded="false"
+					onclick={() => (syllablesOpen = true)}
+				>
+					<span class="syl-preview">{@render syllableLine?.(true)}</span>
+					<span class="syl-count">{syllablesPlaced}&thinsp;/&thinsp;{syllablesTotal}</span>
+					<svg class="syl-chevron" class:expanded={syllablesOpen} width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,1.5 7,5 3,8.5" /></svg>
+				</button>
+			{/if}
+		{/if}
+
 		<!-- ── THE ONE WAY IN THAT IS NOT A DROP. N.108 increment 4, ruled by
 		     Dann 2026-09-03: one Choose a file button, under the field, taking
 		     every kind. It was two, and the second said "Read a score from a
@@ -593,6 +690,101 @@
 
 	.receipt-btn:hover {
 		color: var(--ink-primary);
+	}
+
+	/* ── THE SYLLABLE LINE, N.114 ───────────────────────────
+	   THE BOX IS `SyllableStation`'s OWN RECIPE, lifted off the SABB cell it
+	   already draws (that file's `.slot.is-cursor`, `background: #FFFFFF` and
+	   `border: 1px solid #8E7E9B`) and applied to the row. Ruling 2 names
+	   those two declarations, so they are copied value for value rather than
+	   re-chosen, and the collapsed row and the open line wear the same box.
+	   The 3px radius is drawing r2's (`.syl.boxed`). */
+	.syl-box {
+		background: #ffffff;
+		border: 1px solid #8e7e9b;
+		border-radius: 3px;
+		padding: 6px 8px;
+		text-align: left;
+	}
+
+	/* Collapsed: preview, then count, then chevron, on one row. `min-width: 0`
+	   on the preview is what lets it ellipsise instead of pushing the count
+	   and the chevron off the end; the clip itself is the station's own
+	   `.station-text.is-clipped`. */
+	.syl-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		cursor: pointer;
+		font: inherit;
+	}
+
+	.syl-preview {
+		flex: 1;
+		min-width: 0;
+	}
+
+	/* Open: the count and the chevron on the row ABOVE the line, right-aligned
+	   because there is no label to sit opposite. No rule of its own: the score
+	   receipt directly above already draws the drawer's hairline, and a second
+	   one 8px under it would read as a mistake. */
+	.syl-head {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 8px;
+	}
+
+	.syl-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		border: none;
+		background: transparent;
+		padding: 0 2px;
+		cursor: pointer;
+		font: inherit;
+	}
+
+	/* The pair, in the recipe `CorrectionSurface`'s `.station-count` uses on
+	   the Lyric label: tertiary ink, tabular figures, thin spaces around the
+	   solidus. Two numbers rather than a formatted string, so nothing here
+	   needs translating. */
+	.syl-count {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--ink-tertiary);
+		font-variant-numeric: tabular-nums;
+		flex: none;
+		white-space: nowrap;
+	}
+
+	/* THE GLYPH AND THE TWO ROTATIONS ARE `StationHeader.svelte`'s, copied
+	   value for value the way this file's header says the button family is:
+	   Svelte scopes a rule to the file that writes the markup, and this markup
+	   is written here. Change one and change both. The rule they express is
+	   that ruling's, unchanged: the chevron points the way the panel will
+	   grow, so closed points down and open points up. */
+	.syl-chevron {
+		flex-shrink: 0;
+		transform: rotate(90deg);
+		transition: transform 150ms ease;
+		color: var(--ink-tertiary);
+	}
+
+	.syl-chevron.expanded {
+		transform: rotate(-90deg);
+	}
+
+	/* The touch floor, twinned on `StationHeader`'s `.station-disclosure`: a
+	   coarse pointer gets 44 px, a fine one does not. No new geometry and no
+	   new exemption; the row is a disclosure and it is sized like the drawer's
+	   other disclosures. */
+	@media (pointer: coarse) {
+		.syl-row,
+		.syl-toggle {
+			min-height: 44px;
+		}
 	}
 
 	/* The one way in that is not a drop, N.108 increment 4. The wrap is kept

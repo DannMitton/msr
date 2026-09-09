@@ -47,6 +47,28 @@
   it. `+page.svelte` derives both numbers because the header is no longer
   this component's to draw.
 
+  N.114 MOVED THIS LINE OUT OF SCORE MARKUP AND UNDER THE POEM FIELD.
+  RULED BY DANN 2026-09-07 and 2026-09-09. `IntakePanel.svelte` renders it now,
+  inside the Input band, under the score receipt, live whenever a score is
+  present. It is still the same component and still read-only; what changed
+  here is two colour values (ruling 4, below) and one new prop.
+
+  `clipped` IS THE COLLAPSED ROW, ruling 2. In that state the whole row is one
+  button that opens the line, so the syllables inside it CANNOT be buttons: a
+  button inside a button is not a DOM a browser will build. They render as
+  spans, the line breaks render as spaces, and the line clips to one row with
+  an ellipsis. Nothing else differs, so the collapsed preview and the open line
+  are the same object at two sizes, which is what the drawing calls for.
+
+  THE 44 px FLOOR IS THE SABB'S ONLY WHERE THE SABB IS A TARGET. Open, it is a
+  button and it carries the floor exactly as before. Clipped, no syllable is a
+  target at all and the row itself carries the floor, so the SABB draws its
+  cell without the floor. That removes a target rather than exempting one.
+
+  THE COLOURS ARE INVERTED, N.114 ruling 4, Dann 2026-09-07: "Committed is
+  black." Unplaced is tertiary ink and placed is primary ink; before this they
+  were the other way round. The SABB cell is untouched.
+
   THE DRIFT LINE IS GONE, N.112, and with it this component's only
   translated string. It read "Text changed" and a count, ratified by Dann
   2026-08-14, and it existed because a seat could not follow its word: a
@@ -66,8 +88,13 @@
 		cursor: number;
 		language: Language;
 		oncursor: (index: number) => void;
+		/**
+		 * N.114 ruling 2. The collapsed row: one line, spans rather than
+		 * buttons, clipped with an ellipsis. See the head comment.
+		 */
+		clipped?: boolean;
 	}
-	let { slots, pairings, cursor, language, oncursor }: Props = $props();
+	let { slots, pairings, cursor, language, oncursor, clipped = false }: Props = $props();
 
 	const keyOf = (s: Slot) => `${s.origin.lineIndex}-${s.origin.wordIndex}-${s.origin.slotIndex}`;
 
@@ -117,19 +144,35 @@
 	});
 </script>
 
+<!-- ONE RUN, TWO WRAPPERS. The reading order is written once, in `run`, and
+     rendered into whichever wrapper the state calls for. Clipped, the wrapper
+     is a `<span>` and nothing else: `IntakePanel` puts that row inside a
+     button, and a `<section>` or a `<p>` inside a button is not a DOM a
+     browser will build. Open, the wrapper is the `<section>` and `<p>` this
+     component has always drawn, unchanged. -->
+{#snippet run()}{#each items as it (keyOf(it.slot))}{#if it.lead === 'line'}{#if clipped}{' '}{:else}<br />{/if}{:else if it.lead === 'space'}{' '}{/if}{#if clipped}<span
+				class="slot"
+				class:is-placed={placed.has(keyOf(it.slot))}
+				class:is-cursor={it.index === cursor}
+			>{it.slot.cyrillic}{it.trailingHyphen ? '-' : ''}</span>{:else}<button
+				type="button"
+				class="slot"
+				class:is-placed={placed.has(keyOf(it.slot))}
+				class:is-cursor={it.index === cursor}
+				aria-current={it.index === cursor ? 'true' : undefined}
+				onclick={() => oncursor(it.index)}
+			>{it.slot.cyrillic}{it.trailingHyphen ? '-' : ''}</button>{/if}{/each}{/snippet}
+
 {#if slots.length > 0}
-	<section class="syllable-station">
-		<p class="station-text">
-			{#each items as it (keyOf(it.slot))}{#if it.lead === 'line'}<br />{:else if it.lead === 'space'}{' '}{/if}<button
-					type="button"
-					class="slot"
-					class:is-placed={placed.has(keyOf(it.slot))}
-					class:is-cursor={it.index === cursor}
-					aria-current={it.index === cursor ? 'true' : undefined}
-					onclick={() => oncursor(it.index)}
-				>{it.slot.cyrillic}{it.trailingHyphen ? '-' : ''}</button>{/each}
-		</p>
-	</section>
+	{#if clipped}
+		<span class="station-text is-clipped">{@render run()}</span>
+	{:else}
+		<section class="syllable-station">
+			<p class="station-text">
+				{@render run()}
+			</p>
+		</section>
+	{/if}
 {/if}
 
 <style>
@@ -155,7 +198,19 @@
 		margin: 0;
 		font-size: 0.8125rem;
 		line-height: 1.6;
-		color: #1a1612;
+		/* N.114 ruling 4, inverted from #1a1612: this is the UNPLACED ink now,
+		   and `.slot.is-placed` below carries the black. */
+		color: #6A655F;
+	}
+	/* N.114 ruling 2, the collapsed row's clip, in the three declarations the
+	   ruling names. `display: block` because the wrapper is a `<span>` and
+	   `text-overflow` needs a block box to ellipsise inside; the row that
+	   holds it gives it its width and its `min-width: 0`. */
+	.station-text.is-clipped {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	/* Plain inline text, not a chip: only the cursor (below) gets a visible
 	   box and the 44 px floor. Every other syllable is a same-size word in
@@ -171,8 +226,9 @@
 		color: inherit;
 		font: inherit;
 	}
+	/* N.114 ruling 4, inverted from #9a948c. "Committed is black." */
 	.slot.is-placed {
-		color: #9a948c;
+		color: #1a1612;
 	}
 	/* The one moving highlight (STATE.md, "N.55b's station shape"). This is
 	   the sole surface that spends the 44 px touch floor; every other
@@ -188,6 +244,14 @@
 		background: #FFFFFF;
 		border: 1px solid #8E7E9B;
 		vertical-align: middle;
+	}
+	/* CLIPPED, THE SABB DRAWS ITS CELL AND SPENDS NO TOUCH GEOMETRY. No
+	   syllable is a target in that state, so there is nothing to give a
+	   floor to; the row that holds the line is the target and carries the
+	   floor itself. This removes a target rather than exempting one. */
+	.is-clipped .slot.is-cursor {
+		min-height: 0;
+		min-width: 0;
 	}
 	.slot:focus-visible {
 		outline: 2px solid #8E7E9B;

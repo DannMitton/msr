@@ -15,6 +15,15 @@
  * `source` and anything unrecognized; on a phone keep only the first
  * survivor."
  *
+ * `shiftLyrics` NOW DROPS INSTEAD OF MAPPING, and `underlay` drops with it.
+ * N.114, ruled by Dann 2026-09-07 and briefed at
+ * `docs/sessions/brief-n114-syllable-line_r1_2026-09-09.md` ruling 6: "The
+ * Score markup band loses its Underlay station." The queue and the SABB are a
+ * row inside the intake now, and the intake has no station id, so there is no
+ * successor left for either word to name. The expectations below take their
+ * value from that ruling and not from the mechanism, exactly as the N.108 ones
+ * took theirs from the N.108 brief.
+ *
  * `SectionSet` ITSELF IS NOT EXERCISED HERE. It holds `$state` and a
  * `localStorage` write, and this repository's vitest runs in the `node`
  * environment with neither; the file's own header says that is why every
@@ -32,15 +41,25 @@ import {
 } from './sections.svelte';
 
 describe('N.108 the open set migrates once', () => {
-	it('maps each of ship B’s four survivors to its successor', () => {
+	/* Three of ship B's four, since N.114 took `shiftLyrics`'s successor away
+	   with the station. The fourth is in its own test below. */
+	it('maps each of ship B’s three surviving ids to its successor', () => {
 		expect(migrateOpenStations(['piece'], false)).toEqual(['metadata']);
 		expect(migrateOpenStations(['songs'], false)).toEqual(['repertoire']);
 		expect(migrateOpenStations(['analysis'], false)).toEqual(['analysis']);
-		expect(migrateOpenStations(['shiftLyrics'], false)).toEqual(['underlay']);
 	});
 
 	it('drops `source`, which has no successor because the intake never closes', () => {
 		expect(migrateOpenStations(['source'], false)).toEqual([]);
+	});
+
+	/* N.114 ruling 6. The station these two named is gone, so both drop. A
+	   browser that visited between N.108 and N.114 holds `underlay`; one that
+	   has not been here since ship B holds `shiftLyrics`. Neither has a
+	   station to open. */
+	it('drops `shiftLyrics` and `underlay`, whose station N.114 removed', () => {
+		expect(migrateOpenStations(['underlay'], false)).toEqual([]);
+		expect(migrateOpenStations(['shiftLyrics', 'underlay'], false)).toEqual([]);
 	});
 
 	it('drops anything it does not recognise', () => {
@@ -55,15 +74,15 @@ describe('N.108 the open set migrates once', () => {
 	});
 
 	it('keeps the order the singer had, and keeps every survivor on a desk', () => {
-		expect(migrateOpenStations(['shiftLyrics', 'piece', 'songs'], false)).toEqual([
-			'underlay',
+		expect(migrateOpenStations(['analysis', 'piece', 'songs'], false)).toEqual([
+			'analysis',
 			'metadata',
 			'repertoire',
 		]);
 	});
 
 	it('keeps only the first survivor on a phone', () => {
-		expect(migrateOpenStations(['shiftLyrics', 'piece', 'songs'], true)).toEqual(['underlay']);
+		expect(migrateOpenStations(['analysis', 'piece', 'songs'], true)).toEqual(['analysis']);
 	});
 
 	/* `source` is dropped BEFORE the phone takes the first one, so a phone
@@ -78,7 +97,7 @@ describe('N.108 the open set migrates once', () => {
 	   return the same array or the key would be rewritten on every boot, which
 	   is the second silent save site N.27 forbids while it is open. */
 	it('returns an already-migrated set unchanged', () => {
-		const migrated = ['metadata', 'repertoire', 'underlay'];
+		const migrated = ['metadata', 'repertoire', 'analysis'];
 		expect(migrateOpenStations(migrated, false)).toEqual(migrated);
 		expect(migrateOpenStations(migrated, false)).toEqual(
 			migrateOpenStations(migrateOpenStations(migrated, false), false)

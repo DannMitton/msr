@@ -74,21 +74,28 @@ export const STATION_IDS = {
 	binder: 'binder',
 	notation: 'notation',
 	analysis: 'analysis',
-	underlay: 'underlay',
 	corrections: 'corrections',
 	voice: 'voice',
 } as const;
 
 /**
- * THE MIGRATION, exactly as Design's revision 2 §4.4 wrote it and the build
+ * THE MIGRATION, as Design's revision 2 §4.4 wrote it and the N.108 build
  * brief ruled it: `piece` to `metadata`, `songs` to `repertoire`, `analysis`
- * to `analysis`, `shiftLyrics` to `underlay`.
+ * to `analysis`.
+ *
+ * `shiftLyrics` MAPPED TO `underlay` UNTIL N.114, RULED BY DANN 2026-09-07.
+ * That ruling moved the queue and the SABB out of Score markup and under the
+ * poem field, where they are a row inside the intake and not a station: there
+ * is no UNDERLAY station left, so `underlay` is out of `STATION_IDS` and
+ * `shiftLyrics` has no successor to be mapped to. It is DROPPED, exactly as
+ * `source` is and for the same reason.
  *
  * THE FIVE IDS SHIP B COULD WRITE were `piece`, `source`, `songs`, `analysis`
  * and `shiftLyrics`; `notation` was a station under both maps and was never
- * written. Four of the five are mapped above. `source` IS DROPPED AND HAS NO
+ * written. Three of the five are mapped above. `source` IS DROPPED AND HAS NO
  * SUCCESSOR: the intake is always open and has no id to store, so a stored
- * `source` has nothing to become.
+ * `source` has nothing to become. A stored `underlay`, from a browser that
+ * visited between N.108 and N.114, is dropped the same way.
  *
  * A NEW ID MAPS TO ITSELF, which is what makes this idempotent. Run it on an
  * already-migrated array and it returns that array, so a browser that has been
@@ -99,7 +106,6 @@ const SUCCESSOR: Readonly<Record<string, string>> = {
 	piece: STATION_IDS.metadata,
 	songs: STATION_IDS.repertoire,
 	analysis: STATION_IDS.analysis,
-	shiftLyrics: STATION_IDS.underlay,
 	...Object.fromEntries(Object.values(STATION_IDS).map((id) => [id, id])),
 };
 

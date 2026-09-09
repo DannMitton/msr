@@ -68,6 +68,12 @@ const strings: Record<string, Record<Language, string>> = {
 	//    `shiftLyrics.title` "Shift Lyrics", which keeps its ratified French
 	//    and its own call sites; this is the station name, and the two are not
 	//    folded together for the reason given above.
+	//
+	//    UNUSED SINCE N.114 (Dann's ruling of 2026-09-07: the Underlay station
+	//    leaves Score markup and the syllable line goes under the poem field,
+	//    where the ruling of 2026-09-09 gives it no label at all). Kept and
+	//    marked in place rather than deleted, the way `upload.scanTooltip` is,
+	//    on Dann's ruling of 2026-09-03.
 	'underlay.heading':            { en: 'Underlay',                     fr: 'Underlay' },
 	//    VOICE, the station name from E.27 §3.3. The anchor line inside it
 	//    keeps its ratified `calib.anchor.*` strings.
