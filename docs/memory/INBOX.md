@@ -108,3 +108,6 @@ Format: `I.nn | YYYY-MM-DD | one line, in Dann's words where possible`
 - N.113 walk defect, Dann 2026-09-07 on e1bcb67: after a melisma shift had pushed one syllable off the end, deleting много left the last note reading ка ка on both lines: the vacated tail still draws the file's word in this state, though Code's clean-state walk of rider 0 passed. Reproduce with a melisma set before the deletion. Same paste.
 - RULED IN AS N.117 2026-09-07. Dann 2026-09-07 late, on the N.113a alias walk: the page takes a few seconds to load on reload; consider a placating message so the singer knows Ilya is loading. Unnumbered.
   - Same night, second mention: Dann's preference is a PROGRESS BAR for the load, not a message.
+- [2026-09-09] Loupe's taken-note box reads weird (tall) on the dotted B♭3, Without Sun no. 1 m. 2; Dann: adjust it. See VoiceProfilePane.svelte:459 height rule.
+- [2026-09-09] Loupe locator line 2: Dann wants "dotted quarter" (and the double-dot form) instead of "Quarter · Dot". French to be shown to him.
+- [2026-09-09] Dann: the Open syllables toggle (Text > Notation) should alter Score markup live, as it does the Transcription. Tree fact from STATE: the toggle clears syllable overrides (+page.svelte:2391).

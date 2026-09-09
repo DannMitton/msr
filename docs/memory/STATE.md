@@ -139,6 +139,51 @@ git -C ~/Desktop/ilya-rewrite --no-pager log -1 --format="%H %cI" && git -C ~/De
 > system right; the pairing layer's seats, third walk to touch it (see also
 > memo-n113a §9). Dann to rule whether it is numbered.
 >
+> **N.113b ITEM 3 CLOSED BY DANN'S HANDS, 2026-09-09, session on HEAD `15e8ab4`.**
+> The "improper melisma" was not a melisma path at all: the score file gives
+> the B♭3 of m. 2 its own «тес» and no `<extend>` (parsed this session), the
+> renderer's file-side rule (`staff-renderer.ts:1841-1852`) and singer-side
+> rule (`:1887-1904`) both need the next note bare or marked, and the pill
+> was plain. What the page carried was a garbled seat map: from «тес» on,
+> every seat one note late, two junk seats («я ти»), «ка» unseated, the
+> final «я» pushed off; system 2 carried «на нат Ком» for «на-я тень»;
+> «песня» was absent because Dann deleted it on the N.113a walk. **Cleaned
+> with the existing hands only:** shift ← to end of lyric from the junk
+> note (drops the taken note's seat, `pairings.ts:849-850`, and pulls every
+> later seat back one), then two-click placements (arm the syllable in the
+> Underlay station, `SyllableStation.svelte:129`; pick the note in the loupe,
+> `+page.svelte:623-626`, `:579-600`), then «песня» typed back into the poem
+> box, which re-seated live with no press (N.112, `+page.svelte:544-548`)
+> but produced a stray «в бью» and a one-forward shift after it, cleaned by
+> one more shift ←. **Dann: the whole piece is seated.** Whether the seat
+> garble's ORIGIN is the pairing layer's coordinates (memo-n113a §9, 59 of
+> 96 seats) is still unnumbered and still wants a number.
+>
+> **Walk findings 2026-09-09, all Dann's, in INBOX.md:** the loupe's box on
+> the dotted B♭3 reads tall (`VoiceProfilePane.svelte:459`); the loupe's
+> locator should read "dotted quarter" not "Quarter · Dot", French to be
+> shown; the Open syllables toggle should alter Score markup live as it does
+> Transcription; the loupe draws a stress mark U+02C8 in a Cyrillic cell
+> where the page does not (loupe only, source NOT ESTABLISHED, neither
+> `pairings.ts` write of `STRESS_MARK` touches `cyrillic`); a placed final
+> syllable draws no hyphen before it («ка я»; `pairedSyllableType` not
+> read).
+>
+> **N.118, NUMBERED BY DANN 2026-09-09: punctuation travels in the slot.**
+> A placed syllable never carries the poem's punctuation because
+> `cyrOfSyllable` reads `cleanWord` (`pairings.ts:152-159`); the punctuated
+> cells on the page are wherever the map has no entry (`pairedCyrillic`,
+> `:702-712`, overrides only mapped ids; consistent with Dann's screens, not
+> yet proven on a taken note). Ruled design, desk's recommendation taken
+> over Dann's first idea of a Transcribe-and-fit restore pass: give the
+> word's LAST syllable its trailing punctuation inside `buildSlotQueue`
+> (`:192-226`), so every placement, shift, and re-seat carries it. NOT
+> ESTABLISHED for Code: whether `WordStackData` holds the raw word beside
+> `cleanWord`; whether `estimateCyrillicWidthPx` prices a trailing comma.
+> Gould rule 10 (project extraction, snippet only): the Cyrillic line keeps
+> the author's punctuation. Dann said N.115; N.115 was taken, N.118 is the
+> DESK DEFAULT. After N.114 unless he places it.
+>
 > **THE ONE THING after Dann's N.113a walk: N.114, Type Into Score.**
 > **Drawing r1 in the tree, `docs/sessions/drawing-n114-type-into-score_r1_2026-09-08.html`
 > (rode in `00149c3`), and Dann ruled on it 2026-09-07 late, all recorded

@@ -62,6 +62,7 @@ next session the same hour it cost the last one.
 |---|---|
 | drive a browser yourself | `Claude Code, and where the building` |
 | a walk harness needs a home | `A WALK HARNESS BELONGS` |
+| vitest or node dies on the bridge with `@rollup/rollup-linux-arm64-gnu` | `THE BRIDGE SHELL IS NOT THE MAC` |
 | `vite preview` serving the wrong thing, or caching | `vite preview` |
 | a code change that will not appear after a rebuild | `VITE PREVIEW BUILDS ITS FILE TABLE AT BOOT` |
 | a fixture file you need the app to fetch | `WHAT VITE PREVIEW ACTUALLY SERVES` |
@@ -439,6 +440,15 @@ any measurement:
 document.querySelector('link[rel=modulepreload]').href
 ```
 
+
+## THE BRIDGE SHELL IS NOT THE MAC. `node_modules` WILL NOT RUN THERE
+
+2026-09-09. `device_bash` runs in a Linux ARM VM with the repository mounted,
+and the repository's `node_modules` were installed on the Mac. `vitest` in
+`packages/score-parser` dies at once on a missing
+`@rollup/rollup-linux-arm64-gnu`. So from a desk session: **read the tree, run
+Python on fixtures, and do not try to run the parser, vitest, or any build.** A
+parse of a MusicXML fixture is one `xml.etree` script; that worked.
 
 ## A WALK HARNESS BELONGS IN `build/index.html`, NEVER IN THE SOURCE TREE
 
